@@ -7,6 +7,69 @@ import { GiBroom } from "react-icons/gi";
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+            setShowNotifications(false);
+          }
+        };
+    
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }, []);
+
+        const notifications = [
+          {
+            id: 1,
+            type: "schedule",
+            title: "Waste Collection Tomorrow",
+            message: "General & Recyclable waste collection scheduled for your area tomorrow. Please keep your bins accessible.",
+            time: "2 hours ago",
+            icon: <BsCalendarEvent className="text-blue-500" />,
+            read: false
+          },
+          {
+            id: 2,
+            type: "report",
+            title: "Report #2456 Resolved",
+            message: "Your reported issue at Lakeside area has been resolved. Thank you for keeping Pokhara clean!",
+            time: "1 day ago",
+            icon: <BsCheckCircle className="text-green-500" />,
+            read: false
+          },
+          {
+            id: 3,
+            type: "schedule",
+            title: "Organic Waste Collection",
+            message: "Organic waste collection scheduled for July 1st. Remember to separate your food scraps.",
+            time: "2 days ago",
+            icon: <BsClock className="text-amber-500" />,
+            read: true
+          },
+          {
+            id: 4,
+            type: "report",
+            title: "Report #2451 In Progress",
+            message: "Your reported overflowing bin at Fewa Lake is being addressed. Expected resolution: 24 hours.",
+            time: "3 days ago",
+            icon: <BsTrash className="text-orange-500" />,
+            read: true
+          },
+          {
+            id: 5,
+            type: "schedule",
+            title: "Monthly Deep Cleaning",
+            message: "Monthly deep cleaning program scheduled for your ward next week. Please cooperate.",
+            time: "1 week ago",
+            icon: <GiBroom className="text-purple-500" />,
+            read: true
+          }
+        ];
+      
 
       useEffect(() => {
         const handleScroll = () => {
