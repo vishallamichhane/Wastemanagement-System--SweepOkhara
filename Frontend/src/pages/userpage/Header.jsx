@@ -48,10 +48,10 @@ function Header() {
         
                   {/* Navigation Links */}
                   <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-                    {[{label:"Home", path:"/"}, {label:"Schedule", path:"/schedule"}, {label:"My Reports", path:"myreport"}].map((item) => (
+                    {[{label:"Home", path:"/user"}, {label:"Schedule", path:"../schedule"}, {label:"My Reports", path:"../myreport"}].map((item) => (
                       <NavLink
                         key={item.path}
-                        to={`../`+item.path}
+                        to={item.path}
                         className={({isActive})=>`relative px-4 py-2 rounded-xl transition-all duration-300 group ${
                           isActive
                             ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
