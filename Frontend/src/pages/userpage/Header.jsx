@@ -228,7 +228,13 @@ function Header() {
       
                   {/* User Icon */}
                   <div className="w-9 h-9 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-center font-semibold select-none shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer group relative">
-                    U
+                  
+                    <Link
+                    to="/profile"
+                     >                 
+                     U              
+                    </Link>
+                                    
                     <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
                   </div>
       

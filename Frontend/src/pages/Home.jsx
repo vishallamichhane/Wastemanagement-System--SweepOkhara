@@ -5,7 +5,7 @@ import Header from "../components/Header";
 
 const testimonials = [
   {
-    quote: "SweepOkhara has transformed our neighborhood. It's so easy to report issues, and the community has never been cleaner.",
+    quote: "SweePokhara has transformed our neighborhood. It's so easy to report issues, and the community has never been cleaner.",
     name: "Jane Doe",
     role: "Community Leader",
     image: "https://randomuser.me/api/portraits/women/68.jpg",
@@ -17,7 +17,7 @@ const testimonials = [
     image: "https://randomuser.me/api/portraits/men/75.jpg",
   },
   {
-    quote: "Thanks to SweepOkhara, our parks and streets have become cleaner and healthier spaces for everyone.",
+    quote: "Thanks to SweePokhara, our parks and streets have become cleaner and healthier spaces for everyone.",
     name: "Emily Clark",
     role: "Environmental Activist",
     image: "https://randomuser.me/api/portraits/women/44.jpg",
@@ -79,7 +79,7 @@ export default function Home() {
               <span className="bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">Together</span>.
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
-              SweepOkhara is your smart solution for efficient waste management and community involvement. Join us to make a difference.
+              SweePokhara is your smart solution for efficient waste management and community involvement. Join us to make a difference.
             </p>
           </div>
           <button className="group bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-2xl font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 flex items-center gap-3">
@@ -309,7 +309,7 @@ export default function Home() {
             <div className="flex items-center gap-3 text-lg font-bold">
               <GiBroom className="text-emerald-600 text-2xl" />
               <span className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                SweepOkhara
+                SweePokhara
               </span>
             </div>
             
@@ -323,7 +323,7 @@ export default function Home() {
             </div>
             
             <div className="text-emerald-600 text-sm">
-              © 2024 SweepOkhara. All rights reserved.
+              © 2024 SweePokhara. All rights reserved.
             </div>
           </div>
         </div>

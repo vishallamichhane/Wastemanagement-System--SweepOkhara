@@ -12,11 +12,7 @@ const PickupReminders = () => {
     sms: false
   });
   
-  const [reminderTimings, setReminderTimings] = useState({
-    firstReminder: '1 day before',
-    secondReminder: '1 hour before'
-  });
-
+  const [reminderTiming, setReminderTiming] = useState('1 day before');
   const [isScrolled, setIsScrolled] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,11 +24,8 @@ const PickupReminders = () => {
     }));
   };
 
-  const handleReminderChange = (reminderType, value) => {
-    setReminderTimings(prev => ({
-      ...prev,
-      [reminderType]: value
-    }));
+  const handleReminderChange = (value) => {
+    setReminderTiming(value);
   };
 
   const handleSaveChanges = () => {
@@ -57,10 +50,7 @@ const PickupReminders = () => {
       email: true,
       sms: false
     });
-    setReminderTimings({
-      firstReminder: '1 day before',
-      secondReminder: '1 hour before'
-    });
+    setReminderTiming('1 day before');
   };
 
   return (
@@ -80,7 +70,7 @@ const PickupReminders = () => {
             Pickup Reminders
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Never miss a waste collection. Set your preferred notification methods and reminder timings.
+            Never miss a waste collection. Set your preferred notification methods and reminder timing.
           </p>
         </div>
 
@@ -219,45 +209,33 @@ const PickupReminders = () => {
             </div>
           </div>
 
-          {/* Reminder Timings Section */}
+          {/* Reminder Timing Section - Single Reminder */}
           <div className="mb-12">
             <h3 className="text-lg font-semibold text-gray-700 mb-6">
               When should we remind you?
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* First Reminder */}
+            <div className="max-w-md mx-auto">
               <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
-                <h4 className="font-bold text-gray-800 mb-4 text-center">First Reminder</h4>
+                <h4 className="font-bold text-gray-800 mb-4 text-center">Reminder Timing</h4>
                 <div className="space-y-3">
-                  {['1 day before', '12 hours before', '6 hours before', '3 hours before'].map((time) => (
+                  {[
+                    '1 day before', 
+                    '12 hours before', 
+                    '6 hours before', 
+                    '3 hours before',
+                    '1 hour before', 
+                    '30 minutes before', 
+                    '15 minutes before', 
+                    'At pickup time'
+                  ].map((time) => (
                     <button
                       key={time}
-                      onClick={() => handleReminderChange('firstReminder', time)}
+                      onClick={() => handleReminderChange(time)}
                       className={`w-full py-3 px-4 rounded-lg border-2 transition-all duration-300 transform hover:scale-105 ${
-                        reminderTimings.firstReminder === time
+                        reminderTiming === time
                           ? 'border-emerald-500 bg-white shadow-lg text-emerald-700 font-semibold'
                           : 'border-gray-200 bg-white/80 hover:border-emerald-300 text-gray-700'
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Second Reminder */}
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
-                <h4 className="font-bold text-gray-800 mb-4 text-center">Second Reminder</h4>
-                <div className="space-y-3">
-                  {['1 hour before', '30 minutes before', '15 minutes before', 'At pickup time'].map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => handleReminderChange('secondReminder', time)}
-                      className={`w-full py-3 px-4 rounded-lg border-2 transition-all duration-300 transform hover:scale-105 ${
-                        reminderTimings.secondReminder === time
-                          ? 'border-blue-500 bg-white shadow-lg text-blue-700 font-semibold'
-                          : 'border-gray-200 bg-white/80 hover:border-blue-300 text-gray-700'
                       }`}
                     >
                       {time}

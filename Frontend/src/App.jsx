@@ -18,7 +18,12 @@ import Awareness2Page from './pages/userpage/Awareness2';
 import Awareness3Page from './pages/userpage/Awareness3';
 import ProfilePage from './pages/userpage/Profile';
 import PrivacySettingsPage from './pages/userpage/Privacysetting';
+import ChangePasswordPage from './pages/userpage/Changepassword';
+import Privacy_PolicyPage from './pages/userpage/Policy';
+import TermsPage from './pages/userpage/Terms';
+import DashboardPage from './pages/collectorpage/Dashboard';
 import UserLayout from './pages/userpage/Layout';
+import CollectorDashboard from './pages/collectorpage/Dashboard';
 
 
 
@@ -51,8 +56,11 @@ function App() {
           <Route path='/profile' element= {<ProfilePage/>}/>
           <Route path='/privacy' element= {<PrivacySettingsPage/>}/>
           <Route path='/map' element= {<MapPage/>}/>
+          <Route path='/changepw' element= {<ChangePasswordPage/>}/>
+          <Route path='/policy' element= {<Privacy_PolicyPage/>}/>
+          <Route path='/terms' element= {<TermsPage/>}/>
       {/* </Route> */}
-
+      <Route path='/dashboard' element= {<DashboardPage/>}/>
 
      </Routes>
     </BrowserRouter>

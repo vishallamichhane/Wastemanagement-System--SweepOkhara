@@ -259,14 +259,17 @@ export default function UserProfilePage() {
                 Account Settings
               </h3>
               
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link to="/changepw" className="block">
                 <button className="p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-emerald-200 transition-all duration-300 text-left group">
                   <div className="text-emerald-600 mb-2">🔒</div>
                   <h4 className="font-semibold text-gray-800 group-hover:text-emerald-700">Change Password</h4>
                   <p className="text-sm text-gray-600">Update your account security</p>
                 </button>
-                
-                <Link to="/privacy-settings" className="block">
+                </Link>
+
+                <Link to="/privacy" className="block">
                   <button className="w-full p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-emerald-200 transition-all duration-300 text-left group">
                     <div className="text-emerald-600 mb-2">👥</div>
                     <h4 className="font-semibold text-gray-800 group-hover:text-emerald-700">Privacy Settings</h4>
@@ -274,17 +277,14 @@ export default function UserProfilePage() {
                   </button>
                 </Link>
                 
+                <Link to="/myreport" className="block">
                 <button className="p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-emerald-200 transition-all duration-300 text-left group">
                   <div className="text-emerald-600 mb-2">📋</div>
                   <h4 className="font-semibold text-gray-800 group-hover:text-emerald-700">My Reports</h4>
                   <p className="text-sm text-gray-600">View your submitted reports</p>
                 </button>
+                </Link>
                 
-                <button className="p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-red-200 transition-all duration-300 text-left group">
-                  <div className="text-red-600 mb-2">🗑️</div>
-                  <h4 className="font-semibold text-gray-800 group-hover:text-red-700">Delete Account</h4>
-                  <p className="text-sm text-gray-600">Permanently remove your account</p>
-                </button>
               </div>
             </div>
           </div>

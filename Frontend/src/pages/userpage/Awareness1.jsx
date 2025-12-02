@@ -116,7 +116,7 @@ export default function ThreeRsPage() {
               </p>
               <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-2xl border border-emerald-200">
                 <p className="text-emerald-800 font-semibold text-center">
-                  Every small action counts! Together, we can make SweepOkhara cleaner and greener.
+                  Every small action counts! Together, we can make Sweepokhara cleaner and greener.
                 </p>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function ThreeRsPage() {
 
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-8 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
+        <span className="font-semibold">© 2024 Sweepokhara. All rights reserved.</span>
         <div className="flex gap-6">
           <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
             Privacy Policy

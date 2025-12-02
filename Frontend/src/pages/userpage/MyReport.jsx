@@ -158,7 +158,7 @@ const MyReports = () => {
       <main className="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <Link to="/userhome" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
             <span className="font-semibold">Back to Dashboard</span>
           </Link>

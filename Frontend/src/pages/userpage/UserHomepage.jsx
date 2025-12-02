@@ -22,13 +22,17 @@ export default function UserHomePage() {
               Your dashboard for a cleaner Pokhara.
             </p>
           </div>
-          <button
+
+          <Link to="/report">
+            <button
             type="button"
             className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:ring-4 focus:ring-red-400 focus:ring-opacity-50 rounded-xl px-6 py-3 text-white font-bold shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 inline-flex items-center gap-3 animate-pulse-slow"
-          >
-            <BsExclamationTriangle className="text-xl" />
-            Report Issue
+            >
+           <BsExclamationTriangle className="text-xl" />
+           Report Issue
           </button>
+        </Link>
+
         </section>
 
         {/* Overview + Waste Pickup Schedules */}
@@ -58,7 +62,7 @@ export default function UserHomePage() {
             </div>
 
             <Link 
-              to="/mapstatus"
+              to="/map"
               className="relative z-10 mt-6 inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 text-white font-bold rounded-xl px-6 py-4 shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl active:scale-95 group/btn"
             >
               <BsMapFill className="text-xl group-hover/btn:scale-110 transition-transform" />
@@ -103,7 +107,7 @@ export default function UserHomePage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Card 1 */}
-            <Link to="/three-rs" className="block">
+            <Link to="/awareness1" className="block">
               <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border border-green-100/50 group">
                 <div className="h-48 overflow-hidden">
                   <img 
@@ -128,7 +132,7 @@ export default function UserHomePage() {
             </Link>
 
             {/* Card 2 */}
-            <Link to="/composting" className="block">
+            <Link to="/awareness2" className="block">
               <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border border-green-100/50 group">
                 <div className="h-48 overflow-hidden">
                   <img
@@ -154,7 +158,7 @@ export default function UserHomePage() {
             </Link>
 
             {/* Card 3 */}
-            <Link to="/smart-segregation" className="block">
+            <Link to="/awareness3" className="block">
               <article className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border border-green-100/50 group">
                 <div className="h-48 overflow-hidden">
                   <img

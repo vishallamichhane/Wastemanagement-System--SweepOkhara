@@ -186,7 +186,7 @@ export default function ContactPage() {
             <div className="flex items-center gap-3 text-lg font-bold">
               <GiBroom className="text-emerald-600 text-2xl" />
               <span className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                SweepOkhara
+                Sweepokhara
               </span>
             </div>
             
@@ -200,7 +200,7 @@ export default function ContactPage() {
             </div>
             
             <div className="text-emerald-600 text-sm">
-              © 2024 SweepOkhara. All rights reserved.
+              © 2024 Sweepokhara. All rights reserved.
             </div>
           </div>
         </div>

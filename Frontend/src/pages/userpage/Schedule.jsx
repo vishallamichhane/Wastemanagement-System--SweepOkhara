@@ -53,7 +53,7 @@ const WastePickupSchedule = () => {
     setIsReminderSet(true);
     // Navigate to reminder confirmation page after 1 second
     setTimeout(() => {
-      navigate('/reminder-confirmation');
+      navigate('/reminder');
     }, 1000);
   };
 
@@ -87,9 +87,9 @@ const WastePickupSchedule = () => {
       <main className="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <Link to="/userhome" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
-            <span className="font-semibold">Back to Dashboard</span>
+            <span className="font-semibold">Back to Home</span>
           </Link>
           
           <h1 className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-3">
