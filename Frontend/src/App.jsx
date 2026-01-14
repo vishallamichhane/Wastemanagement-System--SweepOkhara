@@ -23,7 +23,17 @@ import Privacy_PolicyPage from './pages/userpage/Policy';
 import TermsPage from './pages/userpage/Terms';
 import DashboardPage from './pages/collectorpage/Dashboard';
 import UserLayout from './pages/userpage/Layout';
-import CollectorDashboard from './pages/collectorpage/Dashboard';
+import WelcomeLayout from './pages/WelcomeLayout';
+import CollectorLayout from './pages/collectorpage/CollectorLayout';
+import AssignedTaskPage from './pages/collectorpage/Assignedtasks';
+import CollectorMapPage from './pages/collectorpage/Collectormap';
+import CollectorProfilePage from './pages/collectorpage/Profilecollector';
+import AdminDashboard from './pages/adminpage/Admin';
+import UserManagementPage from './pages/adminpage/UserManagement';
+
+
+
+
 
 
 
@@ -34,33 +44,50 @@ function App() {
   
 
   return (
-    <> 
+    <>  
     <BrowserRouter>
      <Routes>
+       {/* Routes for welcome layout*/}
+       <Route element={<WelcomeLayout />}>
+          <Route path='/' element= {<HomePage/>}/>
+          <Route path='/feature' element= {<FeaturePage/>}/>
+          <Route path='/aboutus' element= {<AboutusPage/>}/>
+          <Route path='/contact' element= {<ContactPage/>}/>
+          <Route path='/policy' element= {<Privacy_PolicyPage/>}/>
+          <Route path='/terms' element= {<TermsPage/>}/>
+       </Route>
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/login' element={<LoginPage />} />
       
-      <Route path='/' element= {<HomePage/>}/>
-      <Route path='/feature' element= {<FeaturePage/>}/>
-      <Route path='/aboutus' element= {<AboutusPage/>}/>
-      <Route path='/contact' element= {<ContactPage/>}/>
-      {/* <Route path="" element={<UserLayout />} > */}
-          <Route path="/user" element={<UserHomePage />} />
-          <Route path='/schedule' element= {<SchedulePage/>}/>
-          <Route path='/myreport' element= {<MyRepotPage/>}/>
-          <Route path='/reminder' element= {<ReminderPage/>}/>
-          <Route path='/report' element= {<ReportPage/>}/>
-          <Route path='/awareness1' element= {<Awareness1Page/>}/>
-          <Route path='/awareness2' element= {<Awareness2Page/>}/>
-          <Route path='/awareness3' element= {<Awareness3Page/>}/>
-          <Route path='/profile' element= {<ProfilePage/>}/>
-          <Route path='/privacy' element= {<PrivacySettingsPage/>}/>
-          <Route path='/map' element= {<MapPage/>}/>
-          <Route path='/changepw' element= {<ChangePasswordPage/>}/>
-          <Route path='/policy' element= {<Privacy_PolicyPage/>}/>
-          <Route path='/terms' element= {<TermsPage/>}/>
-      {/* </Route> */}
-      <Route path='/dashboard' element= {<DashboardPage/>}/>
+      {/* Routes for user layout */}
+      <Route path="/user" element={<UserLayout />} > 
+          <Route index element={<UserHomePage />} />
+          <Route path='schedule' element= {<SchedulePage/>}/>
+          <Route path='myreport' element= {<MyRepotPage/>}/>
+          <Route path='reminder' element= {<ReminderPage/>}/>
+          <Route path='report' element= {<ReportPage/>}/>
+          <Route path='awareness2' element= {<Awareness2Page/>}/>
+          <Route path='awareness1' element= {<Awareness1Page/>}/>
+          <Route path='awareness3' element= {<Awareness3Page/>}/>
+          <Route path='profile' element= {<ProfilePage/>}/>
+          <Route path='privacy' element= {<PrivacySettingsPage/>}/>
+          <Route path='map' element= {<MapPage/>}/>
+          <Route path='changepw' element= {<ChangePasswordPage/>}/>
+          <Route path='policy' element= {<Privacy_PolicyPage/>}/>
+          <Route path='terms' element= {<TermsPage/>}/>
+      </Route> 
+
+      {/* Routes for collector layout */}
+      <Route path="/collector" element={<CollectorLayout />}>
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="tasks" element={<AssignedTaskPage />} />
+        <Route path="map" element={<CollectorMapPage />} />
+        <Route path="profile" element={<CollectorProfilePage />} />
+      </Route>
+
+      {/* Routes for admin */}
+      <Route path='/admin' element= {<AdminDashboard/>}/>
+      <Route path='/usermanagement' element= {<UserManagementPage/>}/>
 
      </Routes>
     </BrowserRouter>

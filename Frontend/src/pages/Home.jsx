@@ -62,7 +62,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-teal-50/30 text-gray-800 font-sans flex flex-col relative overflow-hidden">
-      {/* Enhanced Background Elements */}
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-200 rounded-full opacity-20 mix-blend-multiply filter blur-3xl animate-blob"></div>
+        <div className="absolute top-40 right-10 w-96 h-96 bg-teal-200 rounded-full opacity-20 mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-cyan-200 rounded-full opacity-15 mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-emerald-300 rounded-full opacity-10 mix-blend-multiply filter blur-3xl animate-blob-reverse"></div>
+      </div>
       <Header />
 
       {/* Enhanced Hero Section */}
@@ -70,35 +76,36 @@ export default function Home() {
         {/* Left Content */}
         <div className="max-w-2xl space-y-8 animate-fade-in-up">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold border border-emerald-200">
-              🚀 Join the Clean City Movement
+            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold border border-emerald-200 animate-bounce-gentle">
+              <span className="animate-pulse-slow">🚀</span> Join the Clean City Movement
             </div>
-            <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
+            <h1 className="text-5xl lg:text-6xl font-bold leading-tight animate-slide-in-left">
               Creating a Cleaner{" "}
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">City</span>,{" "}
-              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">Together</span>.
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent animate-gradient">City</span>,{" "}
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent animate-gradient animation-delay-500">Together</span>.
             </h1>
-            <p className="text-xl text-gray-600 leading-relaxed">
+            <p className="text-xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300">
               SweePokhara is your smart solution for efficient waste management and community involvement. Join us to make a difference.
             </p>
           </div>
-          <button className="group bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-2xl font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 flex items-center gap-3">
-            Get Started
-            <BsArrowRight className="group-hover:translate-x-2 transition-transform duration-300" />
+          <button className="group bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-2xl font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 flex items-center gap-3 animate-fade-in animation-delay-600 hover:from-emerald-700 hover:to-teal-700 relative overflow-hidden">
+            <span className="absolute inset-0 bg-white/20 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+            <span className="relative z-10">Get Started</span>
+            <BsArrowRight className="group-hover:translate-x-2 transition-transform duration-300 relative z-10" />
           </button>
         </div>
 
         {/* Enhanced Image Slider with Attractive Arrows */}
-        <div className="relative max-w-lg">
-          <div className="rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-gradient-to-br from-white/80 to-emerald-50/50 backdrop-blur-sm">
+        <div className="relative max-w-lg animate-fade-in-right">
+          <div className="rounded-3xl overflow-hidden shadow-2xl border-2 border-white/30 bg-gradient-to-br from-white/80 to-emerald-50/50 backdrop-blur-sm transform hover:scale-[1.02] transition-all duration-500">
             <div className="relative aspect-[4/3] overflow-hidden">
               {slidingImages.map((src, idx) => (
                 <img
                   key={idx}
                   src={src}
                   alt={`Clean City ${idx + 1}`}
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                    idx === currentSlide ? 'opacity-100' : 'opacity-0'
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
+                    idx === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
                   }`}
                   draggable={false}
                 />
@@ -107,29 +114,29 @@ export default function Home() {
               {/* Enhanced Navigation Arrows */}
               <button 
                 onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 backdrop-blur-sm text-white w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group border border-white/20"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group border-2 border-white/50 animate-pulse-gentle"
               >
-                <BsChevronLeft className="group-hover:scale-110 transition-transform duration-200" />
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <BsChevronLeft className="group-hover:scale-110 group-hover:-translate-x-0.5 transition-transform duration-200 text-xl" />
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
               <button 
                 onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 backdrop-blur-sm text-white w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group border border-white/20"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group border-2 border-white/50 animate-pulse-gentle animation-delay-500"
               >
-                <BsChevronRight className="group-hover:scale-110 transition-transform duration-200" />
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <BsChevronRight className="group-hover:scale-110 group-hover:translate-x-0.5 transition-transform duration-200 text-xl" />
+                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/30 to-emerald-500/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
 
               {/* Slide Indicators */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/20 backdrop-blur-sm px-3 py-2 rounded-full">
                 {slidingImages.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    className={`transition-all duration-300 rounded-full ${
                       idx === currentSlide 
-                        ? 'bg-white w-6 shadow-lg' 
-                        : 'bg-white/60 hover:bg-white/80'
+                        ? 'bg-white w-6 h-2 shadow-lg' 
+                        : 'bg-white/60 hover:bg-white/80 w-2 h-2'
                     }`}
                   />
                 ))}
@@ -165,13 +172,16 @@ export default function Home() {
           }].map(({ icon, title, desc }, index) => (
             <div
               key={title}
-              className="group bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border border-emerald-100 hover:border-emerald-200 hover:scale-105 animate-fade-in-up"
+              className="group bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border-2 border-emerald-100 hover:border-emerald-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up cursor-pointer"
               style={{ animationDelay: `${index * 200}ms` }}
             >
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 group-hover:scale-110 transition-transform duration-500">
-                {icon}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-teal-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10 transform group-hover:scale-110 transition-transform duration-500">
+                  {icon}
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{title}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-emerald-700 transition-colors duration-300">{title}</h3>
               <p className="text-gray-600 leading-relaxed">{desc}</p>
             </div>
           ))}
@@ -207,21 +217,21 @@ export default function Home() {
                 desc: "Get real-time updates and confirmation once the issue is resolved.",
               },
             ].map(({ img, title, desc }, index) => (
-              <div key={title} className="text-center group cursor-pointer">
-                <div className="relative mb-6">
-                  <div className="absolute -top-2 -left-2 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg z-10">
+              <div key={title} className="text-center group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${index * 150}ms` }}>
+                <div className="relative mb-6 transform group-hover:scale-105 transition-all duration-500">
+                  <div className="absolute -top-2 -left-2 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg z-10 animate-bounce-gentle">
                     {index + 1}
                   </div>
-                  <div className="rounded-2xl overflow-hidden shadow-lg transition-all duration-500">
+                  <div className="rounded-2xl overflow-hidden shadow-lg transition-all duration-500 group-hover:shadow-2xl border-2 border-transparent group-hover:border-emerald-200">
                     <img
                       src={img}
                       alt={title}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
                       draggable={false}
                     />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">
                   {title}
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -243,20 +253,23 @@ export default function Home() {
             Join thousands of residents making Pokhara cleaner every day
           </p>
         </div>
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-emerald-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-emerald-100 hover:border-emerald-200 transition-all duration-500 hover:shadow-3xl">
           <div className="text-center">
-            <blockquote className="text-2xl text-gray-700 italic leading-relaxed mb-8 max-w-2xl mx-auto transition-opacity duration-500">
+            <blockquote className="text-2xl text-gray-700 italic leading-relaxed mb-8 max-w-2xl mx-auto transition-all duration-500 animate-fade-in">
               "{testimonials[currentTestimonial].quote}"
             </blockquote>
-            <div className="flex items-center justify-center gap-6">
-              <img
-                src={testimonials[currentTestimonial].image}
-                alt={testimonials[currentTestimonial].name}
-                className="w-16 h-16 rounded-full object-cover shadow-lg transition-transform duration-500 hover:scale-110"
-                draggable={false}
-              />
+            <div className="flex items-center justify-center gap-6 animate-fade-in animation-delay-300">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full animate-ping opacity-20"></div>
+                <img
+                  src={testimonials[currentTestimonial].image}
+                  alt={testimonials[currentTestimonial].name}
+                  className="w-16 h-16 rounded-full object-cover shadow-lg transition-transform duration-500 hover:scale-110 relative z-10 border-2 border-white"
+                  draggable={false}
+                />
+              </div>
               <div className="text-left">
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-gray-900 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                   {testimonials[currentTestimonial].name}
                 </p>
                 <p className="text-gray-600">
@@ -269,10 +282,10 @@ export default function Home() {
                 <button
                   key={idx}
                   onClick={() => setCurrentTestimonial(idx)}
-                  className={`w-3 h-3 rounded-full transition-all duration-500 cursor-pointer ${
+                  className={`rounded-full transition-all duration-500 cursor-pointer hover:scale-110 ${
                     idx === currentTestimonial
-                      ? "bg-emerald-600 scale-125"
-                      : "bg-emerald-300 hover:bg-emerald-400"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 w-8 h-3 shadow-lg"
+                      : "bg-emerald-300 hover:bg-emerald-400 w-3 h-3"
                   }`}
                 />
               ))}
@@ -282,52 +295,28 @@ export default function Home() {
       </section>
 
       {/* Enhanced CTA */}
-      <section className="max-w-6xl mx-auto px-6 lg:px-10 mt-28 mb-24 relative z-10">
-        <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl p-12 text-center text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-400 animate-glow"></div>
-          <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full animate-pulse-slow"></div>
-          <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/10 rounded-full animate-pulse-slow animation-delay-2000"></div>
+      <section className="max-w-6xl mx-auto px-6 lg:px-10 mt-28 mb-24 relative z-10 animate-fade-in-up">
+        <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl p-12 text-center text-white shadow-2xl relative overflow-hidden transform hover:scale-[1.02] transition-all duration-500">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-400 animate-shimmer"></div>
+          <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full animate-blob"></div>
+          <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/10 rounded-full animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full animate-blob-reverse"></div>
           
           <div className="relative z-10">
-            <h3 className="text-4xl font-bold mb-6 leading-tight">
+            <h3 className="text-4xl font-bold mb-6 leading-tight animate-fade-in">
               Join the Movement for a Cleaner Tomorrow
             </h3>
-            <p className="text-emerald-100 text-xl mb-8 max-w-2xl mx-auto">
+            <p className="text-emerald-100 text-xl mb-8 max-w-2xl mx-auto animate-fade-in animation-delay-300">
               Register today and become an active part of the solution. Let's make our city a better place, one report at a time.
             </p>
-            <button className="bg-white text-emerald-700 font-bold px-12 py-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500">
-              Register Now
+            <button className="bg-white text-emerald-700 font-bold px-12 py-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 animate-fade-in animation-delay-600 hover:bg-emerald-50 relative overflow-hidden group">
+              <span className="absolute inset-0 bg-gradient-to-r from-emerald-100/50 to-teal-100/50 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+              <span className="relative z-10">Register Now</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* Enhanced Footer */}
-      <footer className="bg-gradient-to-r from-emerald-50 to-teal-50 border-t border-emerald-200 py-8">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3 text-lg font-bold">
-              <GiBroom className="text-emerald-600 text-2xl" />
-              <span className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                SweePokhara
-              </span>
-            </div>
-            
-            <div className="flex gap-8 text-emerald-700 text-sm font-medium">
-              <a href="#" className="hover:text-emerald-800 transition-colors duration-300 hover:underline">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-emerald-800 transition-colors duration-300 hover:underline">
-                Terms of Service
-              </a>
-            </div>
-            
-            <div className="text-emerald-600 text-sm">
-              © 2024 SweePokhara. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
 
       {/* Enhanced Animation Styles */}
       <style jsx>{`

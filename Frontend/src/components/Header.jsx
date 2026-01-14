@@ -33,15 +33,17 @@ function Header() {
               : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
           }`}>
             <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
+              <Link to="/">
               <div className="flex items-center space-x-3 group cursor-pointer">
                 <div className="relative">
                   <GiBroom className="text-emerald-600 text-4xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
                   <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
                 </div>
                 <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-                  SweepOkhara
+                  SWEEPokhara
                 </span>
               </div>
+              </Link>
 
 
 

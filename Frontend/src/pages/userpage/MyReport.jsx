@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { GiBroom } from 'react-icons/gi';
 import { BsBell, BsEye, BsFilter, BsSearch, BsClock, BsCheckCircle, BsExclamationTriangle, BsArrowClockwise } from 'react-icons/bs';
 import { FiLogOut, FiChevronLeft } from 'react-icons/fi';
-import Header from './Header';
+import Header from './components/Header';
 
 const MyReports = () => {
   const [reports, setReports] = useState([]);
@@ -151,9 +151,7 @@ const MyReports = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50 text-gray-900 flex flex-col relative overflow-hidden">
-      <Header />
-
+    <>
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
@@ -248,7 +246,7 @@ const MyReports = () => {
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No reports found</h3>
               <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
               <Link
-                to="/report-issue"
+                to="/user/report"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
               >
                 Report New Issue
@@ -311,7 +309,7 @@ const MyReports = () => {
         {/* Quick Actions */}
         <div className="mt-8 flex justify-center">
           <Link
-            to="/report-issue"
+            to="/user/report"
             className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 transform"
           >
             <span>+</span>
@@ -320,18 +318,6 @@ const MyReports = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-6 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center items-center relative z-10 mt-8">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
-        <div className="flex gap-4">
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </a>
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
 
       {/* Enhanced animations */}
       <style jsx>{`
@@ -381,7 +367,7 @@ const MyReports = () => {
           animation-delay: 2s;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 

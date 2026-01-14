@@ -179,32 +179,6 @@ export default function ContactPage() {
         </section>
       </main>
 
-      {/* Footer - UPDATED with home page style */}
-      <footer className="bg-gradient-to-r from-emerald-50 to-teal-50 border-t border-emerald-200 py-8">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3 text-lg font-bold">
-              <GiBroom className="text-emerald-600 text-2xl" />
-              <span className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                Sweepokhara
-              </span>
-            </div>
-            
-            <div className="flex gap-8 text-emerald-700 text-sm font-medium">
-              <a href="#" className="hover:text-emerald-800 transition-colors duration-300 hover:underline">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-emerald-800 transition-colors duration-300 hover:underline">
-                Terms of Service
-              </a>
-            </div>
-            
-            <div className="text-emerald-600 text-sm">
-              © 2024 Sweepokhara. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
 
       {/* Enhanced Animation Styles */}
       <style jsx>{`

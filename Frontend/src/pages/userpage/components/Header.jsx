@@ -1,9 +1,14 @@
 import {useState, useEffect, useRef} from 'react'
 import { BsCalendarEvent, BsBell, BsMapFill, BsExclamationTriangle, BsCheckCircle, BsClock, BsTrash } from "react-icons/bs";
 import { NavLink, Link } from 'react-router-dom'
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiHome } from "react-icons/fi";
 import { GiBroom } from "react-icons/gi";
 
+const navItems = [
+  {label:"Home", path:"/user"}, 
+  {label:"Schedule", path:"/user/schedule"},
+  {label:"My Reports", path:"/user/myreport"}
+]
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -106,6 +111,7 @@ function Header() {
             }`}>
               <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-10 py-4 select-none">
                 {/* Logo Section */}
+                <Link to="/user">
                 <div className="flex items-center space-x-3 group cursor-pointer">
                   <div className="relative">
                     <GiBroom className="text-emerald-600 text-4xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
@@ -115,10 +121,11 @@ function Header() {
                     SweepOkhara
                   </span>
                 </div>
+                </Link>
       
                 {/* Navigation Links */}
-                <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-                    {[{label:"Home", path:"/user"}, {label:"Schedule", path:"../schedule"}, {label:"My Reports", path:"../myreport"}].map((item) => (
+                <nav className="hidden md:flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-sm font-medium justify-end">
+                    {navItems.map((item) => (
                       <NavLink
                         key={item.path}
                         to={item.path}
@@ -227,16 +234,14 @@ function Header() {
                   </div>
       
                   {/* User Icon */}
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-center font-semibold select-none shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer group relative">
-                  
                     <Link
-                    to="/profile"
+                    to="/user/profile"
                      >                 
-                     U              
-                    </Link>
-                                    
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-center font-semibold select-none shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer group relative">
+                     U                                                  
                     <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
                   </div>
+                    </Link>
       
                   {/* Logout Button */}
                   <button
@@ -251,6 +256,28 @@ function Header() {
                 </nav>
               </div>
             </nav>
+
+            {/* Mobile bottom nav */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-[0_-8px_25px_rgba(0,0,0,0.08)] border-t border-emerald-100/60">
+              <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+                {navItems.map((item) => {
+                  const isHome = item.path === '/user';
+                  const Icon = isHome ? FiHome : item.label === 'Schedule' ? BsCalendarEvent : BsCheckCircle;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      className={({ isActive }) => `flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all duration-200 ${
+                        isActive ? 'text-emerald-700 bg-emerald-50' : 'text-gray-500 hover:text-emerald-700 hover:bg-emerald-50/70'
+                      }`}
+                    >
+                      <Icon className="text-lg mb-1" />
+                      <span className="text-xs font-semibold">{isHome ? 'Home' : item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
       
             {/* Spacer for fixed nav */}
             <div className="h-20"></div>

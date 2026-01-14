@@ -5,7 +5,7 @@ import { FiLogOut } from "react-icons/fi";
 import { GiBroom } from "react-icons/gi";
 import { TbPlant, TbLeaf, TbTrash, TbSeeding } from "react-icons/tb";
 import { FaRegCompass } from "react-icons/fa";
-import Header from "./Header";
+import Header from "./components/Header";
 
 export default function CompostingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -122,8 +122,7 @@ export default function CompostingPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-amber-50 via-green-50 to-emerald-100 text-gray-900 relative overflow-hidden">
-      <Header />
+    <>
 
       {/* Main content */}
       <main className="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-12 relative z-10">
@@ -355,18 +354,6 @@ export default function CompostingPage() {
         
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-8 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10">
-        <span className="font-semibold">© 2024 Sweepokhara. All rights reserved.</span>
-        <div className="flex gap-6">
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </a>
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
 
       {/* Enhanced animations */}
       <style jsx>{`
@@ -460,6 +447,6 @@ export default function CompostingPage() {
           animation-delay: 2s;
         }
       `}</style>
-    </div>
+    </>
   );
 }

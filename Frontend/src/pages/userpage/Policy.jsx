@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BsShieldCheck, BsFileText, BsPeople, BsLock, BsGlobe, BsCheckCircle, BsArrowLeft } from "react-icons/bs";
 import { GiBroom } from "react-icons/gi";
-import Header from "./Header";
+import Header from "./components/Header";
 
 export default function PrivacyPolicyPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -69,9 +69,7 @@ export default function PrivacyPolicyPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 via-blue-50 to-emerald-100 text-gray-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <Header />
+    <>  
       {/* Main content */}
       <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-10 relative z-10">
         {/* Back button and header */}
@@ -195,18 +193,6 @@ export default function PrivacyPolicyPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-8 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
-        <div className="flex gap-6">
-          <Link to="/privacy-policy" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </Link>
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
 
       {/* Enhanced animations */}
       <style jsx>{`
@@ -268,6 +254,6 @@ export default function PrivacyPolicyPage() {
           animation-delay: 2s;
         }
       `}</style>
-    </div>
+    </>
   );
 }

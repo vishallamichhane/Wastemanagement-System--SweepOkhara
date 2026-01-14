@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { GiBroom } from 'react-icons/gi';
 import { BsBell, BsCamera, BsPinMap, BsCheckCircle, BsUpload, BsGeoAlt } from 'react-icons/bs';
 import { FiLogOut, FiChevronLeft, FiMapPin } from 'react-icons/fi';
-import Header from './Header';
+import Header from './components/Header';
 
 const ReportIssue = () => {
   const [issueType, setIssueType] = useState('missed-pickup');
@@ -214,8 +214,7 @@ const ReportIssue = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50 text-gray-900 flex flex-col relative overflow-hidden">
-      <Header />
+    <>
 
       {/* Main Content */}
       <main className="flex-grow max-w-4xl mx-auto px-6 lg:px-8 py-8 w-full">
@@ -455,18 +454,7 @@ const ReportIssue = () => {
         </form>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-6 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center items-center relative z-10 mt-8">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
-        <div className="flex gap-4">
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </a>
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
+
 
       {/* Success Confirmation */}
       {showSuccess && (
@@ -641,7 +629,7 @@ const ReportIssue = () => {
           animation-delay: 2s;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 

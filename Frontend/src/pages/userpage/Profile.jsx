@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BsCalendarEvent, BsBell, BsMapFill, BsExclamationTriangle, BsPerson, BsEnvelope, BsTelephone, BsHouse, BsCamera, BsCheck, BsPencil, BsShieldCheck } from "react-icons/bs";
 import { FiLogOut, FiUser, FiSettings } from "react-icons/fi";
 import { GiBroom } from "react-icons/gi";
-import Header from "./Header";
+import Header from "./components/Header";
 
 export default function UserProfilePage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,9 +54,7 @@ export default function UserProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 via-blue-50 to-emerald-100 text-gray-900 relative overflow-hidden">
-      <Header />
-
+    <>
       {/* Main content */}
       <main className="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-8 relative z-10">
         {/* Back button and header */}
@@ -291,19 +289,6 @@ export default function UserProfilePage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-8 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
-        <div className="flex gap-6">
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </a>
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
-
       {/* Enhanced animations */}
       <style jsx>{`
         @keyframes float-slow {
@@ -368,6 +353,6 @@ export default function UserProfilePage() {
           animation-delay: 2s;
         }
       `}</style>
-    </div>
+    </>
   );
 }

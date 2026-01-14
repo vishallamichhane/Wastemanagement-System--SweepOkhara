@@ -4,7 +4,7 @@ import { FaCalendarAlt, FaClock, FaTruck, FaBell, FaTrashAlt, FaRecycle } from '
 import { BsBell, BsArrowRight, BsCheckCircle } from "react-icons/bs";
 import { FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { GiBroom } from "react-icons/gi";
-import Header from './Header';
+import Header from './components/Header';
 
 const WastePickupSchedule = () => {
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
@@ -80,8 +80,7 @@ const WastePickupSchedule = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50 text-gray-900 flex flex-col relative overflow-hidden">
-      <Header />
+    <>
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
@@ -262,18 +261,6 @@ const WastePickupSchedule = () => {
         </div>
       </main>
 
-      {/* Footer - Using UserHome Page Style */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-green-200 py-6 text-center text-green-800 text-sm select-none flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center items-center relative z-10 mt-8">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
-        <div className="flex gap-4">
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </a>
-          <a href="#" className="underline hover:text-green-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
 
       {/* Enhanced animations */}
       <style jsx>{`
@@ -335,7 +322,7 @@ const WastePickupSchedule = () => {
           animation-delay: 2s;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
