@@ -2,6 +2,40 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+// Typing Animation Component
+const TypingText = ({ text, delay = 0 }) => {
+  const characters = text.split("");
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: delay,
+      },
+    },
+  };
+
+  const characterVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.01 },
+    },
+  };
+
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      {characters.map((char, index) => (
+        <motion.span key={index} variants={characterVariants}>
+          {char}
+        </motion.span>
+      ))}
+    </motion.div>
+  );
+};
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -88,7 +122,7 @@ export default function RegisterPage() {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1545558014-8692077e9b5c?auto=format&fit=crop&w=1600&q=80')",
+              "url('https://i.pinimg.com/1200x/7f/43/03/7f4303e68af7cee0ee19a1eefad890dc.jpg')",
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-black/65 via-black/55 to-black/65" />
@@ -103,10 +137,10 @@ export default function RegisterPage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-4xl font-bold mb-4 leading-tight">
-              Let's Get Started
+              <TypingText text="Let's Get Started" delay={0.3} />
             </h1>
             <p className="text-lg text-gray-300 leading-relaxed max-w-md">
-              Join SweepOkhara and be part of a cleaner, greener future. Track waste collection, report issues, and make a real impact in your community.
+              <TypingText text="Join SweePokhara and be part of a cleaner, greener future. Track waste collection, report issues, and make a real impact in your community." delay={1.2} />
             </p>
           </motion.div>
         </div>

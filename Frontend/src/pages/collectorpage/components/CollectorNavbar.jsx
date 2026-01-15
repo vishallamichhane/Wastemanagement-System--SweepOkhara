@@ -4,6 +4,7 @@ import {
   FiCalendar, 
   FiLogOut 
 } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
 
 const CollectorNavbar = ({
@@ -33,18 +34,21 @@ const CollectorNavbar = ({
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
           
           {/* Logo */}
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="relative">
-              <GiBroom className="text-emerald-600 text-4xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500" />
-              <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+          <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
+                <GiBroom className="text-white text-xl" />
+              </div>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                  SweePokhara
+                </span>
+              </div>
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+                Collector
+              </span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-              SweepOkhara
-            </span>
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
-              Collector
-            </span>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <div className="flex items-center space-x-6">
@@ -96,7 +100,7 @@ const CollectorNavbar = ({
 const NavButton = ({ icon: Icon, label, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 ${
+    className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
       active
         ? "text-emerald-700 bg-emerald-50/80 shadow-sm"
         : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
@@ -108,7 +112,7 @@ const NavButton = ({ icon: Icon, label, active, onClick }) => (
     </div>
     <span
       className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 ${
-        active ? "w-4/5 left-1/10" : "w-0"
+        active ? "w-4/5 left-1/10" : "w-0 group-hover:w-4/5 group-hover:left-1/10"
       }`}
     />
   </button>

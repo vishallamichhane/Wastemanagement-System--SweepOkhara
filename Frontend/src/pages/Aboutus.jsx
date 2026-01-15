@@ -29,7 +29,7 @@ export default function AboutPage() {
         {/* Enhanced About Heading */}
         <section className="max-w-4xl mx-auto text-center mb-24 animate-fade-in-up">
           <h1 className="text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-6">
-            About Sweepokhara
+            About SweePokhara
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
             We are a team of passionate individuals dedicated to leveraging technology for a cleaner, greener, and more sustainable Pokhara. Our mission is to empower citizens and streamline waste management for a healthier community.
@@ -44,7 +44,7 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-4 text-gray-600 text-lg leading-relaxed">
               <p>
-                Sweepokhara was born from a simple idea: that every citizen deserves to live in a clean and healthy environment. Frustrated by inefficient waste management systems, we envisioned a platform that could connect residents, collectors, and city officials seamlessly. Starting in 2022, our small team began developing a smart solution to tackle Pokhara's waste challenges head-on.
+                SweePokhara was born from a simple idea: that every citizen deserves to live in a clean and healthy environment. Frustrated by inefficient waste management systems, we envisioned a platform that could connect residents, collectors, and city officials seamlessly. Starting in 2022, our small team began developing a smart solution to tackle Pokhara's waste challenges head-on.
               </p>
               <p>
                 Today, we are proud to offer a comprehensive system that not only optimizes waste collection but also fosters a sense of community ownership and environmental responsibility. Our journey is one of collaboration, innovation, and an unwavering commitment to our city.
@@ -119,7 +119,7 @@ export default function AboutPage() {
             <h2 className="text-4xl font-extrabold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
               Meet Our Team
             </h2>
-            <p className="text-xl text-gray-600 mb-12">The dedicated minds behind Sweepokhara.</p>
+            <p className="text-xl text-gray-600 mb-12">The dedicated minds behind SweePokhara.</p>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 justify-center">

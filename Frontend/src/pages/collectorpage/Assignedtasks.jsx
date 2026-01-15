@@ -400,13 +400,14 @@ const AssignedTasksPage = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
           {/* Left: Logo (from Header) */}
           <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="relative">
-              <GiBroom className="text-emerald-600 text-4xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
-              <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+            <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
+              <GiBroom className="text-white text-xl" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-              SweepOkhara
-            </span>
+            <div>
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                SweePokhara
+              </span>
+            </div>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
               Collector
             </span>
@@ -695,7 +696,7 @@ const AssignedTasksPage = () => {
 
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-emerald-200 py-8 text-center text-emerald-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10 mt-12">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
+        <span className="font-semibold">© 2024 SweePokhara. All rights reserved.</span>
         <div className="flex gap-6">
           <a href="#" className="underline hover:text-emerald-900 transition-colors duration-300 font-medium">
             Privacy Policy
@@ -752,20 +753,22 @@ const AssignedTasksPage = () => {
         /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 8px;
+          height: 8px;
         }
         
         ::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: transparent;
           border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #10b981, #0d9488);
+          background: rgba(16, 185, 129, 0.5);
           border-radius: 10px;
+          transition: background 0.3s ease;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #059669, #0f766e);
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </div>

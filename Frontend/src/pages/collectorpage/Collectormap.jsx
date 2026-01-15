@@ -592,7 +592,7 @@ const CollectorMapView = () => {
                   <MapContainer
                     center={mapCenter}
                     zoom={zoomLevel}
-                    scrollWheelZoom={true}
+                    scrollWheelZoom={false}
                     className="h-full w-full"
                     zoomControl={false}
                   >

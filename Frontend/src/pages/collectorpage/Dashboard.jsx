@@ -398,18 +398,21 @@ const CollectorDashboard = () => {
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
           {/* Left: Logo (from Header) */}
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="relative">
-              <GiBroom className="text-emerald-600 text-4xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
-              <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+          <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
+                <GiBroom className="text-white text-xl" />
+              </div>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                  SweePokhara
+                </span>
+              </div>
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+                Collector
+              </span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-              SweepOkhara
-            </span>
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
-              Collector
-            </span>
-          </div>
+          </Link>
 
           {/* Right: Navigation */}
           <div className="flex items-center space-x-6">

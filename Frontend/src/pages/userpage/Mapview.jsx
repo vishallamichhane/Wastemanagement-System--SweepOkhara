@@ -248,9 +248,9 @@ export default function MapStatusPage() {
       <main className="flex-grow mx-auto p-6 w-full max-w-7xl flex flex-col">
         {/* Header Section */}
         <div className="mb-8">
-          <Link to="/userhome" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
-            <span className="font-semibold">Back to Dashboard</span>
+            <span className="font-semibold">Back to Home</span>
           </Link>
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -299,7 +299,7 @@ export default function MapStatusPage() {
             <MapContainer
               center={[28.2096, 83.9856]}
               zoom={14}
-              scrollWheelZoom
+              scrollWheelZoom={false}
               className="h-full w-full rounded-3xl"
               zoomControl={false}
             >

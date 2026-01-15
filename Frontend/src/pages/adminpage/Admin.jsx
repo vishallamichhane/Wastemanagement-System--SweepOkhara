@@ -183,7 +183,7 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                    SweepOkhara
+                    SweePokhara
                   </span>
                   <span className="block text-xs text-gray-500 font-medium">Administration Portal</span>
                 </div>
@@ -508,7 +508,7 @@ const AdminDashboard = () => {
                       Admin Dashboard
                     </h1>
                     <p className="text-gray-600">
-                      Comprehensive overview of SweepOkhara waste management system
+                      Comprehensive overview of SweePokhara waste management system
                     </p>
                   </div>
               
@@ -730,7 +730,7 @@ const AdminDashboard = () => {
 
         main {
           scrollbar-width: thin;
-          scrollbar-color: #10b981 #f1f1f1;
+          scrollbar-color: rgba(16, 185, 129, 0.5) transparent;
         }
 
         main::-webkit-scrollbar {
@@ -739,37 +739,39 @@ const AdminDashboard = () => {
         }
 
         main::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: transparent;
           border-radius: 10px;
         }
 
         main::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #10b981, #14b8a6);
+          background: rgba(16, 185, 129, 0.5);
           border-radius: 10px;
           transition: background 0.3s ease;
         }
 
         main::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #059669, #0d9488);
+          background: rgba(16, 185, 129, 0.8);
         }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
+          height: 8px;
         }
         
         ::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: transparent;
           border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: #10b981;
+          background: rgba(16, 185, 129, 0.5);
           border-radius: 10px;
+          transition: background 0.3s ease;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: #059669;
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </div>

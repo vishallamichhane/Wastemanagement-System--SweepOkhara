@@ -72,13 +72,11 @@ export default function Home() {
       <Header />
 
       {/* Enhanced Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-10 mt-16 grid grid-cols-1 lg:grid-cols-2 items-center gap-16 relative z-10">
+      <section className="max-w-7xl mx-auto px-6 lg:px-10 mt-4 grid grid-cols-1 lg:grid-cols-2 items-center gap-16 relative z-10">
         {/* Left Content */}
         <div className="max-w-2xl space-y-8 animate-fade-in-up">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold border border-emerald-200 animate-bounce-gentle">
-              <span className="animate-pulse-slow">🚀</span> Join the Clean City Movement
-            </div>
+           
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight animate-slide-in-left">
               Creating a Cleaner{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent animate-gradient">City</span>,{" "}
@@ -172,16 +170,14 @@ export default function Home() {
           }].map(({ icon, title, desc }, index) => (
             <div
               key={title}
-              className="group bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border-2 border-emerald-100 hover:border-emerald-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up cursor-pointer"
-              style={{ animationDelay: `${index * 200}ms` }}
+              className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-2 border-emerald-100"
             >
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-teal-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10 transform group-hover:scale-110 transition-transform duration-500">
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6">
+                <div className="relative z-10">
                   {icon}
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-emerald-700 transition-colors duration-300">{title}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{title}</h3>
               <p className="text-gray-600 leading-relaxed">{desc}</p>
             </div>
           ))}
@@ -217,21 +213,21 @@ export default function Home() {
                 desc: "Get real-time updates and confirmation once the issue is resolved.",
               },
             ].map(({ img, title, desc }, index) => (
-              <div key={title} className="text-center group cursor-pointer animate-fade-in-up" style={{ animationDelay: `${index * 150}ms` }}>
-                <div className="relative mb-6 transform group-hover:scale-105 transition-all duration-500">
-                  <div className="absolute -top-2 -left-2 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg z-10 animate-bounce-gentle">
+              <div key={title} className="text-center">
+                <div className="relative mb-6">
+                  <div className="absolute -top-2 -left-2 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg z-10">
                     {index + 1}
                   </div>
-                  <div className="rounded-2xl overflow-hidden shadow-lg transition-all duration-500 group-hover:shadow-2xl border-2 border-transparent group-hover:border-emerald-200">
+                  <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100">
                     <img
                       src={img}
                       alt={title}
-                      className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      className="w-full h-48 object-cover"
                       draggable={false}
                     />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
                   {title}
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
