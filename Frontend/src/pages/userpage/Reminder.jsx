@@ -4,8 +4,10 @@ import { GiBroom } from 'react-icons/gi';
 import { BsBell, BsCheckCircle, BsEnvelope, BsPhone } from 'react-icons/bs';
 import { FiLogOut, FiChevronLeft } from 'react-icons/fi';
 import Header from './components/Header';
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 const PickupReminders = () => {
+  useScrollToTop();
   const [notificationMethods, setNotificationMethods] = useState({
     inApp: false,
     email: true,
@@ -59,7 +61,7 @@ const PickupReminders = () => {
       <main className="flex-grow max-w-4xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <Link to="/schedule" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+          <Link to="/user/schedule" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
             <span className="font-semibold">Back to Schedule</span>
           </Link>
@@ -422,6 +424,27 @@ const PickupReminders = () => {
         
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </>

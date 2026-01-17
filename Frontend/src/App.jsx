@@ -62,17 +62,19 @@ function App() {
       {/* Routes for user layout */}
       <Route path="/user" element={<UserLayout />} > 
           <Route index element={<UserHomePage />} />
-          <Route path='schedule' element= {<SchedulePage/>}/>
+          <Route path='schedule' element= {<SchedulePage/>}>
+            <Route path='reminder' element= {<ReminderPage/>}/>
+          </Route>
           <Route path='myreport' element= {<MyRepotPage/>}/>
-          <Route path='reminder' element= {<ReminderPage/>}/>
           <Route path='report' element= {<ReportPage/>}/>
           <Route path='awareness2' element= {<Awareness2Page/>}/>
           <Route path='awareness1' element= {<Awareness1Page/>}/>
           <Route path='awareness3' element= {<Awareness3Page/>}/>
-          <Route path='profile' element= {<ProfilePage/>}/>
-          <Route path='privacy' element= {<PrivacySettingsPage/>}/>
+          <Route path='profile' element= {<ProfilePage/>}>
+            <Route path='privacy' element= {<PrivacySettingsPage/>}/>
+            <Route path='changepw' element= {<ChangePasswordPage/>}/>
+          </Route>
           <Route path='map' element= {<MapPage/>}/>
-          <Route path='changepw' element= {<ChangePasswordPage/>}/>
           <Route path='policy' element= {<Privacy_PolicyPage/>}/>
           <Route path='terms' element= {<TermsPage/>}/>
       </Route> 

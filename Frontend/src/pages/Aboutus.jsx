@@ -3,9 +3,11 @@ import { GiBroom, GiRocket } from "react-icons/gi";
 import { BsEye, BsHeart, BsArrowRight } from "react-icons/bs";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import useScrollToTop from "../hooks/useScrollToTop";
 
 
 export default function AboutPage() {
+  useScrollToTop();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -261,6 +263,27 @@ export default function AboutPage() {
         
         .animation-delay-3000 {
           animation-delay: 3s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </div>

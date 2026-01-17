@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { BsCalendarEvent, BsMapFill, BsExclamationTriangle, BsCheckCircle, BsClock, BsTrash } from "react-icons/bs";
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 
 export default function UserHomePage() {
+  useScrollToTop();
 
   return (
     <>
@@ -277,6 +279,27 @@ export default function UserHomePage() {
         
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </>

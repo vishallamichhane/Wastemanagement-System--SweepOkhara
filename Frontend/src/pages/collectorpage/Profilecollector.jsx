@@ -30,6 +30,8 @@ import {
 } from "react-icons/bs";
 import { GiBroom, GiPathDistance, GiRank3 } from "react-icons/gi";
 import { MdOutlineVerified, MdLocationPin, MdWorkHistory } from "react-icons/md";
+import useScrollToTop from "../../hooks/useScrollToTop";
+import CollectorNotificationCenter from "./components/CollectorNotificationCenter";
 
 // -------------------------
 // DUMMY PROFILE DATA
@@ -200,20 +202,31 @@ const ProgressBar = ({ label, value, color, showValue = true }) => {
 // MAIN COMPONENT
 // -------------------------
 const CollectorProfile = () => {
+  useScrollToTop();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [activeNav, setActiveNav] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(collectorProfileData);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const currentScroll = window.scrollY;
+      setIsScrolled(currentScroll > 50);
+
+      if (currentScroll < lastScrollY - 10) {
+        setIsNavVisible(true);
+      } else if (currentScroll > lastScrollY + 10 && currentScroll > 80) {
+        setIsNavVisible(false);
+      }
+
+      setLastScrollY(currentScroll);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const handleEditProfile = () => {
     setIsEditing(true);
@@ -252,25 +265,30 @@ const CollectorProfile = () => {
       </div>
 
       {/* UPDATED NAVBAR - Same as Collector Dashboard */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+        isNavVisible ? 'translate-y-0' : '-translate-y-full'
+      } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
-          {/* Logo */}
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="relative">
-              <GiBroom className="text-emerald-600 text-4xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
-              <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+          {/* Logo - Match Collector Dashboard */}
+          <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
+                <GiBroom className="text-white text-xl" />
+              </div>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                  SweePokhara
+                </span>
+              </div>
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+                Collector
+              </span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-              SweepOkhara
-            </span>
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
-              Collector
-            </span>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <div className="flex items-center space-x-6">
@@ -314,7 +332,8 @@ const CollectorProfile = () => {
                             }`}></span>
                           </button>
             
-            
+            {/* Notification Center */}
+            <CollectorNotificationCenter />
             
             <button className="relative px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
               <div className="flex items-center space-x-2">
@@ -437,137 +456,19 @@ const CollectorProfile = () => {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2 border-b border-gray-200">
-            {['overview', 'performance', 'achievements', 'vehicle'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 font-medium transition-all duration-300 relative ${
-                  activeTab === tab
-                    ? 'text-emerald-700 border-b-2 border-emerald-600'
-                    : 'text-gray-600 hover:text-emerald-700'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Personal Info */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Performance Stats */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <BsGraphUp className="text-emerald-600" />
-                  Performance Overview
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <ProfileStatCard
-                    title="Total Collections"
-                    value={profileData.performance.totalCollections}
-                    icon={BsFillTrashFill}
-                    color="emerald"
-                    trend={2.5}
-                  />
-                  <ProfileStatCard
-                    title="Efficiency Rate"
-                    value={profileData.performance.efficiency}
-                    icon={FiTrendingUp}
-                    color="blue"
-                    unit="%"
-                    trend={1.2}
-                  />
-                  <ProfileStatCard
-                    title="Accuracy Score"
-                    value={profileData.performance.accuracy}
-                    icon={FiCheckCircle}
-                    color="purple"
-                    unit="%"
-                    trend={0.8}
-                  />
-                  <ProfileStatCard
-                    title="Attendance"
-                    value={profileData.performance.attendance}
-                    icon={BsCalendarCheck}
-                    color="amber"
-                    unit="%"
-                    trend={0.3}
-                  />
-                </div>
-                
-                {/* Progress Bars */}
-                <div className="space-y-2">
-                  <ProgressBar label="Collection Efficiency" value={profileData.performance.efficiency} color="emerald" />
-                  <ProgressBar label="Safety Compliance" value={profileData.performance.safetyScore} color="blue" />
-                  <ProgressBar label="Route Optimization" value={92.3} color="purple" />
-                  <ProgressBar label="Customer Satisfaction" value={96.8} color="amber" />
-                </div>
-              </div>
-
-              {/* Current Tasks */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <BsTruck className="text-emerald-600" />
-                  Current Task Status
-                </h2>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Object.entries(profileData.currentTasks).map(([key, value]) => {
-                    const labels = {
-                      today: 'Today',
-                      pending: 'Pending',
-                      inProgress: 'In Progress',
-                      completed: 'Completed'
-                    };
-                    
-                    const colors = {
-                      today: 'bg-emerald-500',
-                      pending: 'bg-amber-500',
-                      inProgress: 'bg-blue-500',
-                      completed: 'bg-purple-500'
-                    };
-                    
-                    return (
-                      <div key={key} className="text-center">
-                        <div className={`text-4xl font-bold mb-2 ${key === 'completed' ? 'text-emerald-700' : 'text-gray-900'}`}>
-                          {value}
-                        </div>
-                        <div className="flex items-center justify-center">
-                          <div className={`w-3 h-3 rounded-full ${colors[key]} mr-2`}></div>
-                          <span className="text-sm text-gray-600">{labels[key]}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                  <p className="text-sm text-emerald-800 font-medium">
-                    <span className="font-bold">Tip:</span> Complete 3 more pending tasks today to maintain your Gold Tier status!
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Personal Details */}
-            <div className="space-y-8">
-              {/* Contact Information */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <BsPeople className="text-emerald-600" />
-                  Contact Information
-                </h2>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
-                    <FiPhone className="text-gray-500" />
+        {/* Profile Content */}
+        <div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Contact Information */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <BsPeople className="text-emerald-600" />
+                Contact Information
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                  <FiPhone className="text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Phone</p>
                       <p className="font-medium">{profileData.contact.phone}</p>
@@ -600,46 +501,8 @@ const CollectorProfile = () => {
                 </div>
               </div>
 
-              {/* Vehicle Info */}
-              <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-2xl p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <BsTruck className="text-emerald-400" />
-                  Assigned Vehicle
-                </h2>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Vehicle ID</span>
-                    <span className="font-bold text-xl">{profileData.vehicle.id}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Type</span>
-                    <span className="font-semibold">{profileData.vehicle.type}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Capacity</span>
-                    <span className="font-semibold">{profileData.vehicle.capacity}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Status</span>
-                    <span className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                      {profileData.vehicle.status}
-                    </span>
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-gray-700">
-                    <p className="text-sm text-gray-400">Next Service Due</p>
-                    <p className="font-semibold text-lg">{profileData.vehicle.nextService}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employment Details */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
+            {/* Employment Details */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Employment Details</h2>
                 
                 <div className="space-y-3">
@@ -668,164 +531,6 @@ const CollectorProfile = () => {
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === 'performance' && (
-          <div className="space-y-8">
-            {/* Performance Metrics */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Performance Metrics</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <ProfileStatCard
-                  title="Total Distance"
-                  value={profileData.stats.totalDistance}
-                  icon={GiPathDistance}
-                  color="blue"
-                />
-                <ProfileStatCard
-                  title="Bins Collected"
-                  value={profileData.stats.binsCollected}
-                  icon={BsFillTrashFill}
-                  color="emerald"
-                />
-                <ProfileStatCard
-                  title="Working Hours"
-                  value={profileData.stats.workingHours}
-                  icon={FiClock}
-                  color="purple"
-                />
-                <ProfileStatCard
-                  title="Carbon Saved"
-                  value={profileData.stats.carbonSaved}
-                  icon={BsShieldCheck}
-                  color="amber"
-                />
-              </div>
-              
-              {/* Monthly Performance Chart (Placeholder) */}
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Performance Trend</h3>
-                <div className="h-48 bg-white/80 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">Performance chart visualization would appear here</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'achievements' && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <FiAward className="text-amber-600" />
-                Achievements & Badges
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {profileData.achievements.map(achievement => (
-                  <AchievementCard key={achievement.id} achievement={achievement} />
-                ))}
-              </div>
-              
-              {/* Badge Collection */}
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Badge Collection</h3>
-                <div className="flex flex-wrap gap-4">
-                  {['Gold Tier', 'Safety Star', 'Efficiency Expert', 'Customer Champion', 'Perfect Attendance', 'Route Master'].map(badge => (
-                    <div key={badge} className="flex flex-col items-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-amber-200 to-yellow-200 rounded-full flex items-center justify-center mb-2">
-                        <FiAward className="text-amber-600 text-2xl" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700">{badge}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'vehicle' && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Vehicle Details & Maintenance</h2>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Vehicle Info */}
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Vehicle Specifications</h3>
-                  <div className="space-y-4">
-                    {Object.entries(profileData.vehicle).map(([key, value]) => {
-                      const labels = {
-                        id: 'Vehicle ID',
-                        type: 'Vehicle Type',
-                        capacity: 'Capacity',
-                        registration: 'Registration',
-                        lastService: 'Last Service',
-                        nextService: 'Next Service Due',
-                        status: 'Current Status',
-                        fuelType: 'Fuel Type'
-                      };
-                      
-                      return (
-                        <div key={key} className="flex justify-between items-center py-3 border-b border-gray-100">
-                          <span className="text-gray-600">{labels[key]}</span>
-                          <span className={`font-semibold ${
-                            key === 'status' ? (
-                              value === 'Active' ? 'text-emerald-600' : 'text-amber-600'
-                            ) : 'text-gray-900'
-                          }`}>
-                            {value}
-                            {key === 'status' && (
-                              <div className={`inline-block w-2 h-2 rounded-full ml-2 ${
-                                value === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                              }`}></div>
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                
-                {/* Maintenance Schedule */}
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Maintenance Schedule</h3>
-                  <div className="space-y-4">
-                    {[
-                      { service: 'Oil Change', due: 'In 500 km', status: 'Upcoming' },
-                      { service: 'Tire Rotation', due: 'In 2 weeks', status: 'Scheduled' },
-                      { service: 'Brake Inspection', due: 'Next month', status: 'Planned' },
-                      { service: 'Engine Tune-up', due: 'In 3 months', status: 'Future' }
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-300">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{item.service}</h4>
-                          <p className="text-sm text-gray-600">{item.due}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          item.status === 'Upcoming' ? 'bg-amber-100 text-amber-800' :
-                          item.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' :
-                          item.status === 'Planned' ? 'bg-emerald-100 text-emerald-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
-                    <p className="text-sm text-blue-800 font-medium">
-                      <span className="font-bold">Note:</span> Regular maintenance ensures vehicle efficiency and safety compliance.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
 
       {/* Footer */}
@@ -867,6 +572,27 @@ const CollectorProfile = () => {
         
         .animate-float-medium {
           animation: float-medium 6s ease-in-out infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </div>

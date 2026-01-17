@@ -25,6 +25,8 @@ import { GiBroom } from "react-icons/gi";
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import useScrollToTop from "../../hooks/useScrollToTop";
+import CollectorNotificationCenter from "./components/CollectorNotificationCenter";
 
 // -------------------------
 // ENHANCED VEHICLE SVG ICON (From your map)
@@ -273,11 +275,11 @@ const MapSection = () => {
         </div>
       </div>
       
-      <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200">
+      <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200" style={{ zIndex: 0, position: "relative" }}>
         <MapContainer
           center={[28.2096, 83.9856]}
           zoom={14}
-          style={{ height: '100%', width: '100%' }}
+          style={{ height: '100%', width: '100%', zIndex: 0, position: "relative" }}
           zoomControl={false}
         >
           <TileLayer
@@ -365,21 +367,29 @@ const MapSection = () => {
 // MAIN COMPONENT
 // -------------------------
 const CollectorDashboard = () => {
+  useScrollToTop();
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+      const currentScroll = window.scrollY;
+      setIsScrolled(currentScroll > 50);
+
+      if (currentScroll < lastScrollY - 10) {
+        setIsNavVisible(true);
+      } else if (currentScroll > lastScrollY + 10 && currentScroll > 80) {
+        setIsNavVisible(false);
       }
+
+      setLastScrollY(currentScroll);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-100 text-gray-900 flex flex-col">
@@ -391,7 +401,9 @@ const CollectorDashboard = () => {
       </div>
 
       {/* Enhanced Navbar with Header styling */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+        isNavVisible ? 'translate-y-0' : '-translate-y-full'
+      } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
@@ -455,6 +467,9 @@ const CollectorDashboard = () => {
                 activeNav === 'schedule' ? "w-4/5 left-1/10" : ""
               }`}></span>
             </button>
+            
+            {/* Notification Center */}
+            <CollectorNotificationCenter />
             
             <button 
               onClick={() => navigate('/login')}
@@ -651,6 +666,27 @@ const CollectorDashboard = () => {
           animation-delay: 3s;
         }
 
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
+        }
+
         /* Custom popup styles */
         :global(.custom-popup .leaflet-popup-content-wrapper) {
           border-radius: 12px;
@@ -661,6 +697,32 @@ const CollectorDashboard = () => {
         :global(.custom-popup .leaflet-popup-tip) {
           background: white;
           border: 1px solid #e5e7eb;
+        }
+
+        /* Fix z-index for leaflet map to stay below navbar (navbar is z-50) */
+        :global(.leaflet-container) {
+          z-index: 0 !important;
+          position: relative !important;
+        }
+        
+        :global(.leaflet-pane),
+        :global(.leaflet-map-pane),
+        :global(.leaflet-tile-pane),
+        :global(.leaflet-overlay-pane),
+        :global(.leaflet-shadow-pane),
+        :global(.leaflet-marker-pane),
+        :global(.leaflet-tooltip-pane),
+        :global(.leaflet-popup-pane) {
+          z-index: auto !important;
+        }
+        
+        :global(.leaflet-top),
+        :global(.leaflet-bottom) {
+          z-index: 400 !important;
+        }
+        
+        :global(.leaflet-control) {
+          z-index: 400 !important;
         }
       `}</style>
     </div>

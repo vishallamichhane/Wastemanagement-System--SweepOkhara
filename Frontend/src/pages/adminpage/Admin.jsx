@@ -23,6 +23,7 @@ import {
 } from "react-icons/bs";
 import { GiBroom } from "react-icons/gi";
 import { TbReportAnalytics } from "react-icons/tb";
+import useScrollToTop from "../../hooks/useScrollToTop";
 import UserManagement from "./UserManagement";
 import CollectorManagement from "./CollectorManagement";
 import ReportsAnalytics from "./ReportsAnalytics";
@@ -87,12 +88,34 @@ const StatCard = ({ title, value, change, icon: Icon, color, trend = "up" }) => 
 };
 
 const AdminDashboard = () => {
+  useScrollToTop();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(3);
   const [dateRange, setDateRange] = useState("today");
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Handle scroll for navbar hide/show animation
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Hide navbar when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsNavVisible(false);
+      } else {
+        setIsNavVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   // Sample Notifications Data
   const [notifications, setNotifications] = useState([
@@ -163,7 +186,9 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 text-gray-900 flex flex-col">
       {/* Top Navigation Bar */}
-      <nav className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <nav className={`bg-white/95 backdrop-blur-md border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm transition-all duration-500 ${
+        isNavVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left: Logo and Brand */}
@@ -341,11 +366,14 @@ const AdminDashboard = () => {
         </div>
       </nav>
 
+      {/* Spacer for fixed navbar */}
+      <div className="h-16"></div>
+
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className={`
-          fixed top-16 left-0 z-40 h-[calc(100vh-64px)] w-64 bg-white/95 backdrop-blur-md border-r border-gray-200 transform transition-all duration-300 ease-in-out
+          fixed top-24 left-0 z-40 h-[calc(100vh-96px)] w-64 bg-white/95 backdrop-blur-md border-r border-gray-200 transform transition-all duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 overflow-y-auto
         `}>
           <div className="h-full flex flex-col">

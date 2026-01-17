@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [role, setRole] = useState("general");
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +21,26 @@ export default function LoginPage() {
   const onSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      alert(`Logging in as ${role === "general" ? "General User" : "Waste Collector"} with email: ${form.email}`);
+      // Dummy authentication - check against registered users in localStorage
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const user = registeredUsers.find(u => u.email === form.email);
+      
+      if (user && user.password === form.password) {
+        // Store logged-in user data
+        localStorage.setItem('currentUser', JSON.stringify({
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          address: user.address,
+          ward: user.ward,
+          role: role
+        }));
+        alert(`Welcome ${user.fullName}!`);
+        navigate('/user');
+      } else {
+        setErrors({ password: 'Email or password is incorrect' });
+      }
     }
   };
 

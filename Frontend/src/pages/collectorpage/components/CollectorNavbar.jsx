@@ -6,6 +6,7 @@ import {
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
+import CollectorNotificationCenter from './CollectorNotificationCenter';
 
 const CollectorNavbar = ({
   activeNav = "home",
@@ -13,14 +14,31 @@ const CollectorNavbar = ({
   collectorData
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+      
+      // Hide navbar when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   return (
     <>
@@ -29,6 +47,8 @@ const CollectorNavbar = ({
           isScrolled
             ? "bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100"
             : "bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg"
+        } ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
@@ -65,7 +85,12 @@ const CollectorNavbar = ({
               active={activeNav === "schedule"}
               onClick={() => onNavChange("schedule")}
             />
+          </div>
 
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-4">
+            <CollectorNotificationCenter />
+            
             <button className="px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:bg-emerald-50 transition-all duration-300">
               <div className="flex items-center space-x-2">
                 <FiLogOut />

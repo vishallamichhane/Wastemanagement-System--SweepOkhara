@@ -3,8 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { BsShieldCheck, BsFileText, BsPeople, BsLock, BsGlobe, BsCheckCircle, BsArrowLeft } from "react-icons/bs";
 import { GiBroom } from "react-icons/gi";
 import Header from "./components/Header";
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 export default function PrivacyPolicyPage() {
+  useScrollToTop();
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
 
@@ -252,6 +254,27 @@ export default function PrivacyPolicyPage() {
         
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </>

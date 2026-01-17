@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { BsCalendarEvent, BsBell, BsMapFill, BsExclamationTriangle, BsPerson, BsEnvelope, BsTelephone, BsHouse, BsCamera, BsCheck, BsPencil, BsShieldCheck } from "react-icons/bs";
 import { FiLogOut, FiUser, FiSettings } from "react-icons/fi";
 import { GiBroom } from "react-icons/gi";
 import Header from "./components/Header";
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 export default function UserProfilePage() {
+  useScrollToTop();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProfileRoot = location.pathname === '/user/profile';
 
   const [userData, setUserData] = useState({
     fullName: "John Doe",
@@ -55,6 +59,9 @@ export default function UserProfilePage() {
 
   return (
     <>
+      <Outlet />
+      {isProfileRoot && (
+      <>
       {/* Main content */}
       <main className="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-8 relative z-10">
         {/* Back button and header */}
@@ -259,7 +266,7 @@ export default function UserProfilePage() {
               
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link to="/changepw" className="block">
+                <Link to="/user/profile/changepw" className="block">
                 <button className="p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-emerald-200 transition-all duration-300 text-left group">
                   <div className="text-emerald-600 mb-2">🔒</div>
                   <h4 className="font-semibold text-gray-800 group-hover:text-emerald-700">Change Password</h4>
@@ -267,20 +274,12 @@ export default function UserProfilePage() {
                 </button>
                 </Link>
 
-                <Link to="/privacy" className="block">
+                <Link to="/user/profile/privacy" className="block">
                   <button className="w-full p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-emerald-200 transition-all duration-300 text-left group">
                     <div className="text-emerald-600 mb-2">👥</div>
                     <h4 className="font-semibold text-gray-800 group-hover:text-emerald-700">Privacy Settings</h4>
                     <p className="text-sm text-gray-600">Control your data visibility</p>
                   </button>
-                </Link>
-                
-                <Link to="/myreport" className="block">
-                <button className="p-4 bg-gray-50/50 rounded-xl border border-gray-200 hover:bg-white hover:border-emerald-200 transition-all duration-300 text-left group">
-                  <div className="text-emerald-600 mb-2">📋</div>
-                  <h4 className="font-semibold text-gray-800 group-hover:text-emerald-700">My Reports</h4>
-                  <p className="text-sm text-gray-600">View your submitted reports</p>
-                </button>
                 </Link>
                 
               </div>
@@ -352,7 +351,30 @@ export default function UserProfilePage() {
         .animation-delay-2000 {
           animation-delay: 2s;
         }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
+        }
       `}</style>
+      </>
+      )}
     </>
   );
 }

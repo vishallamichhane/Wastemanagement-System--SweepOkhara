@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { 
   FiArrowLeft,
   FiFilter,
@@ -27,6 +27,8 @@ import { MdOutlineDeleteSweep, MdMyLocation } from "react-icons/md";
 import { TbRoute } from "react-icons/tb";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import useScrollToTop from "../../hooks/useScrollToTop";
+import CollectorNotificationCenter from "./components/CollectorNotificationCenter";
 
 import {
   MapContainer,
@@ -232,8 +234,11 @@ const createVehicleIcon = () => {
 // MAIN COMPONENT
 // -------------------------
 const CollectorMapView = () => {
+  useScrollToTop();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBin, setSelectedBin] = useState(null);
@@ -245,11 +250,20 @@ const CollectorMapView = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const currentScroll = window.scrollY;
+      setIsScrolled(currentScroll > 50);
+
+      if (currentScroll < lastScrollY - 10) {
+        setIsNavVisible(true);
+      } else if (currentScroll > lastScrollY + 10 && currentScroll > 80) {
+        setIsNavVisible(false);
+      }
+
+      setLastScrollY(currentScroll);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   // Get user's current location
   useEffect(() => {
@@ -344,25 +358,30 @@ const CollectorMapView = () => {
       </div>
 
       {/* SAME NAVBAR AS ASSIGNED TASKS PAGE */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+        isNavVisible ? 'translate-y-0' : '-translate-y-full'
+      } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
-          {/* Logo */}
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="relative">
-              <GiBroom className="text-emerald-600 text-4xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
-              <div className="absolute inset-0 bg-emerald-400 rounded-full blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+          {/* Logo - Match Collector Dashboard */}
+          <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
+                <GiBroom className="text-white text-xl" />
+              </div>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                  SweePokhara
+                </span>
+              </div>
+              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+                Collector
+              </span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-              SweepOkhara
-            </span>
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
-              Collector
-            </span>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <div className="flex items-center space-x-6">
@@ -405,6 +424,9 @@ const CollectorMapView = () => {
                               activeNav === 'schedule' ? "w-4/5 left-1/10" : ""
                             }`}></span>
                           </button>
+            
+            {/* Notification Center */}
+            <CollectorNotificationCenter />
             
             <button className="relative px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
               <div className="flex items-center space-x-2">
@@ -587,13 +609,14 @@ const CollectorMapView = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Map Container - 2/3 width */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[600px] border border-emerald-100">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[600px] border border-emerald-100" style={{ zIndex: 0, position: "relative" }}>
                 {typeof window !== 'undefined' && MapContainer ? (
                   <MapContainer
                     center={mapCenter}
                     zoom={zoomLevel}
                     scrollWheelZoom={false}
                     className="h-full w-full"
+                    style={{ zIndex: 0, position: "relative" }}
                     zoomControl={false}
                   >
                     <TileLayer
@@ -796,16 +819,6 @@ const CollectorMapView = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <button 
-                    onClick={() => setMapCenter(userLocation)}
-                    className="w-full flex items-center justify-between p-3 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-colors duration-300"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <MdMyLocation className="text-xl" />
-                      <span>Go to My Location</span>
-                    </div>
-                    <FiChevronRight />
-                  </button>
-                  <button 
                     onClick={() => navigate('/collector/tasks')}
                     className="w-full flex items-center justify-between p-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors duration-300"
                   >
@@ -998,6 +1011,27 @@ const CollectorMapView = () => {
           animation: float-medium 6s ease-in-out infinite;
         }
 
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
+        }
+
         /* Leaflet popup customization */
         :global(.leaflet-popup-content-wrapper) {
           border-radius: 12px;
@@ -1008,6 +1042,32 @@ const CollectorMapView = () => {
         :global(.leaflet-popup-tip) {
           background: white;
           border: 1px solid #e5e7eb;
+        }
+
+        /* Fix z-index for leaflet map to stay below navbar (navbar is z-50) */
+        :global(.leaflet-container) {
+          z-index: 0 !important;
+          position: relative !important;
+        }
+        
+        :global(.leaflet-pane),
+        :global(.leaflet-map-pane),
+        :global(.leaflet-tile-pane),
+        :global(.leaflet-overlay-pane),
+        :global(.leaflet-shadow-pane),
+        :global(.leaflet-marker-pane),
+        :global(.leaflet-tooltip-pane),
+        :global(.leaflet-popup-pane) {
+          z-index: auto !important;
+        }
+        
+        :global(.leaflet-top),
+        :global(.leaflet-bottom) {
+          z-index: 400 !important;
+        }
+        
+        :global(.leaflet-control) {
+          z-index: 400 !important;
         }
       `}</style>
     </div>

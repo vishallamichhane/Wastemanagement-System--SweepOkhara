@@ -6,6 +6,7 @@ import { GiBroom } from "react-icons/gi";
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 // -------------------------
 // ENHANCED VEHICLE SVG ICON
@@ -295,13 +296,14 @@ export default function MapStatusPage() {
 
         {/* MAP OR LIST */}
         {viewMode === "map" ? (
-          <div className="rounded-3xl overflow-hidden shadow-2xl border border-emerald-200 flex-grow bg-white/80 backdrop-blur-sm" style={{ height: "70vh" }}>
+          <div className="rounded-3xl overflow-hidden shadow-2xl border border-emerald-200 flex-grow bg-white/80 backdrop-blur-sm relative" style={{ height: "70vh", zIndex: 0, position: "relative" }}>
             <MapContainer
               center={[28.2096, 83.9856]}
               zoom={14}
               scrollWheelZoom={false}
               className="h-full w-full rounded-3xl"
               zoomControl={false}
+              style={{ zIndex: 0, position: "relative" }}
             >
               <TileLayer 
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -502,6 +504,27 @@ export default function MapStatusPage() {
           animation-delay: 2s;
         }
 
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
+        }
+
         /* Custom popup styles */
         :global(.custom-popup .leaflet-popup-content-wrapper) {
           border-radius: 12px;
@@ -512,6 +535,32 @@ export default function MapStatusPage() {
         :global(.custom-popup .leaflet-popup-tip) {
           background: white;
           border: 1px solid #e5e7eb;
+        }
+
+        /* Fix z-index for leaflet map to stay below navbar (navbar is z-50) */
+        :global(.leaflet-container) {
+          z-index: 0 !important;
+          position: relative !important;
+        }
+        
+        :global(.leaflet-pane),
+        :global(.leaflet-map-pane),
+        :global(.leaflet-tile-pane),
+        :global(.leaflet-overlay-pane),
+        :global(.leaflet-shadow-pane),
+        :global(.leaflet-marker-pane),
+        :global(.leaflet-tooltip-pane),
+        :global(.leaflet-popup-pane) {
+          z-index: auto !important;
+        }
+        
+        :global(.leaflet-top),
+        :global(.leaflet-bottom) {
+          z-index: 400 !important;
+        }
+        
+        :global(.leaflet-control) {
+          z-index: 400 !important;
         }
       `}</style>
     </>

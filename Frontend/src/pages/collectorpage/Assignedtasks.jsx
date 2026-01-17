@@ -23,6 +23,8 @@ import {
 } from "react-icons/bs";
 import { GiBroom, GiPathDistance } from "react-icons/gi";
 import { MdAssignmentTurnedIn, MdOutlineDeleteSweep } from "react-icons/md";
+import useScrollToTop from "../../hooks/useScrollToTop";
+import CollectorNotificationCenter from "./components/CollectorNotificationCenter";
 
 // -------------------------
 // STATIC DATA - Dummy data that can be replaced with backend
@@ -339,19 +341,33 @@ const FilterSection = ({ activeFilter, setActiveFilter }) => {
 // MAIN COMPONENT
 // -------------------------
 const AssignedTasksPage = () => {
+  useScrollToTop();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState(assignedTasksData.tasks);
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeNav, setActiveNav] = useState('tasks');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 50);
+
+      // Hide navbar when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsNavVisible(false);
+      } else {
+        setIsNavVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const handleStatusChange = (taskId, newStatus) => {
     setTasks(prev => prev.map(task => 
@@ -396,7 +412,7 @@ const AssignedTasksPage = () => {
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
-      }`}>
+      } ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
           {/* Left: Logo (from Header) */}
           <div className="flex items-center space-x-3 group cursor-pointer">
@@ -436,9 +452,9 @@ const AssignedTasksPage = () => {
             </button>
             
             <button
-              onClick={() => setActiveNav('schedule')}
+              onClick={() => setActiveNav('tasks')}
               className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
-                activeNav === 'schedule' 
+                activeNav === 'tasks' 
                   ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
                   : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
               }`}
@@ -448,9 +464,12 @@ const AssignedTasksPage = () => {
                 <span className="font-semibold">Schedule</span>
               </div>
               <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
-                activeNav === 'schedule' ? "w-4/5 left-1/10" : ""
+                activeNav === 'tasks' ? "w-4/5 left-1/10" : ""
               }`}></span>
             </button>
+            
+            {/* Notification Center */}
+            <CollectorNotificationCenter />
             
             <button className="relative px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
               <div className="flex items-center space-x-2">
@@ -461,7 +480,10 @@ const AssignedTasksPage = () => {
             </button>
             
             {/* Profile - Using data from assignedTasksData */}
-            <div className="flex items-center space-x-3">
+            <div 
+              onClick={() => navigate('/collector/profile')}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
               <div className="text-right hidden md:block">
                 <p className="text-sm font-semibold">{assignedTasksData.collector.name}</p>
                 <p className="text-xs text-gray-500">Collector ID: {assignedTasksData.collector.id}</p>
@@ -643,55 +665,7 @@ const AssignedTasksPage = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <BsTruck className="text-emerald-600" />
-            Quick Actions
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <button 
-              onClick={() => {
-                const pendingTask = tasks.find(t => t.status === 'pending');
-                if (pendingTask) {
-                  handleStatusChange(pendingTask.id, 'in-progress');
-                }
-              }}
-              disabled={!tasks.find(t => t.status === 'pending')}
-              className="bg-white px-4 py-3 rounded-xl text-center hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="text-lg font-semibold text-emerald-700 mb-1">Start Next Task</div>
-              <div className="text-sm text-gray-600">Begin nearest collection</div>
-            </button>
-            
-            <button 
-              onClick={() => {
-                const inProgressTask = tasks.find(t => t.status === 'in-progress');
-                if (inProgressTask) {
-                  handleStatusChange(inProgressTask.id, 'completed');
-                }
-              }}
-              disabled={!tasks.find(t => t.status === 'in-progress')}
-              className="bg-white px-4 py-3 rounded-xl text-center hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="text-lg font-semibold text-emerald-700 mb-1">Mark Current Complete</div>
-              <div className="text-sm text-gray-600">Finish active collection</div>
-            </button>
-            
-            <button 
-              onClick={handleNavigateToMap}
-              className="bg-white px-4 py-3 rounded-xl text-center hover:shadow-md transition-all duration-300"
-            >
-              <div className="text-lg font-semibold text-emerald-700 mb-1">View Route Map</div>
-              <div className="text-sm text-gray-600">See all locations</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Footer Note */}
-        <div className="text-center text-gray-500 text-sm mb-6">
-          <p>Task status updates in real-time. Refresh page to sync with server.</p>
-        </div>
+       
       </main>
 
       {/* Footer */}

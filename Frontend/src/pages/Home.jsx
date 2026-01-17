@@ -1,26 +1,28 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
 import { BsTruck, BsExclamationTriangle, BsLightbulb, BsArrowRight, BsChevronLeft, BsChevronRight } from "react-icons/bs";
 import Header from "../components/Header";
+import useScrollToTop from "../hooks/useScrollToTop";
 
 const testimonials = [
   {
     quote: "SweePokhara has transformed our neighborhood. It's so easy to report issues, and the community has never been cleaner.",
-    name: "Jane Doe",
+    name: "Ashwin Rajbomsi",
     role: "Community Leader",
-    image: "https://randomuser.me/api/portraits/women/68.jpg",
+    image: "https://i.pinimg.com/1200x/30/e5/18/30e5185980e8eca9a44f8647f7780d0c.jpg",
   },
   {
     quote: "The app makes waste reporting and scheduling super accessible. A true community enhancer!",
-    name: "John Smith",
+    name: "Awan Poudel",
     role: "Local Resident",
-    image: "https://randomuser.me/api/portraits/men/75.jpg",
+    image: "https://i.pinimg.com/1200x/30/e5/18/30e5185980e8eca9a44f8647f7780d0c.jpg",
   },
   {
     quote: "Thanks to SweePokhara, our parks and streets have become cleaner and healthier spaces for everyone.",
-    name: "Emily Clark",
+    name: "Bibek Lamichhane",
     role: "Environmental Activist",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
+    image: "https://i.pinimg.com/1200x/30/e5/18/30e5185980e8eca9a44f8647f7780d0c.jpg",
   },
 ];
 
@@ -32,6 +34,8 @@ const slidingImages = [
 ];
 
 export default function Home() {
+  useScrollToTop();
+  const navigate = useNavigate();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -305,7 +309,9 @@ export default function Home() {
             <p className="text-emerald-100 text-xl mb-8 max-w-2xl mx-auto animate-fade-in animation-delay-300">
               Register today and become an active part of the solution. Let's make our city a better place, one report at a time.
             </p>
-            <button className="bg-white text-emerald-700 font-bold px-12 py-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 animate-fade-in animation-delay-600 hover:bg-emerald-50 relative overflow-hidden group">
+            <button 
+              onClick={() => navigate('/register')}
+              className="bg-white text-emerald-700 font-bold px-12 py-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 animate-fade-in animation-delay-600 hover:bg-emerald-50 relative overflow-hidden group cursor-pointer">
               <span className="absolute inset-0 bg-gradient-to-r from-emerald-100/50 to-teal-100/50 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
               <span className="relative z-10">Register Now</span>
             </button>
@@ -362,6 +368,27 @@ export default function Home() {
         
         .animation-delay-3000 {
           animation-delay: 3s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </div>

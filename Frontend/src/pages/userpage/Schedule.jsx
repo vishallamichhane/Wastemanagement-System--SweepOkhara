@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { FaCalendarAlt, FaClock, FaTruck, FaBell, FaTrashAlt, FaRecycle } from 'react-icons/fa';
 import { BsBell, BsArrowRight, BsCheckCircle } from "react-icons/bs";
 import { FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { GiBroom } from "react-icons/gi";
 import Header from './components/Header';
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 const WastePickupSchedule = () => {
+  useScrollToTop();
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [isReminderSet, setIsReminderSet] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,7 +56,7 @@ const WastePickupSchedule = () => {
     setIsReminderSet(true);
     // Navigate to reminder confirmation page after 1 second
     setTimeout(() => {
-      navigate('/reminder');
+      navigate('/user/schedule/reminder');
     }, 1000);
   };
 
@@ -81,8 +84,9 @@ const WastePickupSchedule = () => {
 
   return (
     <>
-
-      {/* Main Content */}
+      <Outlet />
+      {/* Only show schedule content when on the exact schedule route, not on child routes */}
+      {location.pathname === '/user/schedule' && (
       <main className="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
@@ -224,17 +228,6 @@ const WastePickupSchedule = () => {
                   <p className="text-base font-bold text-gray-800">Truck #SW-05</p>
                   <p className="text-xs text-blue-600 mt-1">Driver: Raj Kumar</p>
                 </div>
-
-                <div className="group p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200 hover:border-amber-400 transition-all duration-300">
-                  <h4 className="text-xs font-semibold text-amber-700 mb-1 flex items-center gap-2">
-                    <FaRecycle className="text-base" />
-                    Waste Types
-                  </h4>
-                  <div className="flex flex-wrap gap-1">
-                    <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">General</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Recyclable</span>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -260,6 +253,7 @@ const WastePickupSchedule = () => {
           </div>
         </div>
       </main>
+      )}
 
 
       {/* Enhanced animations */}
@@ -320,6 +314,27 @@ const WastePickupSchedule = () => {
         
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </>

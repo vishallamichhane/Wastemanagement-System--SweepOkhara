@@ -3,8 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { BsLock, BsEye, BsEyeSlash, BsCheckCircle, BsXCircle, BsArrowLeft } from "react-icons/bs";
 import { FiLock } from "react-icons/fi";
 import Header from "./components/Header";
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 export default function ChangePasswordPage() {
+  useScrollToTop();
   const navigate = useNavigate();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -437,6 +439,27 @@ export default function ChangePasswordPage() {
         
         .animate-fade-in-delay {
           animation: fade-in 1s ease-out 0.5s both;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </>

@@ -1,22 +1,38 @@
 import {useState, useEffect} from 'react'
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
 import { FiLogOut } from "react-icons/fi";
+import NotificationCenter from './NotificationCenter';
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+  const location = useLocation();
+  const isProfileActive = location.pathname.startsWith('/user/profile');
 
     useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > 50) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+      
+      // Hide navbar when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   return (
     <>
@@ -31,6 +47,8 @@ function Header() {
             isScrolled 
               ? 'bg-white/95 backdrop-blur-xl shadow-2xl' 
               : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
+          } ${
+            isVisible ? 'translate-y-0' : '-translate-y-full'
           }`}>
             <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
               <Link to="/user" className="transform hover:scale-105 transition-transform duration-300">
@@ -67,9 +85,14 @@ function Header() {
             ))}
           </ul>
               
-              <div className="hidden md:flex gap-4">
+              <div className="hidden md:flex gap-4 items-center">
+                <NotificationCenter />
                 <Link to="/user/profile">
-                  <button className="text-emerald-700 font-semibold px-6 py-2.5 rounded-xl border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                  <button className={`font-semibold px-6 py-2.5 rounded-xl border transition-all duration-300 ${
+                    isProfileActive
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-lg cursor-default"
+                      : "text-emerald-700 border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg hover:scale-105"
+                  }`}>
                     Profile
                   </button>
                 </Link>

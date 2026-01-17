@@ -4,14 +4,18 @@ import { GiBroom } from 'react-icons/gi';
 import { BsBell, BsEye, BsFilter, BsSearch, BsClock, BsCheckCircle, BsExclamationTriangle, BsArrowClockwise } from 'react-icons/bs';
 import { FiLogOut, FiChevronLeft } from 'react-icons/fi';
 import Header from './components/Header';
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 const MyReports = () => {
+  useScrollToTop();
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Sample reports data
   const sampleReports = [
@@ -150,6 +154,16 @@ const MyReports = () => {
     }
   };
 
+  const handleViewDetails = (report) => {
+    setSelectedReport(report);
+    setShowDetailsModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowDetailsModal(false);
+    setSelectedReport(null);
+  };
+
   return (
     <>
       {/* Main Content */}
@@ -158,7 +172,7 @@ const MyReports = () => {
         <div className="text-center mb-8 animate-fade-in-up">
           <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
-            <span className="font-semibold">Back to Dashboard</span>
+            <span className="font-semibold">Back to Home</span>
           </Link>
           
           <h1 className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-3">
@@ -293,7 +307,9 @@ const MyReports = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform">
+                        <button 
+                          onClick={() => handleViewDetails(report)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform">
                           <BsEye className="text-sm" />
                           View Details
                         </button>
@@ -317,6 +333,93 @@ const MyReports = () => {
           </Link>
         </div>
       </main>
+
+      {/* Report Details Modal */}
+      {showDetailsModal && selectedReport && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform animate-fade-in-up">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{getIssueTypeIcon(selectedReport.issueType)}</span>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{selectedReport.issueType}</h2>
+                  <p className="text-emerald-100">Report #{selectedReport.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="text-white hover:text-emerald-100 transition-colors text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-8 space-y-6">
+              {/* Status and Priority */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Status</p>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(selectedReport.status)}
+                    <span className={`font-bold ${statusConfig[selectedReport.status].color}`}>
+                      {statusConfig[selectedReport.status].label}
+                    </span>
+                  </div>
+                </div>
+                <div className={`rounded-xl p-4 border ${priorityConfig[selectedReport.priority].bgColor} bg-gradient-to-br`}>
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Priority</p>
+                  <span className={`font-bold ${priorityConfig[selectedReport.priority].color}`}>
+                    {priorityConfig[selectedReport.priority].label}
+                  </span>
+                </div>
+              </div>
+
+              {/* Report Details */}
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">📍 Location</p>
+                  <p className="text-lg font-medium text-gray-800">{selectedReport.location}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">📅 Report Date</p>
+                  <p className="text-lg font-medium text-gray-800">{selectedReport.date}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">📝 Description</p>
+                  <p className="text-gray-700 leading-relaxed">{selectedReport.description}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">👤 Assigned To</p>
+                  <p className="text-lg font-medium text-gray-800">{selectedReport.assignedTo}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">🖼️ Attached Images</p>
+                  <p className="text-lg font-medium text-gray-800">{selectedReport.images} image(s)</p>
+                  {selectedReport.images > 0 && (
+                    <p className="text-sm text-gray-500 mt-2">Images would be displayed here</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleCloseModal}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Enhanced animations */}
@@ -365,6 +468,27 @@ const MyReports = () => {
         
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(16, 185, 129, 0.5);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(16, 185, 129, 0.8);
         }
       `}</style>
     </>
