@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { authClient } from "../libs/auth";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -19,28 +20,22 @@ export default function LoginPage() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      // Dummy authentication - check against registered users in localStorage
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const user = registeredUsers.find(u => u.email === form.email);
-      
-      if (user && user.password === form.password) {
-        // Store logged-in user data
-        localStorage.setItem('currentUser', JSON.stringify({
-          id: user.id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-          address: user.address,
-          ward: user.ward,
-          role: role
-        }));
-        alert(`Welcome ${user.fullName}!`);
-        navigate('/user');
-      } else {
+            
+      try {
+          // Store logged-in user data
+          await authClient.signIn.email({
+            email: form.email,
+            password: form.password,
+          })
+          navigate('/user');
+        
+      } catch (error) {
+        console.error("Login error:", error);
         setErrors({ password: 'Email or password is incorrect' });
       }
     }

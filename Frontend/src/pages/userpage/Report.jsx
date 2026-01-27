@@ -1,64 +1,86 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { GiBroom } from 'react-icons/gi';
-import { BsBell, BsCamera, BsPinMap, BsCheckCircle, BsUpload, BsGeoAlt } from 'react-icons/bs';
-import { FiLogOut, FiChevronLeft, FiMapPin } from 'react-icons/fi';
-import Header from './components/Header';
-import useScrollToTop from '../../hooks/useScrollToTop';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { GiBroom } from "react-icons/gi";
+import {
+  BsBell,
+  BsCamera,
+  BsPinMap,
+  BsCheckCircle,
+  BsUpload,
+  BsGeoAlt,
+} from "react-icons/bs";
+import { FiLogOut, FiChevronLeft, FiMapPin } from "react-icons/fi";
+import Header from "./components/Header";
+import useScrollToTop from "../../hooks/useScrollToTop";
+import axios from "axios";
+
+
 
 const ReportIssue = () => {
   useScrollToTop();
-  const [issueType, setIssueType] = useState('missed-pickup');
-  const [location, setLocation] = useState('');
-  const [description, setDescription] = useState('');
+  const [issueType, setIssueType] = useState("missed-pickup");
+  const [issueLabel, setIssueLabel] = useState("Missed Pickup");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [locationError, setLocationError] = useState('');
+  const [locationError, setLocationError] = useState("");
   const [userCoordinates, setUserCoordinates] = useState(null);
-  const [pinnedLocation, setPinnedLocation] = useState({ latitude: '', longitude: '' });
+  const [pinnedLocation, setPinnedLocation] = useState({
+    latitude: "",
+    longitude: "",
+  });
+
+  console.log("User Coordinates:", userCoordinates);
+  console.log("Pinned Location:", pinnedLocation);
 
   const issueTypes = [
-    { id: 'missed-pickup', label: 'Missed Pickup', icon: '🚛' },
-    { id: 'overflowing-bin', label: 'Overflowing Bin', icon: '🗑️' },
-    { id: 'illegal-dumping', label: 'Illegal Dumping', icon: '⚠️' },
-    { id: 'broken-container', label: 'Broken Container', icon: '🔧' },
-    { id: 'street-litter', label: 'Street Litter', icon: '🧹' },
-    { id: 'other', label: 'Other Issue', icon: '❓' }
+    { id: "missed-pickup", label: "Missed Pickup", icon: "🚛" },
+    { id: "overflowing-bin", label: "Overflowing Bin", icon: "🗑️" },
+    { id: "illegal-dumping", label: "Illegal Dumping", icon: "⚠️" },
+    { id: "broken-container", label: "Broken Container", icon: "🔧" },
+    { id: "street-litter", label: "Street Litter", icon: "🧹" },
+    { id: "other", label: "Other Issue", icon: "❓" },
   ];
 
   // Check if geolocation is available
   const isGeolocationAvailable = () => {
-    return 'geolocation' in navigator;
+    return "geolocation" in navigator;
   };
 
   // Get current position using browser's Geolocation API
   const getCurrentLocation = () => {
     if (!isGeolocationAvailable()) {
-      setLocationError('Geolocation is not supported by your browser');
+      setLocationError("Geolocation is not supported by your browser");
       return;
     }
 
     setIsDetectingLocation(true);
-    setLocationError('');
+    setLocationError("");
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
         setUserCoordinates({ latitude, longitude });
-        setPinnedLocation({ latitude: latitude.toFixed(6), longitude: longitude.toFixed(6) });
-        
+        setPinnedLocation({
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6),
+        });
+
         try {
           // Reverse geocoding to get address from coordinates
           const address = await reverseGeocode(latitude, longitude);
           setLocation(address);
         } catch (error) {
-          console.error('Geocoding error:', error);
+          console.error("Geocoding error:", error);
           // Fallback: show coordinates if address lookup fails
           setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-          setLocationError('Could not get precise address, but location coordinates are captured');
+          setLocationError(
+            "Could not get precise address, but location coordinates are captured",
+          );
         } finally {
           setIsDetectingLocation(false);
         }
@@ -67,24 +89,28 @@ const ReportIssue = () => {
         setIsDetectingLocation(false);
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setLocationError('Location access denied. Please allow location access in your browser settings.');
+            setLocationError(
+              "Location access denied. Please allow location access in your browser settings.",
+            );
             break;
           case error.POSITION_UNAVAILABLE:
-            setLocationError('Location information unavailable.');
+            setLocationError("Location information unavailable.");
             break;
           case error.TIMEOUT:
-            setLocationError('Location request timed out.');
+            setLocationError("Location request timed out.");
             break;
           default:
-            setLocationError('An unknown error occurred while getting location.');
+            setLocationError(
+              "An unknown error occurred while getting location.",
+            );
             break;
         }
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 60000
-      }
+        maximumAge: 60000,
+      },
     );
   };
 
@@ -92,25 +118,28 @@ const ReportIssue = () => {
   const reverseGeocode = async (lat, lng) => {
     try {
       const response = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
       );
-      
+
       if (!response.ok) {
-        throw new Error('Geocoding service unavailable');
+        throw new Error("Geocoding service unavailable");
       }
-      
+
       const data = await response.json();
-      
+
       // Construct address from available components
       const addressComponents = [];
       if (data.locality) addressComponents.push(data.locality);
       if (data.city) addressComponents.push(data.city);
-      if (data.principalSubdivision) addressComponents.push(data.principalSubdivision);
+      if (data.principalSubdivision)
+        addressComponents.push(data.principalSubdivision);
       if (data.countryName) addressComponents.push(data.countryName);
-      
-      return addressComponents.join(', ') || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+      return (
+        addressComponents.join(", ") || `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+      );
     } catch (error) {
-      console.error('Reverse geocoding failed:', error);
+      console.error("Reverse geocoding failed:", error);
       // Fallback to OpenStreetMap Nominatim
       return await fallbackReverseGeocode(lat, lng);
     }
@@ -120,92 +149,86 @@ const ReportIssue = () => {
   const fallbackReverseGeocode = async (lat, lng) => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
       );
-      
+
       if (!response.ok) {
-        throw new Error('Fallback geocoding service unavailable');
+        throw new Error("Fallback geocoding service unavailable");
       }
-      
+
       const data = await response.json();
-      
+
       if (data.address) {
         const address = data.address;
         const addressComponents = [];
-        
+
         if (address.road) addressComponents.push(address.road);
         if (address.suburb) addressComponents.push(address.suburb);
         if (address.city) addressComponents.push(address.city);
         if (address.state) addressComponents.push(address.state);
         if (address.country) addressComponents.push(address.country);
-        
-        return addressComponents.join(', ') || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+        return (
+          addressComponents.join(", ") || `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+        );
       }
-      
+
       return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     } catch (error) {
-      console.error('Fallback geocoding failed:', error);
+      console.error("Fallback geocoding failed:", error);
       return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
   };
+  console.log("Photos:", photos);
 
   const handlePhotoUpload = (event) => {
     const files = Array.from(event.target.files);
     if (files.length + photos.length <= 5) {
-      setPhotos(prev => [...prev, ...files]);
+      setPhotos((prev) => [...prev, ...files]);
     } else {
-      alert('Maximum 5 photos allowed');
+      alert("Maximum 5 photos allowed");
     }
   };
 
   const removePhoto = (index) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!location) {
-      setLocationError('Please provide a location for the issue');
+      setLocationError("Please provide a location for the issue");
       return;
     }
 
     setIsSubmitting(true);
-    
+
+
     // Prepare form data
     const formData = {
-      issueType,
+      reportType: issueType,
+      reportLabel: issueLabel,
       location,
       description,
       coordinates: userCoordinates,
-      pinnedLocation,
-      photos: photos.length,
-      timestamp: new Date().toISOString()
+      latitude: parseFloat(pinnedLocation.latitude),
+      longitude: parseFloat(pinnedLocation.longitude),
+      reportImage: photos[0],
     };
 
     try {
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Report submitted:', formData);
-      
-      // Show success message
-      setShowSuccess(true);
-      
-      // Reset form after success
-      setTimeout(() => {
-        setShowSuccess(false);
-        setIssueType('missed-pickup');
-        setLocation('');
-        setDescription('');
-        setPhotos([]);
-        setUserCoordinates(null);
-        setLocationError('');
-      }, 3000);
-      
+      const res = await axios.post("/api/reports", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(res)
+      alert("The report has been submitted successfully.");
+      console.log(res)
     } catch (error) {
-      console.error('Error submitting report:', error);
-      setLocationError('Failed to submit report. Please try again.');
+      console.error("Error submitting report:", error);
+      setLocationError("Failed to submit report. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -214,61 +237,78 @@ const ReportIssue = () => {
   // Check geolocation availability on component mount
   useEffect(() => {
     if (!isGeolocationAvailable()) {
-      setLocationError('Geolocation is not supported by your browser');
+      setLocationError("Geolocation is not supported by your browser");
     }
   }, []);
 
   return (
     <>
-
       {/* Main Content */}
       <main className="flex-grow max-w-4xl mx-auto px-6 lg:px-8 py-8 w-full">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+          <Link
+            to="/user"
+            className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group"
+          >
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
             <span className="font-semibold">Back to Home</span>
           </Link>
-          
+
           <h1 className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-3">
             Report an Issue
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Help us keep Pokhara clean. Let us know about any waste-related problems.
+            Help us keep Pokhara clean. Let us know about any waste-related
+            problems.
           </p>
         </div>
 
         {/* Report Form */}
-        <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 transform hover:scale-[1.005] transition-all duration-500 border border-emerald-100">
-          
+        <form
+          onSubmit={handleSubmit}
+          encType="multipart/form-data"
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 transform hover:scale-[1.005] transition-all duration-500 border border-emerald-100"
+        >
           {/* Type of Issue Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
               <span className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
               Type of Issue
             </h2>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {issueTypes.map((type) => (
                 <button
                   key={type.id}
                   type="button"
-                  onClick={() => setIssueType(type.id)}
+                  onClick={() => {
+                    setIssueType(type.id);
+                    setIssueLabel(type.label);
+                  }}
                   className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 group ${
                     issueType === type.id
-                      ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                      ? "border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg"
+                      : "border-gray-200 hover:border-emerald-300 hover:bg-gray-50"
                   }`}
                 >
                   <div className="text-center">
-                    <div className={`text-2xl mb-2 transition-transform duration-300 ${
-                      issueType === type.id ? 'scale-110' : 'group-hover:scale-110'
-                    }`}>
+                    <div
+                      className={`text-2xl mb-2 transition-transform duration-300 ${
+                        issueType === type.id
+                          ? "scale-110"
+                          : "group-hover:scale-110"
+                      }`}
+                    >
                       {type.icon}
                     </div>
-                    <span className={`font-semibold text-sm ${
-                      issueType === type.id ? 'text-emerald-700' : 'text-gray-700'
-                    }`}>
+                    <span
+                      className={`font-semibold text-sm ${
+                        issueType === type.id
+                          ? "text-emerald-700"
+                          : "text-gray-700"
+                      }`}
+                    >
                       {type.label}
                     </span>
                     {issueType === type.id && (
@@ -291,19 +331,19 @@ const ReportIssue = () => {
               <FiMapPin className="text-emerald-600 text-xl" />
               Location
             </h3>
-            
+
             <div className="space-y-4">
               <input
                 type="text"
                 value={location}
                 onChange={(e) => {
                   setLocation(e.target.value);
-                  setLocationError('');
+                  setLocationError("");
                 }}
                 placeholder="e.g., Lakeside Road, Pokhara-6"
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-300 outline-none"
               />
-              
+
               {/* Location Detection Button */}
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                 <button
@@ -328,7 +368,10 @@ const ReportIssue = () => {
                 {userCoordinates && (
                   <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg">
                     <BsPinMap className="text-emerald-500" />
-                    <span>GPS: {userCoordinates.latitude.toFixed(6)}, {userCoordinates.longitude.toFixed(6)}</span>
+                    <span>
+                      GPS: {userCoordinates.latitude.toFixed(6)},{" "}
+                      {userCoordinates.longitude.toFixed(6)}
+                    </span>
                   </div>
                 )}
               </div>
@@ -336,27 +379,43 @@ const ReportIssue = () => {
               {/* Optional Exact Coordinates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-semibold text-gray-800">Latitude (optional)</label>
+                  <label className="text-sm font-semibold text-gray-800">
+                    Latitude (optional)
+                  </label>
                   <input
                     type="text"
                     value={pinnedLocation.latitude}
-                    onChange={(e) => setPinnedLocation(prev => ({ ...prev, latitude: e.target.value }))}
+                    onChange={(e) =>
+                      setPinnedLocation((prev) => ({
+                        ...prev,
+                        latitude: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., 28.209600"
                     className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-gray-800">Longitude (optional)</label>
+                  <label className="text-sm font-semibold text-gray-800">
+                    Longitude (optional)
+                  </label>
                   <input
                     type="text"
                     value={pinnedLocation.longitude}
-                    onChange={(e) => setPinnedLocation(prev => ({ ...prev, longitude: e.target.value }))}
+                    onChange={(e) =>
+                      setPinnedLocation((prev) => ({
+                        ...prev,
+                        longitude: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., 83.985600"
                     className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
                   />
                 </div>
               </div>
-              <p className="text-xs text-gray-600">Adding lat/long helps admins verify the exact spot.</p>
+              <p className="text-xs text-gray-600">
+                Adding lat/long helps admins verify the exact spot.
+              </p>
 
               {/* Location Error Message */}
               {locationError && (
@@ -388,12 +447,12 @@ const ReportIssue = () => {
               </span>
               Description
             </h3>
-            
+
             <div className="space-y-3">
               <p className="text-sm text-gray-600 italic">
                 Please provide as much detail as possible...
               </p>
-              
+
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -414,7 +473,7 @@ const ReportIssue = () => {
               <BsCamera className="text-emerald-600 text-xl" />
               Upload Photos (Optional)
             </h3>
-            
+
             <div className="space-y-4">
               {/* Upload Area */}
               <label className="block">
@@ -422,6 +481,7 @@ const ReportIssue = () => {
                   type="file"
                   multiple
                   accept="image/*"
+                  name="reportImage"
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
@@ -467,8 +527,8 @@ const ReportIssue = () => {
               disabled={isSubmitting || !location || !description}
               className={`px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl transition-all duration-500 transform hover:scale-105 ${
                 isSubmitting || !location || !description
-                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-3xl'
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-3xl"
               }`}
             >
               {isSubmitting ? (
@@ -477,14 +537,12 @@ const ReportIssue = () => {
                   Submitting Report...
                 </div>
               ) : (
-                'Submit Report'
+                "Submit Report"
               )}
             </button>
           </div>
         </form>
       </main>
-
-
 
       {/* Success Confirmation */}
       {showSuccess && (
@@ -494,31 +552,32 @@ const ReportIssue = () => {
               {/* Animated Checkmark */}
               <div className="relative inline-flex items-center justify-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
-                  <svg 
-                    className="w-10 h-10 text-white animate-checkmark" 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className="w-10 h-10 text-white animate-checkmark"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={3} 
-                      d="M5 13l4 4L19 7" 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
                     />
                   </svg>
                 </div>
                 {/* Pulsing Ring Effect */}
                 <div className="absolute inset-0 border-4 border-emerald-200 rounded-full animate-ping-slow opacity-75"></div>
               </div>
-              
+
               <h3 className="text-2xl font-bold text-gray-800 mb-3">
                 Report Submitted!
               </h3>
               <p className="text-gray-600 mb-6">
-                Thank you for helping keep Pokhara clean. We'll address the issue promptly.
+                Thank you for helping keep Pokhara clean. We'll address the
+                issue promptly.
               </p>
-              
+
               {userCoordinates && (
                 <div className="mb-4 p-3 bg-emerald-50 rounded-lg text-sm text-emerald-700">
                   <div className="flex items-center gap-2 justify-center">
@@ -527,7 +586,7 @@ const ReportIssue = () => {
                   </div>
                 </div>
               )}
-              
+
               <button
                 onClick={() => setShowSuccess(false)}
                 className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
@@ -543,16 +602,18 @@ const ReportIssue = () => {
       <style jsx>{`
         /* Floating background elements */
         @keyframes float-slow {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0px) rotate(0deg);
           }
           50% {
             transform: translateY(-20px) rotate(5deg);
           }
         }
-        
+
         @keyframes float-medium {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0px) rotate(0deg);
           }
           50% {
@@ -621,7 +682,8 @@ const ReportIssue = () => {
             transform: scale(1);
             opacity: 0.75;
           }
-          75%, 100% {
+          75%,
+          100% {
             transform: scale(1.5);
             opacity: 0;
           }
@@ -630,19 +692,19 @@ const ReportIssue = () => {
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
         }
-        
+
         .animate-float-medium {
           animation: float-medium 6s ease-in-out infinite;
         }
-        
+
         .animate-fade-in-up {
           animation: fade-in-up 1s ease-out both;
         }
-        
+
         .animate-fade-in {
           animation: fade-in 0.5s ease-out both;
         }
-        
+
         .animate-confirmation-popup {
           animation: confirmation-popup 0.5s ease-out both;
         }
@@ -654,7 +716,7 @@ const ReportIssue = () => {
         .animate-ping-slow {
           animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
-        
+
         .animation-delay-2000 {
           animation-delay: 2s;
         }
@@ -664,18 +726,18 @@ const ReportIssue = () => {
           width: 8px;
           height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
           background: transparent;
           border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb {
           background: rgba(16, 185, 129, 0.5);
           border-radius: 10px;
           transition: background 0.3s ease;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
           background: rgba(16, 185, 129, 0.8);
         }

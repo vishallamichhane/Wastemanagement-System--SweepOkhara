@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FaGoogle, FaApple } from "react-icons/fa";
+import { authClient } from "../libs/auth";
 
 // Typing Animation Component
 const TypingText = ({ text, delay = 0 }) => {
@@ -49,6 +50,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+  console.log(formData);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -111,21 +113,27 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      // Store user data in localStorage for dummy authentication
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const newUser = {
-        id: Date.now(),
-        ...formData
-      };
-      registeredUsers.push(newUser);
-      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-      localStorage.setItem('lastRegisteredUser', formData.email);
-      
-      alert('Registration successful! Redirecting to login...');
-      navigate('/login');
+  const handleSubmit = async (e) => {
+    try {
+      e.preventDefault();
+      if (validateForm()) {
+        // Store user data in localStorage for dummy authentication
+        const { data, error } = await authClient.signUp.email({
+          name: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          address: formData.address,
+          ward: formData.ward,
+        }, {
+          onError: (err) => { console.error("Sign up error:", err); },
+          onSuccess: (data) => { console.log("Sign up successful:", data); }
+        })
+        console.log(data)
+        if (data) navigate('/user');
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 

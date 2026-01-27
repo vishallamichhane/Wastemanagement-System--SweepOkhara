@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
+    "axios": "^1.13.3",
+    "better-auth": "^1.4.17",
     "framer-motion": "^12.23.24",
     "google-map-react": "^2.2.5",
     "leaflet": "^1.9.4",
