@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   FiHome, 
@@ -9,7 +9,9 @@ import {
   FiMapPin,
   FiFilter,
   FiSearch,
-  FiChevronLeft
+  FiChevronLeft,
+  FiUser,
+  FiSettings
 } from 'react-icons/fi';
 import { 
   BsBell, 
@@ -19,7 +21,8 @@ import {
   BsMap, 
   BsListUl,
   BsCheckCircleFill,
-  BsClock
+  BsClock,
+  BsExclamationTriangle
 } from "react-icons/bs";
 import { GiBroom } from "react-icons/gi";
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
@@ -140,18 +143,8 @@ const stats = {
 
 const trashBins = [
   { 
-    id: "TB1024", 
-    position: [28.2106, 83.9856], 
-    fillStatus: "full", 
-    binType: "General Waste", 
-    lastCollection: "2 days ago", 
-    location: "Mahendra Pul, Pokhara", 
-    fillLevel: 95,
-    assigned: true
-  },
-  { 
     id: "TB1025", 
-    position: [28.209, 83.9884], 
+    position: [28.2090, 83.9596], 
     fillStatus: "half", 
     binType: "General Waste", 
     lastCollection: "1 day ago", 
@@ -161,7 +154,7 @@ const trashBins = [
   },
   { 
     id: "TB1026", 
-    position: [28.2248, 83.9829], 
+    position: [28.2144, 83.9851], 
     fillStatus: "empty", 
     binType: "Recyclable Waste", 
     lastCollection: "6 hours ago", 
@@ -171,7 +164,7 @@ const trashBins = [
   },
   { 
     id: "TB1027", 
-    position: [28.213, 83.983], 
+    position: [28.2096, 83.9896], 
     fillStatus: "half", 
     binType: "Organic Waste", 
     lastCollection: "12 hours ago", 
@@ -181,12 +174,22 @@ const trashBins = [
   },
   { 
     id: "TB1028", 
-    position: [28.207, 83.986], 
+    position: [28.2115, 83.9650], 
     fillStatus: "empty", 
     binType: "General Waste", 
     lastCollection: "3 hours ago", 
     location: "Lakeside East, Pokhara", 
     fillLevel: 10,
+    assigned: false
+  },
+  { 
+    id: "TB1029", 
+    position: [28.21118953908775, 83.9771218979668], 
+    fillStatus: "empty", 
+    binType: "Smart Bin (Demo)", 
+    lastCollection: "Just now", 
+    location: "Pokhara Engineering College", 
+    fillLevel: 0,
     assigned: false
   },
 ];
@@ -373,6 +376,8 @@ const CollectorDashboard = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -390,6 +395,32 @@ const CollectorDashboard = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    setShowProfileDropdown(false);
+    navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/collector/profile');
+  };
+
+  const handleDashboardClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/collector/dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-100 text-gray-900 flex flex-col">
@@ -467,38 +498,73 @@ const CollectorDashboard = () => {
                 activeNav === 'schedule' ? "w-4/5 left-1/10" : ""
               }`}></span>
             </button>
+
+            <button
+              onClick={() => {
+                setActiveNav('reports');
+                navigate('/collector/reports');
+              }}
+              className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
+                activeNav === 'reports' 
+                  ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
+                  : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <BsExclamationTriangle />
+                <span className="font-semibold">Reports</span>
+              </div>
+              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
+                activeNav === 'reports' ? "w-4/5 left-1/10" : ""
+              }`}></span>
+            </button>
             
             {/* Notification Center */}
             <CollectorNotificationCenter />
             
-            <button 
-              onClick={() => navigate('/login')}
-              className="relative px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105 group"
-            >
-              <div className="flex items-center space-x-2">
-                <FiLogOut />
-                <span>Logout</span>
-              </div>
-              <div className="absolute inset-0 bg-emerald-50/50 rounded-xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-            </button>
-            
-            {/* Profile */}
-            <div 
-              onClick={() => navigate('/collector/profile')}
-              className="flex items-center space-x-3 cursor-pointer"
-            >
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-semibold">{collectorData.name}</p>
-                <p className="text-xs text-gray-500">Collector ID: {collectorData.id}</p>
-              </div>
-              <div className="relative group">
-                <img 
-                  src={collectorData.avatar} 
-                  alt="Collector"
-                  className="w-11 h-11 rounded-full border-2 border-emerald-500 group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white group-hover:scale-110 transition-transform duration-300"></div>
-              </div>
+            {/* Profile Dropdown */}
+            <div className="relative ml-2" ref={dropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="w-11 h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
+              >
+                <FiUser className="text-xl" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-emerald-100 overflow-hidden z-50 animate-fadeIn">
+                  <div className="py-2">
+                    <button
+                      onClick={handleDashboardClick}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                    >
+                      <FiHome className="text-lg" />
+                      <span className="font-semibold">Dashboard</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-1"></div>
+                    
+                    <button
+                      onClick={handleProfileClick}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                    >
+                      <FiSettings className="text-lg" />
+                      <span className="font-semibold">Profile Settings</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-1"></div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 transition-all duration-200 text-gray-700 hover:text-red-600"
+                    >
+                      <FiLogOut className="text-lg" />
+                      <span className="font-semibold">Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

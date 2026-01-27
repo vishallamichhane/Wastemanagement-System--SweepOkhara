@@ -18,6 +18,7 @@ const ReportIssue = () => {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [userCoordinates, setUserCoordinates] = useState(null);
+  const [pinnedLocation, setPinnedLocation] = useState({ latitude: '', longitude: '' });
 
   const issueTypes = [
     { id: 'missed-pickup', label: 'Missed Pickup', icon: '🚛' },
@@ -47,6 +48,7 @@ const ReportIssue = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         setUserCoordinates({ latitude, longitude });
+        setPinnedLocation({ latitude: latitude.toFixed(6), longitude: longitude.toFixed(6) });
         
         try {
           // Reverse geocoding to get address from coordinates
@@ -176,6 +178,7 @@ const ReportIssue = () => {
       location,
       description,
       coordinates: userCoordinates,
+      pinnedLocation,
       photos: photos.length,
       timestamp: new Date().toISOString()
     };
@@ -329,6 +332,31 @@ const ReportIssue = () => {
                   </div>
                 )}
               </div>
+
+              {/* Optional Exact Coordinates */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-semibold text-gray-800">Latitude (optional)</label>
+                  <input
+                    type="text"
+                    value={pinnedLocation.latitude}
+                    onChange={(e) => setPinnedLocation(prev => ({ ...prev, latitude: e.target.value }))}
+                    placeholder="e.g., 28.209600"
+                    className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-800">Longitude (optional)</label>
+                  <input
+                    type="text"
+                    value={pinnedLocation.longitude}
+                    onChange={(e) => setPinnedLocation(prev => ({ ...prev, longitude: e.target.value }))}
+                    placeholder="e.g., 83.985600"
+                    className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-600">Adding lat/long helps admins verify the exact spot.</p>
 
               {/* Location Error Message */}
               {locationError && (

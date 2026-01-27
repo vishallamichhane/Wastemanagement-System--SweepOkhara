@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FiArrowLeft,
@@ -9,7 +9,9 @@ import {
   FiHome,
   FiCalendar,
   FiLogOut,
-  FiSearch
+  FiSearch,
+  FiUser,
+  FiSettings
 } from 'react-icons/fi';
 import { 
   BsTruck,
@@ -20,7 +22,8 @@ import {
   BsCheckCircle,
   BsArrowRightCircle,
   BsListUl,
-  BsGeoAlt
+  BsGeoAlt,
+  BsExclamationTriangle
 } from "react-icons/bs";
 import { GiBroom, GiPathDistance } from "react-icons/gi";
 import { MdOutlineDeleteSweep, MdMyLocation } from "react-icons/md";
@@ -67,139 +70,146 @@ const collectorData = {
 
 const assignedBins = [
   {
-    id: "TB1024",
-    binId: "TB1024",
-    location: "Mahendra Pul, Pokhara",
-    coordinates: [28.2106, 83.9856],
-    fillLevel: 95,
-    status: "pending",
-    priority: "high",
-    wasteType: "General Waste",
-    address: "Near Mahendra Pul Bridge, Ward No. 5",
-    lastCollection: "2 days ago",
-    collectionTime: "09:00 AM",
-    notes: "Bin is overflowing, urgent collection needed"
-  },
-  {
     id: "TB1025",
     binId: "TB1025",
     location: "Lakeside, Pokhara",
-    coordinates: [28.209, 83.9884],
+    coordinates: [28.2090, 83.9596],
     fillLevel: 55,
+    fillStatus: "half",
     status: "in-progress",
     priority: "medium",
     wasteType: "General Waste",
-    address: "Lakeside Main Road, Opposite Hotel Bluebird",
+    address: "Lakeside, Pokhara",
     lastCollection: "1 day ago",
     collectionTime: "09:30 AM",
     notes: "Regular collection, accessible location"
   },
   {
-    id: "TB1027",
-    binId: "TB1027",
-    location: "City Center, Pokhara",
-    coordinates: [28.213, 83.983],
-    fillLevel: 65,
-    status: "pending",
-    priority: "high",
-    wasteType: "Organic Waste",
-    address: "City Center Market, Near Bus Park",
-    lastCollection: "12 hours ago",
-    collectionTime: "10:15 AM",
-    notes: "Organic waste - separate collection required"
-  },
-  {
-    id: "TB1030",
-    binId: "TB1030",
+    id: "TB1026",
+    binId: "TB1026",
     location: "Baseline, Pokhara",
-    coordinates: [28.2248, 83.9829],
-    fillLevel: 45,
+    coordinates: [28.2144, 83.9851],
+    fillLevel: 20,
+    fillStatus: "empty",
     status: "pending",
-    priority: "medium",
+    priority: "low",
     wasteType: "Recyclable Waste",
-    address: "Baseline Road, Near Government Hospital",
+    address: "Baseline, Pokhara",
     lastCollection: "6 hours ago",
     collectionTime: "11:00 AM",
     notes: "Plastic and paper recycling"
   },
   {
-    id: "TB1032",
-    binId: "TB1032",
+    id: "TB1027",
+    binId: "TB1027",
+    location: "City Center, Pokhara",
+    coordinates: [28.2096, 83.9896],
+    fillLevel: 65,
+    fillStatus: "half",
+    status: "pending",
+    priority: "high",
+    wasteType: "Organic Waste",
+    address: "City Center, Pokhara",
+    lastCollection: "12 hours ago",
+    collectionTime: "10:15 AM",
+    notes: "Organic waste - separate collection required"
+  },
+  {
+    id: "TB1028",
+    binId: "TB1028",
     location: "Lakeside East, Pokhara",
-    coordinates: [28.207, 83.986],
-    fillLevel: 30,
+    coordinates: [28.2115, 83.9650],
+    fillLevel: 10,
+    fillStatus: "empty",
     status: "pending",
     priority: "low",
     wasteType: "General Waste",
-    address: "Lakeside East Residential Area",
+    address: "Lakeside East, Pokhara",
     lastCollection: "3 hours ago",
     collectionTime: "11:45 AM",
     notes: "Regular collection, easy access"
   },
   {
-    id: "TB1035",
-    binId: "TB1035",
-    location: "Tourist Area, Pokhara",
-    coordinates: [28.211, 83.987],
-    fillLevel: 80,
+    id: "TB1029",
+    binId: "TB1029",
+    location: "Pokhara Engineering College",
+    coordinates: [28.21118953908775, 83.9771218979668],
+    fillLevel: 0,
+    fillStatus: "empty",
     status: "pending",
-    priority: "high",
-    wasteType: "Mixed Waste",
-    address: "Tourist Street, Near Fewa Lake",
-    lastCollection: "4 hours ago",
+    priority: "low",
+    wasteType: "Smart Bin (Demo)",
+    address: "Pokhara Engineering College",
+    lastCollection: "Just now",
     collectionTime: "12:30 PM",
-    notes: "High traffic area, morning collection preferred"
+    notes: "Demo smart bin with ultrasonic sensor"
   }
 ];
 
 const routePath = [
-  [28.2106, 83.9856], // Start: Mahendra Pul
-  [28.209, 83.9884],  // Lakeside
-  [28.213, 83.983],   // City Center
-  [28.2248, 83.9829], // Baseline
-  [28.207, 83.986],   // Lakeside East
-  [28.211, 83.987]    // Tourist Area (End)
+  [28.2090, 83.9596],  // Lakeside
+  [28.2144, 83.9851],  // Baseline
+  [28.2096, 83.9896],  // City Center
+  [28.2115, 83.9650],  // Lakeside East
+  [28.21118953908775, 83.9771218979668]  // Demo Site (End)
 ];
 
 // -------------------------
 // CUSTOM MAP ICONS
 // -------------------------
-const createBinIcon = (fillLevel, status, priority) => {
-  let color, animation = '';
+const createTrashBinIcon = (fillStatus) => {
+  let color, fillLevel, animation;
   
-  // Color based on fill level
-  if (fillLevel >= 80) color = "#EF4444"; // Red
-  else if (fillLevel >= 50) color = "#F59E0B"; // Amber
-  else color = "#10B981"; // Green
-  
-  // Animation based on priority
-  if (priority === "high") animation = 'animation: pulse 2s infinite;';
-  if (status === "in-progress") animation = 'animation: bounce 1s infinite;';
-  
-  const svg = `
+  switch (fillStatus) {
+    case "full":
+      color = "#EF4444";
+      fillLevel = "85%";
+      animation = 'animation: bounce 1s infinite;';
+      break;
+    case "half":
+      color = "#F59E0B";
+      fillLevel = "50%";
+      animation = '';
+      break;
+    case "empty":
+    default:
+      color = "#10B981";
+      fillLevel = "15%";
+      animation = '';
+      break;
+  }
+
+  const trashBinSvg = `
     <div style="
       background: white;
-      border-radius: 50%;
-      padding: 10px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-      border: 3px solid ${color};
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 2px solid ${color};
       ${animation}
     ">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2">
-        <rect x="3" y="6" width="18" height="14" rx="1" fill="white"/>
-        <rect x="4" y="${20 - (fillLevel / 100 * 12)}" width="16" height="${fillLevel / 100 * 12}" fill="${color}" opacity="0.6"/>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.5">
+        <!-- Bin Body -->
+        <rect x="3" y="6" width="18" height="14" rx="1" fill="white" stroke="${color}" stroke-width="1.5"/>
+        <!-- Fill Level - Dynamic based on status -->
+        <rect x="4" y="${20 - (parseInt(fillLevel) / 100 * 12)}" width="16" height="${parseInt(fillLevel) / 100 * 12}" rx="0.5" fill="${color}" opacity="0.7"/>
+        <!-- Lid -->
         <rect x="2" y="4" width="20" height="2" rx="1" fill="${color}"/>
+        <!-- Handle -->
         <rect x="10" y="2" width="4" height="2" rx="1" fill="${color}"/>
+        <!-- Decorative lines -->
+        <line x1="8" y1="8" x2="16" y2="8" stroke="${color}" stroke-width="0.5" opacity="0.6"/>
+        <line x1="8" y1="11" x2="16" y2="11" stroke="${color}" stroke-width="0.5" opacity="0.6"/>
       </svg>
     </div>
   `;
 
   return L.divIcon({
-    html: svg,
-    className: "custom-bin-icon",
-    iconSize: [48, 48],
-    iconAnchor: [24, 48],
-    popupAnchor: [0, -48],
+    html: trashBinSvg,
+    className: "custom-trashbin-icon",
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -44],
   });
 };
 
@@ -247,6 +257,8 @@ const CollectorMapView = () => {
   const [mapCenter, setMapCenter] = useState([28.2096, 83.9856]);
   const [zoomLevel, setZoomLevel] = useState(14);
   const [activeNav, setActiveNav] = useState("map");
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -264,6 +276,32 @@ const CollectorMapView = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    setShowProfileDropdown(false);
+    navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/collector/profile');
+  };
+
+  const handleDashboardClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/collector/dashboard');
+  };
 
   // Get user's current location
   useEffect(() => {
@@ -417,39 +455,80 @@ const CollectorMapView = () => {
               }`}
             >
               <div className="flex items-center space-x-2">
-                              <FiCalendar />
-                              <span className="font-semibold">Schedule</span>
-                            </div>
-                            <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
-                              activeNav === 'schedule' ? "w-4/5 left-1/10" : ""
-                            }`}></span>
-                          </button>
+                <FiCalendar />
+                <span className="font-semibold">Schedule</span>
+              </div>
+              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
+                activeNav === 'tasks' ? "w-4/5 left-1/10" : ""
+              }`}></span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveNav('reports');
+                navigate('/collector/reports');
+              }}
+              className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
+                activeNav === 'reports' 
+                  ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
+                  : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <BsExclamationTriangle />
+                <span className="font-semibold">Reports</span>
+              </div>
+              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
+                activeNav === 'reports' ? "w-4/5 left-1/10" : ""
+              }`}></span>
+            </button>
             
             {/* Notification Center */}
             <CollectorNotificationCenter />
             
-            <button className="relative px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
-              <div className="flex items-center space-x-2">
-                <FiLogOut />
-                <span>Logout</span>
-              </div>
-              <div className="absolute inset-0 bg-emerald-50/50 rounded-xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-            </button>
-            
-            {/* Profile */}
-            <div className="flex items-center space-x-3">
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-semibold">{collectorData.name}</p>
-                <p className="text-xs text-gray-500">Vehicle: {collectorData.vehicle.id}</p>
-              </div>
-              <div className="relative group">
-                <img 
-                  src={collectorData.avatar} 
-                  alt="Collector"
-                  className="w-11 h-11 rounded-full border-2 border-emerald-500 group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white group-hover:scale-110 transition-transform duration-300"></div>
-              </div>
+            {/* Profile Dropdown */}
+            <div className="relative ml-2" ref={dropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="w-11 h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
+              >
+                <FiUser className="text-xl" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-emerald-100 overflow-hidden z-50 animate-fadeIn">
+                  <div className="py-2">
+                    <button
+                      onClick={handleDashboardClick}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                    >
+                      <FiHome className="text-lg" />
+                      <span className="font-semibold">Dashboard</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-1"></div>
+                    
+                    <button
+                      onClick={handleProfileClick}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                    >
+                      <FiSettings className="text-lg" />
+                      <span className="font-semibold">Profile Settings</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-1"></div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 transition-all duration-200 text-gray-700 hover:text-red-600"
+                    >
+                      <FiLogOut className="text-lg" />
+                      <span className="font-semibold">Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -624,23 +703,12 @@ const CollectorMapView = () => {
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
                     
-                    {/* Route Path */}
-                    <Polyline
-                      pathOptions={{
-                        color: '#10B981',
-                        weight: 4,
-                        opacity: 0.7,
-                        dashArray: '10, 10'
-                      }}
-                      positions={routePath}
-                    />
-                    
                     {/* Bin Markers */}
                     {assignedBins.map((bin) => (
                       <Marker 
                         key={bin.id} 
                         position={bin.coordinates}
-                        icon={createBinIcon(bin.fillLevel, bin.status, bin.priority)}
+                        icon={createTrashBinIcon(bin.fillStatus)}
                         eventHandlers={{
                           click: () => handleBinSelect(bin),
                         }}

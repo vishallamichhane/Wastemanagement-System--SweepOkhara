@@ -28,6 +28,7 @@ import CollectorLayout from './pages/collectorpage/CollectorLayout';
 import AssignedTaskPage from './pages/collectorpage/Assignedtasks';
 import CollectorMapPage from './pages/collectorpage/Collectormap';
 import CollectorProfilePage from './pages/collectorpage/Profilecollector';
+import CollectorReportsPage from './pages/collectorpage/Reports';
 import AdminDashboard from './pages/adminpage/Admin';
 import UserManagementPage from './pages/adminpage/UserManagement';
 
@@ -85,6 +86,7 @@ function App() {
         <Route path="tasks" element={<AssignedTaskPage />} />
         <Route path="map" element={<CollectorMapPage />} />
         <Route path="profile" element={<CollectorProfilePage />} />
+        <Route path="reports" element={<CollectorReportsPage />} />
       </Route>
 
       {/* Routes for admin */}

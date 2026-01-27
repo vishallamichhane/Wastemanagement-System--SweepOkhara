@@ -1,13 +1,16 @@
-import {useState, useEffect} from 'react'
-import { NavLink, Link, useLocation } from "react-router-dom";
+import {useState, useEffect, useRef} from 'react'
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiUser, FiSettings, FiHome } from "react-icons/fi";
 import NotificationCenter from './NotificationCenter';
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const dropdownRef = useRef(null);
+    const navigate = useNavigate();
   const location = useLocation();
   const isProfileActive = location.pathname.startsWith('/user/profile');
 
@@ -33,6 +36,32 @@ function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    setShowProfileDropdown(false);
+    navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/user/profile');
+  };
+
+  const handleHomeClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/user');
+  };
 
   return (
     <>
@@ -85,23 +114,55 @@ function Header() {
             ))}
           </ul>
               
-              <div className="hidden md:flex gap-4 items-center">
+              <div className="hidden md:flex gap-2 items-center">
                 <NotificationCenter />
-                <Link to="/user/profile">
-                  <button className={`font-semibold px-6 py-2.5 rounded-xl border transition-all duration-300 ${
-                    isProfileActive
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-lg cursor-default"
-                      : "text-emerald-700 border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg hover:scale-105"
-                  }`}>
-                    Profile
+                
+                {/* Profile Dropdown */}
+                <div className="relative ml-16" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className={`w-11 h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 ${
+                      isProfileActive ? 'ring-4 ring-emerald-300' : ''
+                    }`}
+                  >
+                    <FiUser className="text-xl" />
                   </button>
-                </Link>
-                <Link to="/login">
-                  <button className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold px-8 py-2.5 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:from-emerald-700 hover:to-teal-700 flex items-center gap-2">
-                    <FiLogOut className="text-lg" />
-                    Logout
-                  </button>
-                </Link>
+
+                  {/* Dropdown Menu */}
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-emerald-100 overflow-hidden z-50 animate-fadeIn">
+                      <div className="py-2">
+                        <button
+                          onClick={handleHomeClick}
+                          className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                        >
+                          <FiHome className="text-lg" />
+                          <span className="font-semibold">Home</span>
+                        </button>
+                        
+                        <div className="border-t border-gray-100 my-1"></div>
+                        
+                        <button
+                          onClick={handleProfileClick}
+                          className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                        >
+                          <FiSettings className="text-lg" />
+                          <span className="font-semibold">Profile Settings</span>
+                        </button>
+                        
+                        <div className="border-t border-gray-100 my-1"></div>
+                        
+                        <button
+                          onClick={handleLogout}
+                          className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 transition-all duration-200 text-gray-700 hover:text-red-600"
+                        >
+                          <FiLogOut className="text-lg" />
+                          <span className="font-semibold">Logout</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </nav>

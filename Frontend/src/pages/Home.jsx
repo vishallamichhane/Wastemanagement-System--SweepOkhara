@@ -90,7 +90,9 @@ export default function Home() {
               SweePokhara is your smart solution for efficient waste management and community involvement. Join us to make a difference.
             </p>
           </div>
-          <button className="group bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-2xl font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 flex items-center gap-3 animate-fade-in animation-delay-600 hover:from-emerald-700 hover:to-teal-700 relative overflow-hidden">
+          <button 
+            onClick={() => navigate('/register')}
+            className="group bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-12 py-4 rounded-2xl font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 flex items-center gap-3 animate-fade-in animation-delay-600 hover:from-emerald-700 hover:to-teal-700 relative overflow-hidden cursor-pointer">
             <span className="absolute inset-0 bg-white/20 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
             <span className="relative z-10">Get Started</span>
             <BsArrowRight className="group-hover:translate-x-2 transition-transform duration-300 relative z-10" />
@@ -98,9 +100,9 @@ export default function Home() {
         </div>
 
         {/* Enhanced Image Slider with Attractive Arrows */}
-        <div className="relative max-w-lg animate-fade-in-right">
-          <div className="rounded-3xl overflow-hidden shadow-2xl border-2 border-white/30 bg-gradient-to-br from-white/80 to-emerald-50/50 backdrop-blur-sm transform hover:scale-[1.02] transition-all duration-500">
-            <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative w-full max-w-2xl animate-fade-in-right">
+          <div className="rounded-3xl overflow-hidden shadow-2xl border-2 border-white/30 bg-gradient-to-br from-white/80 to-emerald-50/50 backdrop-blur-sm transition-all duration-500">
+            <div className="relative aspect-[13/9] overflow-hidden">
               {slidingImages.map((src, idx) => (
                 <img
                   key={idx}
@@ -113,22 +115,6 @@ export default function Home() {
                 />
               ))}
               
-              {/* Enhanced Navigation Arrows */}
-              <button 
-                onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group border-2 border-white/50 animate-pulse-gentle"
-              >
-                <BsChevronLeft className="group-hover:scale-110 group-hover:-translate-x-0.5 transition-transform duration-200 text-xl" />
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </button>
-              <button 
-                onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group border-2 border-white/50 animate-pulse-gentle animation-delay-500"
-              >
-                <BsChevronRight className="group-hover:scale-110 group-hover:translate-x-0.5 transition-transform duration-200 text-xl" />
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/30 to-emerald-500/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </button>
-
               {/* Slide Indicators */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/20 backdrop-blur-sm px-3 py-2 rounded-full">
                 {slidingImages.map((_, idx) => (
@@ -164,11 +150,11 @@ export default function Home() {
             title: "Smart Waste Collection",
             desc: "Optimized routes and schedules for timely and efficient waste pickup.",
           }, {
-            icon: <BsExclamationTriangle className="text-6xl text-emerald-600" />,
+            icon: <BsExclamationTriangle className="text-6xl text-emerald-600 animate-alert" />,
             title: "Citizen Reporting",
             desc: "Easily report waste issues in your area with just a few clicks.",
           }, {
-            icon: <BsLightbulb className="text-6xl text-emerald-600" />,
+            icon: <BsLightbulb className="text-6xl text-emerald-600 animate-bulb" />,
             title: "Environmental Awareness",
             desc: "Access resources and information to help our community stay clean.",
           }].map(({ icon, title, desc }, index) => (
@@ -219,9 +205,6 @@ export default function Home() {
             ].map(({ img, title, desc }, index) => (
               <div key={title} className="text-center">
                 <div className="relative mb-6">
-                  <div className="absolute -top-2 -left-2 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg z-10">
-                    {index + 1}
-                  </div>
                   <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100">
                     <img
                       src={img}
@@ -260,7 +243,7 @@ export default function Home() {
             </blockquote>
             <div className="flex items-center justify-center gap-6 animate-fade-in animation-delay-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full animate-ping opacity-20"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full opacity-20"></div>
                 <img
                   src={testimonials[currentTestimonial].image}
                   alt={testimonials[currentTestimonial].name}
@@ -360,6 +343,36 @@ export default function Home() {
         
         .animate-pulse-slow {
           animation: pulseSlow 4s ease-in-out infinite;
+        }
+
+        @keyframes alertBlink {
+          0%, 55% { opacity: 1; transform: scale(1); }
+          60% { opacity: 0.4; transform: scale(0.98); }
+          70% { opacity: 1; transform: scale(1.02); }
+          80% { opacity: 0.4; transform: scale(0.98); }
+          90% { opacity: 1; transform: scale(1.03); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes bulbGlow {
+          0%, 100% { 
+            filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0.25));
+            transform: translateY(0) scale(1);
+          }
+          50% { 
+            filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.6));
+            transform: translateY(-2px) scale(1.05);
+          }
+        }
+
+        .animate-alert {
+          animation: alertBlink 2s ease-in-out infinite;
+          transform-origin: center;
+        }
+
+        .animate-bulb {
+          animation: bulbGlow 2.6s ease-in-out infinite;
+          transform-origin: center;
         }
         
         .animation-delay-2000 {

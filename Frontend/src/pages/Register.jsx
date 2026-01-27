@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FaGoogle, FaApple } from "react-icons/fa";
 
 // Typing Animation Component
 const TypingText = ({ text, delay = 0 }) => {
@@ -150,6 +151,9 @@ export default function RegisterPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
+            <p className="text-3xl font-extrabold tracking-[0.35em] text-emerald-200 mb-4 drop-shadow-lg">
+              SweePokhara
+            </p>
             <h1 className="text-4xl font-bold mb-4 leading-tight">
               <TypingText text="Let's Get Started" delay={0.3} />
             </h1>
@@ -322,6 +326,29 @@ export default function RegisterPage() {
             >
               Sign up
             </motion.button>
+
+            {/* Social sign up */}
+            <div className="flex items-center gap-3 mt-5 text-gray-200 text-xs">
+              <span className="flex-1 h-px bg-white/20" />
+              <span>Or continue with</span>
+              <span className="flex-1 h-px bg-white/20" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 border border-white/30 hover:border-white/60 text-white text-sm py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <FaGoogle size={16} />
+                Google
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 border border-white/30 hover:border-white/60 text-white text-sm py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <FaApple size={18} />
+                Apple
+              </button>
+            </div>
 
             {/* Sign in Link */}
             <p className="text-center text-gray-200 mt-4 text-sm">

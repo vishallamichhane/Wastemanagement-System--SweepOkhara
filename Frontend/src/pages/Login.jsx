@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { FcGoogle } from "react-icons/fc";
+import { FaApple } from "react-icons/fa";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -61,7 +63,7 @@ export default function LoginPage() {
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://i.pinimg.com/736x/60/df/84/60df8487b952c8af5043fa2e02f0db35.jpg')" }}
+          style={{ backgroundImage: "url('https://i.pinimg.com/1200x/e9/d8/86/e9d8861d3847922a7c3af7185092d901.jpg')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-black/65 via-black/55 to-black/65" />
       </motion.div>
@@ -87,8 +89,8 @@ export default function LoginPage() {
             className="w-full max-w-md"
           >
             <div className="text-center mb-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-emerald-200/90 font-bold">Login</p>
-              <h2 className="text-2xl font-bold text-white mt-1">Access your account</h2>
+              <p className="text-lg uppercase tracking-[0.25em] text-emerald-200/90 font-extrabold">Login</p>
+              <h2 className="text-3xl font-extrabold text-white mt-1">Access your account</h2>
             </div>
 
             <div className="rounded-xl p-6 bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-emerald-500/15 text-white shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
@@ -192,8 +194,28 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Log in
+                  {role === "collector" ? "Login as Collector" : "Login as User"}
                 </motion.button>
+
+                {/* Divider */}
+                <div className="relative flex items-center justify-center my-4">
+                  <div className="border-t border-white/20 w-full"></div>
+                  <span className="absolute bg-white/10 px-3 text-xs text-white/70">OR</span>
+                </div>
+
+                {/* Social Login Buttons */}
+                <div className="space-y-3">
+                  <motion.button
+                    type="button"
+                    onClick={() => alert('Google login not yet implemented')}
+                    className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm py-3 rounded-lg transition-colors shadow-md flex items-center justify-center gap-3"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <FcGoogle className="text-xl" />
+                    Continue with Google
+                  </motion.button>
+                </div>
 
                 {/* Links */}
                 <div className="flex items-center justify-between text-sm text-white/80">

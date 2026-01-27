@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FiHome, 
@@ -14,7 +14,8 @@ import {
   FiMapPin,
   FiPhone,
   FiMail,
-  FiCheckCircle
+  FiCheckCircle,
+  FiUser
 } from 'react-icons/fi';
 import { 
   BsBell, 
@@ -26,7 +27,8 @@ import {
   BsGraphUp,
   BsCashCoin,
   BsStarFill,
-  BsListUl
+  BsListUl,
+  BsExclamationTriangle
 } from "react-icons/bs";
 import { GiBroom, GiPathDistance, GiRank3 } from "react-icons/gi";
 import { MdOutlineVerified, MdLocationPin, MdWorkHistory } from "react-icons/md";
@@ -210,6 +212,8 @@ const CollectorProfile = () => {
   const [activeNav, setActiveNav] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(collectorProfileData);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -228,6 +232,32 @@ const CollectorProfile = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    setShowProfileDropdown(false);
+    navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    setShowProfileDropdown(false);
+    // Already on profile page, just close dropdown
+  };
+
+  const handleDashboardClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/collector/dashboard');
+  };
+
   const handleEditProfile = () => {
     setIsEditing(true);
   };
@@ -236,11 +266,6 @@ const CollectorProfile = () => {
     setIsEditing(false);
     // In real app, save to backend here
     console.log('Profile saved');
-  };
-
-  const handleLogout = () => {
-    // In real app, handle logout logic
-    navigate('/login');
   };
 
   const formatJoinDuration = (joinDate) => {
@@ -324,74 +349,81 @@ const CollectorProfile = () => {
               }`}
             >
               <div className="flex items-center space-x-2">
-                              <FiCalendar />
-                              <span className="font-semibold">Schedule</span>
-                            </div>
-                            <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
-                              activeNav === 'schedule' ? "w-4/5 left-1/10" : ""
-                            }`}></span>
-                          </button>
+                <FiCalendar />
+                <span className="font-semibold">Schedule</span>
+              </div>
+              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
+                activeNav === 'tasks' ? "w-4/5 left-1/10" : ""
+              }`}></span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveNav('reports');
+                navigate('/collector/reports');
+              }}
+              className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
+                activeNav === 'reports' 
+                  ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
+                  : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <BsExclamationTriangle />
+                <span className="font-semibold">Reports</span>
+              </div>
+              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
+                activeNav === 'reports' ? "w-4/5 left-1/10" : ""
+              }`}></span>
+            </button>
             
             {/* Notification Center */}
             <CollectorNotificationCenter />
             
-            <button className="relative px-6 py-2.5 rounded-xl text-emerald-700 font-semibold border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50/80 hover:shadow-lg transition-all duration-300 hover:scale-105 group">
-              <div className="flex items-center space-x-2">
-                <FiLogOut />
-                <span>Logout</span>
-              </div>
-              <div className="absolute inset-0 bg-emerald-50/50 rounded-xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-            </button>
-            
-            {/* Profile */}
-<div className="relative group/profile">
-  <Link 
-    to="/collector/profile" 
-    className="flex items-center space-x-3"
-    onClick={() => setActiveNav('profile')}
-  >
-    <div className="text-right hidden md:block">
-      <p className={`text-sm font-semibold ${
-        activeNav === 'profile' ? "text-emerald-700" : "text-gray-700"
-      }`}>
-        {profileData.personal.name}
-      </p>
-      <p className="text-xs text-gray-500">ID: {profileData.personal.id}</p>
-    </div>
-    
-    {/* Avatar Container */}
-    <div className="relative">
-      {/* Outer glow ring on hover */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-0 group-hover/profile:opacity-100 transition-opacity duration-300 blur-sm group-hover/profile:blur-md -z-10"></div>
-      
-      {/* Avatar */}
-      <div className="relative">
-        <img 
-          src={profileData.personal.avatar} 
-          alt="Collector"
-          className={`w-11 h-11 rounded-full border-2 transition-all duration-300 ${
-            activeNav === 'profile'
-              ? "border-emerald-600"
-              : "border-emerald-500 group-hover/profile:border-emerald-400"
-          }`}
-        />
-        
-        {/* Active indicator */}
-        {activeNav === 'profile' && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-          </div>
-        )}
-        
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-emerald-900/20 rounded-full opacity-0 group-hover/profile:opacity-100 transition-opacity duration-300"></div>
-        
-        {/* Hover ring animation */}
-        <div className="absolute -inset-1 rounded-full border-2 border-emerald-400 opacity-0 group-hover/profile:opacity-100 transition-opacity duration-500 animate-ping-once pointer-events-none"></div>
-      </div>
-    </div>
-  </Link>
-</div>
+            {/* Profile Dropdown */}
+            <div className="relative ml-2" ref={dropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="w-11 h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
+              >
+                <FiUser className="text-xl" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-emerald-100 overflow-hidden z-50 animate-fadeIn">
+                  <div className="py-2">
+                    <button
+                      onClick={handleDashboardClick}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                    >
+                      <FiHome className="text-lg" />
+                      <span className="font-semibold">Dashboard</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-1"></div>
+                    
+                    <button
+                      onClick={handleProfileClick}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
+                    >
+                      <FiSettings className="text-lg" />
+                      <span className="font-semibold">Profile Settings</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-100 my-1"></div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 transition-all duration-200 text-gray-700 hover:text-red-600"
+                    >
+                      <FiLogOut className="text-lg" />
+                      <span className="font-semibold">Logout</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>

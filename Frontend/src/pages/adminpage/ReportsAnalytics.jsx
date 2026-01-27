@@ -7,13 +7,11 @@ import {
   FiTrendingDown,
   FiClock,
   FiMapPin,
-  FiUser,
-  FiMail,
-  FiPhone,
   FiBarChart2,
   FiPieChart,
   FiGrid,
-  FiEye
+  FiEye,
+  FiArrowRight
 } from "react-icons/fi";
 import { BsCheckCircle, BsExclamationTriangle, BsArrowClockwise, BsClock } from "react-icons/bs";
 
@@ -36,13 +34,13 @@ const sampleReports = [
     issueType: "Overflowing Bin",
     status: "resolved",
     location: "Lakeside Road, Ward 6",
+    latitude: "28.2096",
+    longitude: "83.9586",
     assignedTo: "Cleanup Team A",
     priority: "medium",
-    reporter: "Ramesh Thapa",
-    reporterEmail: "ramesh.thapa@example.com",
-    reporterPhone: "+977 9841000001",
     description: "Public bin near Lakeside overflowing with tourist waste",
-    images: 2
+    images: 2,
+    photos: ["photo1.jpg", "photo2.jpg"]
   },
   {
     id: "48168C",
@@ -50,13 +48,13 @@ const sampleReports = [
     issueType: "Missed Pickup",
     status: "in-progress",
     location: "Birauta, Ward 8",
+    latitude: "28.2380",
+    longitude: "83.9956",
     assignedTo: "Collection Team B",
     priority: "high",
-    reporter: "Sunita Gurung",
-    reporterEmail: "sunita.gurung@example.com",
-    reporterPhone: "+977 9841000002",
     description: "Regular waste pickup missed in residential area",
-    images: 1
+    images: 1,
+    photos: ["photo3.jpg"]
   },
   {
     id: "E2H5K7",
@@ -64,13 +62,13 @@ const sampleReports = [
     issueType: "Illegal Dumping",
     status: "received",
     location: "Seti River Bank, Ward 9",
+    latitude: "28.2126",
+    longitude: "83.9630",
     assignedTo: "Pending Assignment",
     priority: "high",
-    reporter: "Hotel Mountain View",
-    reporterEmail: "info@mountainview.com",
-    reporterPhone: "+977 9841000003",
     description: "Construction waste dumped illegally near riverbank",
-    images: 3
+    images: 3,
+    photos: ["photo4.jpg", "photo5.jpg", "photo6.jpg"]
   },
   {
     id: "9F632N",
@@ -78,13 +76,13 @@ const sampleReports = [
     issueType: "Damaged Bin",
     status: "resolved",
     location: "Chipledhunga, Ward 3",
+    latitude: "28.2180",
+    longitude: "83.9856",
     assignedTo: "Maintenance Team",
     priority: "medium",
-    reporter: "Tourist Info Center",
-    reporterEmail: "info@touristcenter.com",
-    reporterPhone: "+977 9841000004",
     description: "Public bin damaged and needs replacement",
-    images: 1
+    images: 1,
+    photos: ["photo7.jpg"]
   },
   {
     id: "1C3P8Q",
@@ -92,13 +90,13 @@ const sampleReports = [
     issueType: "Overflowing Bin",
     status: "resolved",
     location: "Old Bazaar, Ward 1",
+    latitude: "28.2090",
+    longitude: "83.9850",
     assignedTo: "Cleanup Team C",
     priority: "high",
-    reporter: "Rajesh Sharma",
-    reporterEmail: "rajesh.sharma@example.com",
-    reporterPhone: "+977 9841000005",
     description: "Market area bin overflowing during peak hours",
-    images: 2
+    images: 2,
+    photos: ["photo8.jpg", "photo9.jpg"]
   },
   {
     id: "7D4G2M",
@@ -106,13 +104,13 @@ const sampleReports = [
     issueType: "Street Litter",
     status: "in-progress",
     location: "New Road, Ward 2",
+    latitude: "28.2110",
+    longitude: "83.9890",
     assignedTo: "Street Cleaning Team",
     priority: "medium",
-    reporter: "Maya Paudel",
-    reporterEmail: "maya.paudel@example.com",
-    reporterPhone: "+977 9841000006",
     description: "Accumulated litter on main street",
-    images: 0
+    images: 0,
+    photos: []
   }
 ];
 
@@ -240,7 +238,7 @@ const TrendBars = ({ data }) => {
   );
 };
 
-const ReportsTable = ({ reports, onExpand, expandedId }) => {
+const ReportsTable = ({ reports, onView }) => {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -257,19 +255,18 @@ const ReportsTable = ({ reports, onExpand, expandedId }) => {
             </tr>
           </thead>
           <tbody>
-            {reports.length === 0 && (
+            {reports.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-6 py-10 text-center text-gray-500">
                   <BsExclamationTriangle className="mx-auto text-2xl mb-2 text-amber-500" />
                   No reports match the filters.
                 </td>
               </tr>
-            )}
-            {reports.map((report) => {
-              const StatusIcon = statusConfig[report.status].icon;
-              return (
-                <React.Fragment key={report.id}>
-                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition">
+            ) : (
+              reports.map((report) => {
+                const StatusIcon = statusConfig[report.status].icon;
+                return (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition" key={report.id}>
                     <td className="px-6 py-4 font-semibold text-gray-900">{report.id}</td>
                     <td className="px-6 py-4 text-gray-700">{report.issueType}</td>
                     <td className="px-6 py-4 text-gray-700">
@@ -292,59 +289,16 @@ const ReportsTable = ({ reports, onExpand, expandedId }) => {
                     <td className="px-6 py-4 text-right">
                       <button
                         className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold"
-                        onClick={() => onExpand(expandedId === report.id ? null : report.id)}
+                        onClick={() => onView(report)}
                       >
                         <FiEye />
-                        {expandedId === report.id ? "Close" : "View"}
+                        View Details
                       </button>
                     </td>
                   </tr>
-                  {expandedId === report.id && (
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <td colSpan="7" className="px-6 py-5">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                          <div className="lg:col-span-2 space-y-3">
-                            <div>
-                              <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Description</div>
-                              <div className="text-gray-800 leading-relaxed">{report.description}</div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
-                              <div>
-                                <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Submitted</div>
-                                {report.date}
-                              </div>
-                              <div>
-                                <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Images</div>
-                                {report.images} attachments
-                              </div>
-                            </div>
-                          </div>
-                          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg">
-                                <FiUser />
-                              </div>
-                              <div>
-                                <div className="text-xs text-gray-500 font-semibold">Reporter</div>
-                                <div className="font-semibold text-gray-900">{report.reporter}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-700">
-                              <FiMail className="text-gray-500" />
-                              <span className="break-all">{report.reporterEmail}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-700">
-                              <FiPhone className="text-gray-500" />
-                              <span>{report.reporterPhone}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
@@ -357,7 +311,7 @@ const ReportsAnalytics = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [expandedId, setExpandedId] = useState(null);
+  const [modalReport, setModalReport] = useState(null);
 
   const filteredReports = useMemo(() => {
     return sampleReports.filter((r) => {
@@ -365,7 +319,7 @@ const ReportsAnalytics = () => {
         r.issueType.toLowerCase().includes(search.toLowerCase()) ||
         r.location.toLowerCase().includes(search.toLowerCase()) ||
         r.id.toLowerCase().includes(search.toLowerCase()) ||
-        r.reporter.toLowerCase().includes(search.toLowerCase());
+        r.assignedTo.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       const matchesPriority = priorityFilter === "all" || r.priority === priorityFilter;
       return matchesSearch && matchesStatus && matchesPriority;
@@ -374,7 +328,7 @@ const ReportsAnalytics = () => {
 
   const handleExport = () => {
     const rows = [
-      ["Report ID", "Issue", "Status", "Priority", "Location", "Assigned To", "Reporter", "Date"],
+      ["Report ID", "Issue", "Status", "Priority", "Location", "Assigned To", "Date"],
       ...filteredReports.map((r) => [
         r.id,
         r.issueType,
@@ -382,7 +336,6 @@ const ReportsAnalytics = () => {
         r.priority,
         r.location,
         r.assignedTo,
-        r.reporter,
         r.date
       ])
     ];
@@ -464,7 +417,7 @@ const ReportsAnalytics = () => {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by ID, issue, location, reporter"
+                  placeholder="Search by ID, issue, location, assignee"
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 />
               </div>
@@ -506,11 +459,114 @@ const ReportsAnalytics = () => {
             </div>
           </div>
 
-          <ReportsTable reports={filteredReports} onExpand={setExpandedId} expandedId={expandedId} />
+          <ReportsTable reports={filteredReports} onView={setModalReport} />
         </div>
       )}
+      {modalReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setModalReport(null)}
+          />
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-slide-up border border-gray-100">
+            <div className="sticky top-0 bg-white/95 backdrop-blur px-5 py-4 flex items-center justify-between border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <span className="text-xl font-semibold text-emerald-700">{modalReport.issueType}</span>
+                <div>
+                  <p className="text-xs text-gray-500">Report #{modalReport.id}</p>
+                  <p className="text-sm font-semibold text-gray-800">{modalReport.location}</p>
+                </div>
+              </div>
+              <button
+                className="text-gray-500 hover:text-gray-800 text-2xl font-bold leading-none"
+                onClick={() => setModalReport(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">📍 Location</p>
+                  <p className="text-sm font-medium text-gray-800">{modalReport.location}</p>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <p className="text-xs font-semibold text-blue-600 uppercase mb-1">🌐 Latitude</p>
+                  <p className="text-sm font-mono font-bold text-gray-800">{modalReport.latitude}</p>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                  <p className="text-xs font-semibold text-purple-600 uppercase mb-1">🌐 Longitude</p>
+                  <p className="text-sm font-mono font-bold text-gray-800">{modalReport.longitude}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">📅 Report Date</p>
+                  <p className="text-sm font-medium text-gray-800">{modalReport.date}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">⚡ Priority</p>
+                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${priorityConfig[modalReport.priority].bg} ${priorityConfig[modalReport.priority].color}`}>
+                    {priorityConfig[modalReport.priority].label}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">📝 Description</p>
+                <p className="text-sm text-gray-800 leading-relaxed">{modalReport.description}</p>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 border border-gray-200">
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">🖼️ Attached Images</p>
+                <p className="text-sm font-medium text-gray-800 mb-2">{modalReport.images} image(s)</p>
+                {modalReport.images > 0 && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      {modalReport.photos.map((photo, index) => (
+                        <div key={index} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                          <span className="text-xs text-gray-500">📷 {photo}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 italic">* Photo preview feature coming soon</p>
+                  </div>
+                )}
+                {modalReport.images === 0 && (
+                  <p className="text-xs text-gray-500 italic">No images attached</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
+                  onClick={() => setModalReport(null)}
+                >
+                  Close
+                </button>
+                <button
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-transform"
+                  onClick={() => console.log(`Assign report ${modalReport.id} to collector`)}
+                >
+                  <FiArrowRight className="text-sm" />
+                  Assign to Collector
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <style>{`
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slide-up { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-fade-in { animation: fade-in 180ms ease-out; }
+        .animate-slide-up { animation: slide-up 220ms ease-out; }
+      `}</style>
     </div>
   );
 };
 
 export default ReportsAnalytics;
+

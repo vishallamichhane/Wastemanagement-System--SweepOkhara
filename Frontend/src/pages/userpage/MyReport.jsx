@@ -26,9 +26,14 @@ const MyReports = () => {
       status: 'resolved',
       description: 'Public bin near Lakeside overflowing with tourist waste',
       location: 'Lakeside Road, Pokhara-6',
+      latitude: '28.2096',
+      longitude: '83.9586',
       assignedTo: 'Cleanup Team A',
       priority: 'medium',
-      images: 2
+      images: 2,
+      photos: ['photo1.jpg', 'photo2.jpg'],
+      contactName: 'Ram Sharma',
+      contactPhone: '+977-9841234567'
     },
     {
       id: '48168C',
@@ -37,9 +42,14 @@ const MyReports = () => {
       status: 'in-progress',
       description: 'Regular waste pickup missed in residential area',
       location: 'Birauta, Pokhara-8',
+      latitude: '28.2380',
+      longitude: '83.9956',
       assignedTo: 'Collection Team B',
       priority: 'high',
-      images: 1
+      images: 1,
+      photos: ['photo3.jpg'],
+      contactName: 'Sita Gurung',
+      contactPhone: '+977-9849876543'
     },
     {
       id: 'E2H5K7',
@@ -48,9 +58,14 @@ const MyReports = () => {
       status: 'received',
       description: 'Construction waste dumped illegally near riverbank',
       location: 'Seti River Bank, Pokhara-9',
+      latitude: '28.2126',
+      longitude: '83.9630',
       assignedTo: 'Pending Assignment',
       priority: 'high',
-      images: 3
+      images: 3,
+      photos: ['photo4.jpg', 'photo5.jpg', 'photo6.jpg'],
+      contactName: 'Hari Thapa',
+      contactPhone: '+977-9851122334'
     },
     {
       id: '9F632N',
@@ -59,9 +74,14 @@ const MyReports = () => {
       status: 'resolved',
       description: 'Public bin damaged and needs replacement',
       location: 'Chipledhunga, Pokhara-3',
+      latitude: '28.2180',
+      longitude: '83.9856',
       assignedTo: 'Maintenance Team',
       priority: 'medium',
-      images: 1
+      images: 1,
+      photos: ['photo7.jpg'],
+      contactName: 'Krishna Rai',
+      contactPhone: '+977-9845567890'
     },
     {
       id: '1C3P8Q',
@@ -70,9 +90,14 @@ const MyReports = () => {
       status: 'resolved',
       description: 'Market area bin overflowing during peak hours',
       location: 'Old Bazaar, Pokhara-1',
+      latitude: '28.2090',
+      longitude: '83.9850',
       assignedTo: 'Cleanup Team C',
       priority: 'high',
-      images: 2
+      images: 2,
+      photos: ['photo8.jpg', 'photo9.jpg'],
+      contactName: 'Maya Tamang',
+      contactPhone: '+977-9843332211'
     },
     {
       id: '7D4G2M',
@@ -81,9 +106,14 @@ const MyReports = () => {
       status: 'in-progress',
       description: 'Accumulated litter on main street',
       location: 'New Road, Pokhara-2',
+      latitude: '28.2110',
+      longitude: '83.9890',
       assignedTo: 'Street Cleaning Team',
       priority: 'medium',
-      images: 0
+      images: 0,
+      photos: [],
+      contactName: 'Bhim Bahadur',
+      contactPhone: '+977-9847778899'
     }
   ];
 
@@ -383,6 +413,17 @@ const MyReports = () => {
                   <p className="text-lg font-medium text-gray-800">{selectedReport.location}</p>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-600 mb-2">🌐 Latitude</p>
+                    <p className="text-lg font-mono font-bold text-gray-800">{selectedReport.latitude}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                    <p className="text-sm font-semibold text-purple-600 mb-2">🌐 Longitude</p>
+                    <p className="text-lg font-mono font-bold text-gray-800">{selectedReport.longitude}</p>
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <p className="text-sm font-semibold text-gray-600 mb-2">📅 Report Date</p>
                   <p className="text-lg font-medium text-gray-800">{selectedReport.date}</p>
@@ -394,15 +435,22 @@ const MyReports = () => {
                 </div>
 
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">👤 Assigned To</p>
-                  <p className="text-lg font-medium text-gray-800">{selectedReport.assignedTo}</p>
-                </div>
-
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <p className="text-sm font-semibold text-gray-600 mb-2">🖼️ Attached Images</p>
                   <p className="text-lg font-medium text-gray-800">{selectedReport.images} image(s)</p>
                   {selectedReport.images > 0 && (
-                    <p className="text-sm text-gray-500 mt-2">Images would be displayed here</p>
+                    <div className="mt-3 space-y-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        {selectedReport.photos.map((photo, index) => (
+                          <div key={index} className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300">
+                            <span className="text-xs text-gray-500">📷 {photo}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 italic">* Photo preview feature coming soon</p>
+                    </div>
+                  )}
+                  {selectedReport.images === 0 && (
+                    <p className="text-sm text-gray-500 mt-2 italic">No images attached</p>
                   )}
                 </div>
               </div>

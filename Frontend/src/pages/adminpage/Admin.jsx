@@ -11,7 +11,8 @@ import {
   FiChevronRight,
   FiDownload,
   FiLogOut,
-  FiAlertTriangle
+  FiAlertTriangle,
+  FiMap
 } from 'react-icons/fi';
 import { 
   BsFillTrashFill, 
@@ -29,6 +30,7 @@ import CollectorManagement from "./CollectorManagement";
 import ReportsAnalytics from "./ReportsAnalytics";
 import BinManagement from "./BinManagement";
 import SystemAnalytics from "./SystemAnalytics";
+import MapOverview from "./MapOverview";
 
 // Dummy Data - Can be replaced with API calls
 const dummyAdminData = {
@@ -471,7 +473,17 @@ const AdminDashboard = () => {
                 </span>
               </button>
 
-
+              <button
+                onClick={() => setActiveTab("map")}
+                className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
+                  activeTab === "map"
+                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
+                }`}
+              >
+                <FiMap size={20} />
+                <span className="font-medium">Map Overview</span>
+              </button>
 
               <button
                 onClick={() => setActiveTab("analytics")}
@@ -524,6 +536,8 @@ const AdminDashboard = () => {
               <ReportsAnalytics />
             ) : activeTab === "bins" ? (
               <BinManagement />
+            ) : activeTab === "map" ? (
+              <MapOverview />
             ) : activeTab === "analytics" ? (
               <SystemAnalytics />
             ) : (
@@ -666,6 +680,14 @@ const AdminDashboard = () => {
           >
             <FiUsers size={20} />
             <span className="text-xs mt-1">Users</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab("map")}
+            className={`flex flex-col items-center p-2 ${activeTab === "map" ? "text-emerald-600" : "text-gray-500"}`}
+          >
+            <FiMap size={20} />
+            <span className="text-xs mt-1">Map</span>
           </button>
           
           <button 

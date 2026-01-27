@@ -104,18 +104,10 @@ const createTrashBinIcon = (fillStatus) => {
 // STATIC DATA
 // -------------------------
 const trashBins = [
-  { 
-    id: "TB1024", 
-    position: [28.2106, 83.9856], 
-    fillStatus: "full", 
-    binType: "General Waste", 
-    lastCollection: "2 days ago", 
-    location: "Mahendra Pul, Pokhara", 
-    fillLevel: 95 
-  },
+ 
   { 
     id: "TB1025", 
-    position: [28.209, 83.9884], 
+    position: [28.2090, 83.9596], 
     fillStatus: "half", 
     binType: "General Waste", 
     lastCollection: "1 day ago", 
@@ -124,7 +116,7 @@ const trashBins = [
   },
   { 
     id: "TB1026", 
-    position: [28.2248, 83.9829], 
+    position: [28.2144, 83.9851], 
     fillStatus: "empty", 
     binType: "Recyclable Waste", 
     lastCollection: "6 hours ago", 
@@ -133,7 +125,7 @@ const trashBins = [
   },
   { 
     id: "TB1027", 
-    position: [28.213, 83.983], 
+    position: [28.2096, 83.9896], 
     fillStatus: "half", 
     binType: "Organic Waste", 
     lastCollection: "12 hours ago", 
@@ -142,12 +134,21 @@ const trashBins = [
   },
   { 
     id: "TB1028", 
-    position: [28.207, 83.986], 
+    position: [28.2115, 83.9650], 
     fillStatus: "empty", 
     binType: "General Waste", 
     lastCollection: "3 hours ago", 
     location: "Lakeside East, Pokhara", 
     fillLevel: 10 
+  },
+  { 
+    id: "TB1029", 
+    position: [28.21118953908775, 83.9771218979668], 
+    fillStatus: "empty", 
+    binType: "Smart Bin (Demo)", 
+    lastCollection: "Just now", 
+    location: "Pokhara Engineering College", 
+    fillLevel: 0 
   },
 ];
 
@@ -197,13 +198,6 @@ export default function MapStatusPage() {
       status: bin.fillLevel,
       lastUpdated: bin.lastCollection,
       fillStatus: bin.fillStatus,
-    })),
-    ...vehicles.map(vehicle => ({
-      id: `Vehicle #${vehicle.id}`,
-      type: "Vehicle",
-      location: vehicle.location,
-      status: vehicle.status === "active" ? "Active" : "Idle",
-      lastUpdated: vehicle.lastUpdated,
     })),
   ].filter(item => 
     item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -335,34 +329,6 @@ export default function MapStatusPage() {
                         <p><span className="font-semibold">Fill Level:</span> {bin.fillLevel}%</p>
                         <p><span className="font-semibold">Last Collection:</span> {bin.lastCollection}</p>
                         <p><span className="font-semibold">Location:</span> {bin.location}</p>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
-              {/* Vehicle Markers */}
-              {vehicles.map((vehicle) => (
-                <Marker key={vehicle.id} position={vehicle.position} icon={createVehicleIcon(vehicle.status)}>
-                  <Popup className="custom-popup">
-                    <div className="p-3 min-w-[200px]">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-3 h-3 rounded-full ${
-                          vehicle.status === "active" ? "bg-green-500 animate-pulse" : "bg-gray-500"
-                        }`}></div>
-                        <h3 className="font-bold text-gray-900">Vehicle #{vehicle.id}</h3>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="font-semibold">Status:</span> 
-                          <span className={`ml-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                            vehicle.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                          }`}>
-                            {vehicle.status.toUpperCase()}
-                          </span>
-                        </p>
-                        <p><span className="font-semibold">Driver:</span> {vehicle.driver}</p>
-                        <p><span className="font-semibold">Route:</span> {vehicle.location}</p>
-                        <p><span className="font-semibold">Last Updated:</span> {vehicle.lastUpdated}</p>
                       </div>
                     </div>
                   </Popup>

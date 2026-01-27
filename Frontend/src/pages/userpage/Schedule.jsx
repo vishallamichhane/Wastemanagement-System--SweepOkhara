@@ -105,36 +105,36 @@ const WastePickupSchedule = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Calendar Section - Made Smaller */}
-          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 transform hover:scale-[1.01] transition-all duration-500 border border-emerald-100">
+          <div className="xl:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 transform hover:scale-[1.01] transition-all duration-500 border border-emerald-100">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <button 
                 onClick={handlePrevMonth}
-                className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:scale-105 transition-all duration-300"
+                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:scale-105 transition-all duration-300"
               >
-                <FiChevronLeft className="text-lg" />
+                <FiChevronLeft className="text-base" />
               </button>
               
-              <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <FaCalendarAlt className="text-emerald-600 text-xl" />
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <FaCalendarAlt className="text-emerald-600 text-base" />
                 {monthNames[currentMonth]} {currentYear}
               </h3>
               
               <button 
                 onClick={handleNextMonth}
-                className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:scale-105 transition-all duration-300"
+                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:scale-105 transition-all duration-300"
               >
-                <FiChevronRight className="text-lg" />
+                <FiChevronRight className="text-base" />
               </button>
             </div>
             
             {/* Smaller Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2 mb-6">
+            <div className="grid grid-cols-7 gap-1.5 mb-4">
               {/* Week Days Header - Smaller */}
               {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
                 <div 
                   key={day} 
-                  className="text-center text-xs font-bold text-emerald-700 py-2 bg-emerald-50/50 rounded-lg"
+                  className="text-center text-[10px] font-bold text-emerald-700 py-1 bg-emerald-50/50 rounded-md"
                 >
                   {day}
                 </div>
@@ -146,7 +146,7 @@ const WastePickupSchedule = () => {
                   key={index}
                   onClick={() => setSelectedDay(date.day)}
                   className={`
-                    h-12 flex flex-col items-center justify-center rounded-lg border transition-all duration-300 transform hover:scale-105
+                    h-8 flex flex-col items-center justify-center rounded-md border transition-all duration-300 transform hover:scale-105
                     ${date.month === 'prev' ? 'text-gray-400 bg-gray-50/50' : 'text-gray-700'}
                     ${selectedDay === date.day && date.month === 'current'
                       ? 'border-emerald-500 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg scale-105' 
@@ -157,9 +157,9 @@ const WastePickupSchedule = () => {
                     ${date.month !== 'current' ? 'opacity-50' : ''}
                   `}
                 >
-                  <span className="text-sm font-semibold">{date.day}</span>
+                  <span className="text-xs font-semibold">{date.day}</span>
                   {date.hasPickup && (
-                    <div className="mt-0.5 transform scale-90">
+                    <div className="mt-0 transform scale-75">
                       <WastePickupIcon />
                     </div>
                   )}
@@ -168,28 +168,28 @@ const WastePickupSchedule = () => {
             </div>
 
             {/* Updated Calendar Legend */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-              <h4 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <FaTrashAlt className="text-emerald-600 text-base" />
+            <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
+              <h4 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
+                <FaTrashAlt className="text-emerald-600 text-sm" />
                 Collection Legend
               </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 group">
-                  <div className="w-8 h-8 flex items-center justify-center bg-emerald-100 border-2 border-emerald-400 rounded-md transition-transform group-hover:scale-110">
-                    <WastePickupIcon size="text-xs" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 group">
+                  <div className="w-6 h-6 flex items-center justify-center bg-emerald-100 border-2 border-emerald-400 rounded-md transition-transform group-hover:scale-110">
+                    <WastePickupIcon size="text-[10px]" />
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">Pickup Day</span>
-                    <p className="text-xs text-gray-500">Waste collection scheduled</p>
+                    <span className="text-xs font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">Pickup Day</span>
+                    <p className="text-[10px] text-gray-500">Waste collection scheduled</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 group">
-                  <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-500 border-2 border-emerald-600 rounded-md transition-transform group-hover:scale-110 text-white">
-                    <span className="text-sm font-bold">{selectedDay}</span>
+                <div className="flex items-center gap-2 group">
+                  <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-500 border-2 border-emerald-600 rounded-md transition-transform group-hover:scale-110 text-white">
+                    <span className="text-xs font-bold">{selectedDay}</span>
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">Selected Day</span>
-                    <p className="text-xs text-gray-500">Currently viewing</p>
+                    <span className="text-xs font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">Selected Day</span>
+                    <p className="text-[10px] text-gray-500">Currently viewing</p>
                   </div>
                 </div>
               </div>
