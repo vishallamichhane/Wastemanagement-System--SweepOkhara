@@ -20,7 +20,8 @@ import {
   FiCheck,
   FiX,
   FiClock,
-  FiUser
+  FiUser,
+  FiRefreshCw
 } from 'react-icons/fi';
 import {
   BsPersonPlus,
@@ -30,193 +31,7 @@ import {
   BsBuildings
 } from "react-icons/bs";
 import { FaUserTie, FaCity } from "react-icons/fa";
-
-// Dummy User Data
-const dummyUsers = [
-  {
-    id: "USR-001",
-    name: "Ramesh Thapa",
-    email: "ramesh.thapa@example.com",
-    phone: "+977 9841000001",
-    type: "Resident",
-    status: "active",
-    reports: 3,
-    joined: "2024-01-15",
-    lastActive: "2h ago",
-    address: "Lakeside, Pokhara",
-    ward: "Ward 5"
-  },
-  {
-    id: "USR-002",
-    name: "Sunita Gurung",
-    email: "sunita.gurung@example.com",
-    phone: "+977 9841000002",
-    type: "Business",
-    status: "active",
-    reports: 7,
-    joined: "2024-01-10",
-    lastActive: "1d ago",
-    address: "Mahendra Pul, Pokhara",
-    ward: "Ward 3"
-  },
-  {
-    id: "USR-003",
-    name: "Hotel Mountain View",
-    email: "info@mountainview.com",
-    phone: "+977 9841000003",
-    type: "Commercial",
-    status: "active",
-    reports: 12,
-    joined: "2024-01-05",
-    lastActive: "3h ago",
-    address: "City Center, Pokhara",
-    ward: "Ward 1"
-  },
-  {
-    id: "USR-004",
-    name: "Tourist Info Center",
-    email: "info@touristcenter.com",
-    phone: "+977 9841000004",
-    type: "Government",
-    status: "inactive",
-    reports: 5,
-    joined: "2024-01-01",
-    lastActive: "5d ago",
-    address: "Baseline, Pokhara",
-    ward: "Ward 2"
-  },
-  {
-    id: "USR-005",
-    name: "Rajesh Sharma",
-    email: "rajesh.sharma@example.com",
-    phone: "+977 9841000005",
-    type: "Resident",
-    status: "active",
-    reports: 2,
-    joined: "2024-01-20",
-    lastActive: "5h ago",
-    address: "Lakeside East, Pokhara",
-    ward: "Ward 5"
-  },
-  {
-    id: "USR-006",
-    name: "Gurkha Restaurant",
-    email: "contact@gurkha.com",
-    phone: "+977 9841000006",
-    type: "Commercial",
-    status: "suspended",
-    reports: 15,
-    joined: "2023-12-15",
-    lastActive: "2w ago",
-    address: "Lakeside, Pokhara",
-    ward: "Ward 5"
-  },
-  {
-    id: "USR-007",
-    name: "Bikash Poudel",
-    email: "bikash.poudel@example.com",
-    phone: "+977 9841000007",
-    type: "Resident",
-    status: "active",
-    reports: 1,
-    joined: "2024-01-18",
-    lastActive: "8h ago",
-    address: "Mahendra Pul, Pokhara",
-    ward: "Ward 3"
-  },
-  {
-    id: "USR-008",
-    name: "Pokhara Municipality",
-    email: "office@pokhara.gov.np",
-    phone: "+977 9841000008",
-    type: "Government",
-    status: "active",
-    reports: 8,
-    joined: "2024-01-03",
-    lastActive: "1d ago",
-    address: "City Hall, Pokhara",
-    ward: "Ward 1"
-  },
-];
-
-// Dummy registration requests
-const dummyRegistrationRequests = [
-  {
-    id: "REQ-001",
-    name: "Anita Sharma",
-    email: "anita.sharma@example.com",
-    phone: "+977 9841000010",
-    requestedType: "Resident",
-    address: "Lakeside, Pokhara",
-    ward: "Ward 5",
-    dateSubmitted: "2024-02-10 14:30",
-    verificationDocs: ["id_card.pdf", "utility_bill.pdf"],
-    businessName: null,
-    businessType: null,
-    notes: "New resident in Lakeside area",
-    status: "pending"
-  },
-  {
-    id: "REQ-002",
-    name: "Mountain Cafe",
-    email: "info@mountaincafe.com",
-    phone: "+977 9841000011",
-    requestedType: "Commercial",
-    address: "Lakeside Main Road, Pokhara",
-    ward: "Ward 5",
-    dateSubmitted: "2024-02-09 10:15",
-    verificationDocs: ["business_license.pdf", "tax_certificate.pdf"],
-    businessName: "Mountain Cafe & Restaurant",
-    businessType: "Food & Beverage",
-    notes: "Tourist-focused cafe with outdoor seating",
-    status: "pending"
-  },
-  {
-    id: "REQ-003",
-    name: "Bikas Rai",
-    email: "bikas.rai@example.com",
-    phone: "+977 9841000012",
-    requestedType: "Resident",
-    address: "Mahendra Pul, Pokhara",
-    ward: "Ward 3",
-    dateSubmitted: "2024-02-08 16:45",
-    verificationDocs: ["citizenship.pdf", "photo.jpg"],
-    businessName: null,
-    businessType: null,
-    notes: "Student accommodation",
-    status: "pending"
-  },
-  {
-    id: "REQ-004",
-    name: "Pokhara Adventure Tours",
-    email: "bookings@adventurepokhara.com",
-    phone: "+977 9841000013",
-    requestedType: "Business",
-    address: "Tourist Bus Park, Pokhara",
-    ward: "Ward 1",
-    dateSubmitted: "2024-02-07 09:20",
-    verificationDocs: ["company_registration.pdf", "insurance.pdf"],
-    businessName: "Pokhara Adventure Tours Pvt. Ltd.",
-    businessType: "Tour Operator",
-    notes: "Offers trekking, paragliding, and rafting tours",
-    status: "pending"
-  },
-  {
-    id: "REQ-005",
-    name: "Saraswati Primary School",
-    email: "office@saraswatischool.edu.np",
-    phone: "+977 9841000014",
-    requestedType: "Government",
-    address: "Bagar, Pokhara",
-    ward: "Ward 2",
-    dateSubmitted: "2024-02-06 11:10",
-    verificationDocs: ["school_license.pdf", "ministry_approval.pdf"],
-    businessName: "Saraswati Primary School",
-    businessType: "Educational Institution",
-    notes: "Government-aided primary school",
-    status: "pending"
-  }
-];
+import axios from "axios";
 
 const userTypes = ["All", "Resident", "Business", "Commercial", "Government"];
 const userStatuses = ["All", "active", "inactive", "suspended"];
@@ -257,7 +72,7 @@ const TypeBadge = ({ type }) => {
 };
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(dummyUsers);
+  const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -268,9 +83,35 @@ const UserManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [registrationRequests, setRegistrationRequests] = useState(dummyRegistrationRequests);
+  const [registrationRequests, setRegistrationRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [activeTab, setActiveTab] = useState("pending");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch real users from backend API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('/api/admin/users');
+      if (res.data.success) {
+        setUsers(res.data.data);
+      } else {
+        setUsers([]);
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+      setError('Failed to load users from server');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   // Filter users based on search, type, and status
   const filteredUsers = users.filter(user => {
@@ -329,7 +170,17 @@ const UserManagement = () => {
   };
 
   const handleExportUsers = () => {
-    alert("Exporting user data...");
+    const rows = [
+      ["Name", "Email", "Phone", "Type", "Status", "Ward", "Reports", "Joined"],
+      ...users.map(u => [u.name, u.email, u.phone, u.type, u.status, u.ward, u.reports, u.joined])
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "users-export.csv";
+    a.click();
   };
 
   const handleChangeStatus = (userId, newStatus) => {
@@ -404,10 +255,38 @@ const UserManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-4 lg:p-8 animate-fadeInUp">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">User Management</h1>
-        <p className="text-gray-600">Manage all registered users and their accounts</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">User Management</h1>
+            <p className="text-gray-600">Manage all registered users and their accounts</p>
+          </div>
+          <button
+            onClick={fetchUsers}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+          >
+            <FiRefreshCw className={loading ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          <p className="ml-4 text-gray-600">Loading users...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          {error}
+          <button onClick={fetchUsers} className="ml-4 text-red-800 underline font-medium">Retry</button>
+        </div>
+      )}
+
+      {!loading && (
+      <>
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-300">
@@ -415,7 +294,7 @@ const UserManagement = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Total Users</p>
               <p className="text-4xl font-bold text-gray-900 mt-2">{users.length}</p>
-              <p className="text-xs text-emerald-600 mt-2 font-medium">+5 this month</p>
+              <p className="text-xs text-gray-500 mt-2">From database</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-xl">
               <BsPersonPlus className="text-3xl text-blue-600" />
@@ -681,6 +560,8 @@ const UserManagement = () => {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Registration Requests Modal */}
       {showAddUserModal && (

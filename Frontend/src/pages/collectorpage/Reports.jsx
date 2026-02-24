@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GiBroom } from 'react-icons/gi';
+import { GiBroom } from "react-icons/gi";
 import { BsBell, BsEye, BsFilter, BsSearch, BsClock, BsCheckCircle, BsExclamationTriangle, BsArrowClockwise, BsPinMap, BsImage, BsFile, BsPlay } from 'react-icons/bs';
-import { FiLogOut, FiChevronLeft, FiHome, FiCalendar, FiDownload, FiUser, FiSettings } from 'react-icons/fi';
+import { FiLogOut, FiChevronLeft, FiHome, FiCalendar, FiDownload, FiUser, FiSettings, FiMenu, FiX } from 'react-icons/fi';
 import useScrollToTop from '../../hooks/useScrollToTop';
 import CollectorNotificationCenter from './components/CollectorNotificationCenter';
 
@@ -23,105 +23,35 @@ const CollectorReports = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(false);
   const dropdownRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
 
-  // Sample reports assigned to collector from users
-  const sampleReports = [
-    {
-      id: '803F9A',
-      date: 'July 15, 2024',
-      issueType: 'Overflowing Bin',
-      status: 'pending',
-      description: 'Public bin near Lakeside overflowing with tourist waste',
-      location: 'Lakeside Road, Pokhara-6',
-      coordinates: [28.2090, 83.9596],
-      priority: 'high',
-      reportedBy: 'Rama Sharma',
-      assignedDate: 'July 16, 2024',
-      media: [
-        { type: 'image', name: 'overflow_bin_1.jpg', url: 'https://images.unsplash.com/photo-1584622181563-430f63602d4b?w=500' },
-        { type: 'image', name: 'overflow_bin_2.jpg', url: 'https://images.unsplash.com/photo-1559976615-cd4628902249?w=500' }
-      ]
-    },
-    {
-      id: '48168C',
-      date: 'July 12, 2024',
-      issueType: 'Missed Pickup',
-      status: 'in-progress',
-      description: 'Regular waste pickup missed in residential area',
-      location: 'Birauta, Pokhara-8',
-      coordinates: [28.2115, 83.9650],
-      priority: 'high',
-      reportedBy: 'Priya Patel',
-      assignedDate: 'July 13, 2024',
-      media: [
-        { type: 'image', name: 'missed_pickup.jpg', url: 'https://images.unsplash.com/photo-1563514227147-6d2ff665a7a8?w=500' }
-      ]
-    },
-    {
-      id: 'E2H5K7',
-      date: 'July 11, 2024',
-      issueType: 'Illegal Dumping',
-      status: 'pending',
-      description: 'Construction waste dumped illegally near riverbank',
-      location: 'Seti River Bank, Pokhara-9',
-      coordinates: [28.2144, 83.9851],
-      priority: 'high',
-      reportedBy: 'Deepak Thapa',
-      assignedDate: 'July 12, 2024',
-      media: [
-        { type: 'image', name: 'dump_site_1.jpg', url: 'https://images.unsplash.com/photo-1532996122724-8f3c2cd83c5d?w=500' },
-        { type: 'image', name: 'dump_site_2.jpg', url: 'https://images.unsplash.com/photo-1505994278828-cd271d694d30?w=500' },
-        { type: 'image', name: 'dump_site_3.jpg', url: 'https://images.unsplash.com/photo-1542601906960-ba2006ce398f?w=500' },
-        { type: 'file', name: 'survey_report.pdf', url: '#' }
-      ]
-    },
-    {
-      id: '9F632N',
-      date: 'July 05, 2024',
-      issueType: 'Damaged Bin',
-      status: 'completed',
-      description: 'Public bin damaged and needs replacement',
-      location: 'City Center, Pokhara-3',
-      coordinates: [28.2096, 83.9896],
-      priority: 'medium',
-      reportedBy: 'Anita Sharma',
-      assignedDate: 'July 6, 2024',
-      media: [
-        { type: 'image', name: 'damaged_bin.jpg', url: 'https://images.unsplash.com/photo-1559772212-ad4a9c0ef4b5?w=500' }
-      ]
-    },
-    {
-      id: '1C3P8Q',
-      date: 'June 28, 2024',
-      issueType: 'Overflowing Bin',
-      status: 'completed',
-      description: 'Market area bin overflowing during peak hours',
-      location: 'Old Bazaar, Pokhara-1',
-      coordinates: [28.21118953908775, 83.9771218979668],
-      priority: 'high',
-      reportedBy: 'Mohan Singh',
-      assignedDate: 'June 29, 2024',
-      media: [
-        { type: 'image', name: 'market_overflow_1.jpg', url: 'https://images.unsplash.com/photo-1584622181563-430f63602d4b?w=500' },
-        { type: 'image', name: 'market_overflow_2.jpg', url: 'https://images.unsplash.com/photo-1559976615-cd4628902249?w=500' },
-        { type: 'video', name: 'overflow_video.mp4', url: '#' }
-      ]
-    },
-    {
-      id: '7D4G2M',
-      date: 'June 25, 2024',
-      issueType: 'Street Litter',
-      status: 'in-progress',
-      description: 'Accumulated litter on main street',
-      location: 'New Road, Pokhara-2',
-      coordinates: [28.2106, 83.9856],
-      priority: 'medium',
-      reportedBy: 'Sunita Gupta',
-      assignedDate: 'June 26, 2024',
-      media: []
+  // Map backend status to collector-friendly status
+  const mapStatus = (backendStatus) => {
+    switch (backendStatus) {
+      case 'received': return 'pending';
+      case 'in-progress': return 'in-progress';
+      case 'resolved': return 'completed';
+      default: return 'pending';
     }
-  ];
+  };
+
+  // Map collector status back to backend status
+  const mapStatusToBackend = (collectorStatus) => {
+    switch (collectorStatus) {
+      case 'pending': return 'received';
+      case 'in-progress': return 'in-progress';
+      case 'completed': return 'resolved';
+      default: return 'received';
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   const statusConfig = {
     'pending': { label: 'Pending', color: 'text-blue-600', bgColor: 'bg-blue-100', dotColor: 'bg-blue-500' },
@@ -135,13 +65,66 @@ const CollectorReports = () => {
     'low': { label: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-100' }
   };
 
+  // Fetch real reports from backend
   useEffect(() => {
-    setTimeout(() => {
-      setReports(sampleReports);
-      setFilteredReports(sampleReports);
-      setLoading(false);
-    }, 500);
-  }, []);
+    const fetchReports = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('collectorToken');
+        if (!token) {
+          console.error('No collector token found');
+          navigate('/login');
+          return;
+        }
+
+        const response = await fetch('http://localhost:3000/api/collectors/my-reports', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const result = await response.json();
+        console.log('📋 Collector reports response:', result);
+
+        if (result.success && result.data) {
+          const mappedReports = result.data.map((r) => ({
+            id: r._id,
+            shortId: r._id.slice(-6).toUpperCase(),
+            date: formatDate(r.createdAt),
+            issueType: r.reportLabel || r.reportType,
+            status: mapStatus(r.status),
+            backendStatus: r.status,
+            description: r.description,
+            location: r.location,
+            ward: r.ward,
+            coordinates: [r.latitude || 0, r.longitude || 0],
+            priority: r.priority || 'medium',
+            reportedBy: r.userName || r.userEmail || 'Anonymous',
+            assignedDate: formatDate(r.createdAt),
+            media: (r.images || []).map((img, idx) => ({
+              type: 'image',
+              name: `report_image_${idx + 1}.jpg`,
+              url: img
+            }))
+          }));
+          setReports(mappedReports);
+          setFilteredReports(mappedReports);
+          console.log(`✅ Loaded ${mappedReports.length} reports for collector`);
+        } else {
+          setReports([]);
+          setFilteredReports([]);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching collector reports:', error);
+        setReports([]);
+        setFilteredReports([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, [navigate]);
 
   useEffect(() => {
     let filtered = reports;
@@ -150,7 +133,9 @@ const CollectorReports = () => {
       filtered = filtered.filter(report =>
         report.issueType.toLowerCase().includes(searchTerm.toLowerCase()) ||
         report.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.id.toLowerCase().includes(searchTerm.toLowerCase())
+        report.shortId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (`ward ${report.ward}`).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -184,6 +169,9 @@ const CollectorReports = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowProfileDropdown(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -191,6 +179,17 @@ const CollectorReports = () => {
 
   const handleLogout = () => {
     setShowProfileDropdown(false);
+    
+    console.log('🚪 Collector logging out...');
+    
+    // Clear collector data from localStorage
+    localStorage.removeItem('collectorToken');
+    localStorage.removeItem('collectorData');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    
+    console.log('✅ Collector logged out successfully');
+    
     navigate('/login');
   };
 
@@ -217,12 +216,39 @@ const CollectorReports = () => {
     }
   };
 
-  const handleStatusUpdate = (reportId, newStatus) => {
-    const updatedReports = reports.map(report => 
-      report.id === reportId ? { ...report, status: newStatus } : report
-    );
-    setReports(updatedReports);
-    setSelectedReport(updatedReports.find(r => r.id === reportId));
+  const handleStatusUpdate = async (reportId, newStatus) => {
+    try {
+      setStatusUpdating(true);
+      const token = localStorage.getItem('collectorToken');
+      const backendStatus = mapStatusToBackend(newStatus);
+
+      const response = await fetch(`http://localhost:3000/api/collectors/reports/${reportId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: backendStatus }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        const updatedReports = reports.map(report =>
+          report.id === reportId ? { ...report, status: newStatus, backendStatus } : report
+        );
+        setReports(updatedReports);
+        setSelectedReport(updatedReports.find(r => r.id === reportId));
+        console.log(`✅ Report ${reportId} status updated to ${newStatus}`);
+      } else {
+        console.error('❌ Failed to update status:', result.message);
+        alert('Failed to update status: ' + result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error updating report status:', error);
+      alert('Error updating status. Please try again.');
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
   return (
@@ -234,33 +260,33 @@ const CollectorReports = () => {
       </div>
 
       {/* Enhanced Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+      <nav ref={mobileMenuRef} className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
         isNavVisible ? 'translate-y-0' : '-translate-y-full'
       } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
       }`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
           {/* Left: Logo */}
           <Link to="/collector/dashboard" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-3 group cursor-pointer">
+            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
               <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
                 <GiBroom className="text-white text-xl" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                   SweePokhara
                 </span>
               </div>
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+              <span className="hidden sm:inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
             </div>
           </Link>
 
-          {/* Right: Navigation */}
-          <div className="flex items-center space-x-6">
+          {/* Right: Navigation - Desktop */}
+          <div className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => {
                 setActiveNav('home');
@@ -365,11 +391,44 @@ const CollectorReports = () => {
               )}
             </div>
           </div>
+
+          {/* Mobile: notification + hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            <CollectorNotificationCenter />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg text-gray-700 hover:bg-emerald-50 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <FiX className="text-2xl" /> : <FiMenu className="text-2xl" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile slide-down menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-emerald-100 bg-white/95 backdrop-blur-xl px-4 py-3 space-y-1">
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/dashboard'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiHome /> Dashboard
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/tasks'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiCalendar /> Schedule
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-700 bg-emerald-50/80 font-semibold">
+              <BsExclamationTriangle /> Reports
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiUser /> Profile
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold">
+              <FiLogOut /> Logout
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow mx-auto p-6 w-full max-w-7xl flex flex-col mt-24">
+      <main className="flex-grow mx-auto p-4 sm:p-6 w-full max-w-7xl flex flex-col mt-16 sm:mt-20 md:mt-24">
         {/* Header Section */}
         <div className="mb-8">
           <Link to="/collector/dashboard" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
@@ -379,10 +438,10 @@ const CollectorReports = () => {
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-2">
                 Assigned Reports
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-base sm:text-lg">
                 Manage waste management reports assigned to you by the admin
               </p>
             </div>
@@ -404,7 +463,7 @@ const CollectorReports = () => {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 bg-white rounded-2xl shadow-lg p-4 border border-emerald-100">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 bg-white rounded-2xl shadow-lg p-3 sm:p-4 border border-emerald-100">
             <div className="flex-1 relative">
               <BsSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -451,7 +510,7 @@ const CollectorReports = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredReports.map((report) => (
               <div
                 key={report.id}
@@ -496,7 +555,11 @@ const CollectorReports = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="font-semibold">Report ID:</span>
-                      <span className="font-mono">{report.id}</span>
+                      <span className="font-mono">{report.shortId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Ward:</span>
+                      <span>Ward {report.ward}</span>
                     </div>
                   </div>
 
@@ -512,14 +575,14 @@ const CollectorReports = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedReport && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className={`p-6 ${statusConfig[selectedReport.status].bgColor} flex items-center justify-between border-b`}>
-              <div className="flex items-center gap-3">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className={`p-4 sm:p-6 ${statusConfig[selectedReport.status].bgColor} flex items-center justify-between border-b`}>
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 {getStatusIcon(selectedReport.status)}
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedReport.issueType}</h2>
-                  <p className="text-sm text-gray-600">Report ID: {selectedReport.id}</p>
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{selectedReport.issueType}</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Report ID: {selectedReport.shortId} • Ward {selectedReport.ward}</p>
                 </div>
               </div>
               <button
@@ -530,7 +593,7 @@ const CollectorReports = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Description</h3>
                 <p className="text-gray-700 leading-relaxed">{selectedReport.description}</p>
@@ -598,7 +661,7 @@ const CollectorReports = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-600">Status</label>
                   <p className={`mt-1 px-3 py-2 rounded-lg font-semibold text-sm w-fit ${statusConfig[selectedReport.status].bgColor} ${statusConfig[selectedReport.status].color}`}>
@@ -620,11 +683,11 @@ const CollectorReports = () => {
                   {selectedReport.location}
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
-                  Coordinates: {selectedReport.coordinates[0].toFixed(4)}, {selectedReport.coordinates[1].toFixed(4)}
+                  Coordinates: {selectedReport.coordinates[0]?.toFixed(4)}, {selectedReport.coordinates[1]?.toFixed(4)}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-600">Reported by</label>
                   <p className="mt-1 text-gray-700">{selectedReport.reportedBy}</p>
@@ -637,7 +700,7 @@ const CollectorReports = () => {
 
               <div>
                 <label className="text-sm font-semibold text-gray-600 block mb-3">Update Status</label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleStatusUpdate(selectedReport.id, 'pending')}
                     className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
@@ -671,7 +734,7 @@ const CollectorReports = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t">
                 <button
                   onClick={() => setShowDetailsModal(false)}
                   className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all"

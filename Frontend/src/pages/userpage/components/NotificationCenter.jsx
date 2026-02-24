@@ -1,72 +1,359 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BsBell, BsTrash2, BsCheckCircle, BsClock, BsExclamationTriangle, BsCalendarEvent } from 'react-icons/bs';
+import axios from 'axios';
+import { BsBell, BsTrash2, BsCheckCircle, BsClock, BsExclamationTriangle, BsCalendarEvent, BsTruck, BsCheckAll } from 'react-icons/bs';
+import { useUser } from '@clerk/clerk-react';
+import { WARD_SCHEDULES } from '../../../data/wardSchedules';
+
+// Day name mapping
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function NotificationCenter() {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [wardCollector, setWardCollector] = useState(null); // Real collector from DB
   const dropdownRef = useRef(null);
+  const emailSentRef = useRef(false);
+  const { user: clerkUser, isLoaded } = useUser();
 
-  // Initialize notifications on component mount
+  // Get user's ward from Clerk metadata
+  const userWard = clerkUser?.publicMetadata?.ward || clerkUser?.unsafeMetadata?.ward || '';
+  // Parse ward number safely from both "Ward 14" and "14" formats
+  const wardNum = parseInt(String(userWard).replace(/\D/g, '')) || 0;
+
+  // Get ward schedule info for the user
+  const getWardSchedule = (wardNum) => {
+    const key = `Ward ${wardNum}`;
+    return WARD_SCHEDULES[key] || null;
+  };
+
+  // Fetch real collector assigned to user's ward from the database
   useEffect(() => {
-    // Fetch or generate initial notifications
-    const initialNotifications = [
-      {
-        id: 1,
-        type: 'schedule',
-        title: 'Waste Pickup Tomorrow',
-        message: 'General & Recyclable Waste pickup scheduled for tomorrow at 8:00 AM',
-        icon: 'schedule',
-        read: false,
-        timestamp: new Date(Date.now() - 30 * 60000), // 30 minutes ago
-        link: '/user/schedule'
-      },
-      {
-        id: 2,
-        type: 'report',
-        title: 'Report #803F9A Resolved',
-        message: 'Your report about overflowing bin at Lakeside has been resolved',
-        icon: 'resolved',
-        read: false,
-        timestamp: new Date(Date.now() - 2 * 60 * 60000), // 2 hours ago
-        link: '/user/myreport'
-      },
-      {
-        id: 3,
-        type: 'report',
-        title: 'Report #48168C In Progress',
-        message: 'Missed pickup report is being handled by Collection Team B',
-        icon: 'progress',
-        read: false,
-        timestamp: new Date(Date.now() - 5 * 60 * 60000), // 5 hours ago
-        link: '/user/myreport'
-      },
-      {
-        id: 4,
-        type: 'reminder',
-        title: 'Reminder: Set Your Schedule Alert',
-        message: 'You have an upcoming waste pickup on July 1st. Set a reminder now?',
-        icon: 'reminder',
-        read: true,
-        timestamp: new Date(Date.now() - 24 * 60 * 60000), // 1 day ago
-        link: '/user/schedule/reminder'
-      },
-      {
-        id: 5,
-        type: 'awareness',
-        title: 'Eco Awareness Tip',
-        message: 'Did you know? Composting at home can reduce waste by 30%!',
-        icon: 'awareness',
-        read: true,
-        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60000), // 2 days ago
-        link: '/user/awareness1'
-      }
-    ];
+    if (!wardNum) return;
+    fetch(`http://localhost:3000/api/collectors/ward/${wardNum}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data) setWardCollector(data.data);
+        else setWardCollector(null);
+      })
+      .catch(() => setWardCollector(null));
+  }, [wardNum]);
 
-    setNotifications(initialNotifications);
-    const unread = initialNotifications.filter(n => !n.read).length;
-    setUnreadCount(unread);
-  }, []);
+  // Get upcoming pickup days for a schedule
+  const getUpcomingPickups = (schedule) => {
+    if (!schedule) return [];
+    const now = new Date();
+    const today = now.getDay();
+    const pickups = [];
+
+    for (let offset = 0; offset < 7; offset++) {
+      const dayIndex = (today + offset) % 7;
+      if (schedule.pickupDays.includes(dayIndex)) {
+        const pickupDate = new Date(now);
+        pickupDate.setDate(pickupDate.getDate() + offset);
+        pickupDate.setHours(0, 0, 0, 0);
+        pickups.push({
+          date: pickupDate,
+          dayName: DAY_NAMES[dayIndex],
+          dayOffset: offset,
+          timeSlot: schedule.timeSlot,
+        });
+      }
+    }
+    return pickups;
+  };
+
+  // Check if current time is before the pickup time window
+  const isBeforePickupWindow = (timeSlot) => {
+    const now = new Date();
+    const startTime = timeSlot.split(' - ')[0];
+    const [time, period] = startTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    const pickupHour = hours;
+    return now.getHours() < pickupHour;
+  };
+
+  // Build schedule-based notifications
+  const buildScheduleNotifications = () => {
+    const scheduleNotifs = [];
+    if (!wardNum) return scheduleNotifs;
+
+    const schedule = getWardSchedule(wardNum);
+    if (!schedule) return scheduleNotifs;
+
+    const upcomingPickups = getUpcomingPickups(schedule);
+    const readIds = JSON.parse(localStorage.getItem('userReadNotifications') || '[]');
+
+    // Use real collector data from database if available
+    const collectorInfo = wardCollector
+      ? `Collector: ${wardCollector.name} (Vehicle: ${wardCollector.vehicleId})`
+      : '';
+
+    upcomingPickups.forEach((pickup, index) => {
+      const notifId = `schedule-ward${wardNum}-${pickup.dayName}-${pickup.date.toISOString().split('T')[0]}`;
+
+      if (pickup.dayOffset === 0) {
+        // TODAY's pickup
+        const beforeWindow = isBeforePickupWindow(pickup.timeSlot);
+        scheduleNotifs.push({
+          id: notifId,
+          type: 'schedule',
+          title: `🚛 Waste Pickup TODAY!`,
+          message: `Your ward (Ward ${wardNum}) has waste collection today at ${pickup.timeSlot}.${collectorInfo ? ' ' + collectorInfo + '.' : ''} Please have your waste ready before pickup time!`,
+          icon: beforeWindow ? 'schedule-urgent' : 'schedule-today',
+          read: readIds.includes(notifId),
+          timestamp: new Date(),
+          link: '/user/schedule',
+        });
+      } else if (pickup.dayOffset === 1) {
+        // TOMORROW's pickup
+        scheduleNotifs.push({
+          id: notifId,
+          type: 'schedule',
+          title: `📅 Pickup Tomorrow - ${pickup.dayName}`,
+          message: `Reminder: Waste collection in Ward ${wardNum} is scheduled for tomorrow (${pickup.dayName}) at ${pickup.timeSlot}.${collectorInfo ? ' ' + collectorInfo + '.' : ''} Prepare your waste in advance!`,
+          icon: 'schedule-tomorrow',
+          read: readIds.includes(notifId),
+          timestamp: new Date(new Date().setHours(new Date().getHours() - 1)),
+          link: '/user/schedule',
+        });
+      } else if (index < 3) {
+        // Upcoming (next few days, limit to 3 total)
+        scheduleNotifs.push({
+          id: notifId,
+          type: 'schedule',
+          title: `Next Pickup: ${pickup.dayName}`,
+          message: `Upcoming waste collection on ${pickup.dayName} at ${pickup.timeSlot} for Ward ${wardNum}.`,
+          icon: 'schedule-upcoming',
+          read: true, // Upcoming ones are read by default
+          timestamp: new Date(new Date().setHours(new Date().getHours() - 2)),
+          link: '/user/schedule',
+        });
+      }
+    });
+
+    return scheduleNotifs;
+  };
+
+  // Fetch real reports from the API and generate notifications
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const fetchReportNotifications = async () => {
+      try {
+        const response = await axios.get('/api/reports/my-reports');
+        const reports = response.data;
+        let reportNotifications = [];
+
+        if (reports && reports.length > 0) {
+          // Read dismissed/read notification IDs from localStorage
+          const readIds = JSON.parse(localStorage.getItem('userReadNotifications') || '[]');
+
+          reportNotifications = reports.map((report) => {
+            const reportId = report._id.slice(-6).toUpperCase();
+            const isResolved = report.status === 'resolved';
+            const isInProgress = report.status === 'in-progress';
+
+            let icon, title, message;
+
+            if (isResolved) {
+              icon = 'resolved';
+              title = `Report #${reportId} Resolved`;
+              message = `Your report about "${report.reportLabel}" at ${report.location || 'your location'} has been resolved by ${report.assignedCollectorName || 'the assigned collector'}.`;
+            } else if (isInProgress) {
+              icon = 'progress';
+              title = `Report #${reportId} In Progress`;
+              message = `Your report about "${report.reportLabel}" is being handled by ${report.assignedCollectorName || 'the assigned collector'}.`;
+            } else {
+              // received status
+              icon = 'pending';
+              title = `Report #${reportId} Received`;
+              message = `Your report about "${report.reportLabel}" has been received and is awaiting action.`;
+            }
+
+            return {
+              id: report._id,
+              type: 'report',
+              title,
+              message,
+              icon,
+              read: readIds.includes(report._id),
+              timestamp: new Date(report.updatedAt || report.createdAt),
+              link: '/user/myreport',
+            };
+          });
+        }
+
+        // Build schedule notifications
+        const scheduleNotifs = buildScheduleNotifications();
+
+        // Fetch real-time ward task status from the collector task system
+        let liveStatusNotifs = [];
+        if (wardNum) {
+            const readIds = JSON.parse(localStorage.getItem('userReadNotifications') || '[]');
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            // Fetch today's status
+            try {
+              const statusRes = await axios.get(`http://localhost:3000/api/ward-tasks/status/${wardNum}/${todayStr}`);
+              if (statusRes.data?.success && statusRes.data?.data) {
+                const taskData = statusRes.data.data;
+                const statusId = `pickup-status-ward${wardNum}-${todayStr}`;
+
+                if (taskData.status === 'completed') {
+                  const completedTime = taskData.completedAt
+                    ? new Date(taskData.completedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                    : '';
+                  liveStatusNotifs.push({
+                    id: statusId,
+                    type: 'pickup-completed',
+                    title: `✅ Waste Pickup Completed!`,
+                    message: `Great news! Your ward (Ward ${wardNum}) waste has been collected successfully today${completedTime ? ' at ' + completedTime : ''}. Thank you for keeping your area clean!`,
+                    icon: 'pickup-done',
+                    read: readIds.includes(statusId),
+                    timestamp: taskData.completedAt ? new Date(taskData.completedAt) : new Date(),
+                    link: '/user/schedule',
+                  });
+                } else if (taskData.status === 'in-progress') {
+                  liveStatusNotifs.push({
+                    id: statusId,
+                    type: 'pickup-inprogress',
+                    title: `🚛 Collection In Progress`,
+                    message: `The waste collection truck is currently operating in Ward ${wardNum}. Your waste will be picked up shortly!`,
+                    icon: 'schedule-urgent',
+                    read: readIds.includes(statusId),
+                    timestamp: new Date(),
+                    link: '/user/schedule',
+                  });
+                } else if (taskData.status === 'scheduled') {
+                  liveStatusNotifs.push({
+                    id: statusId,
+                    type: 'pickup-scheduled',
+                    title: `📋 Pickup Scheduled — Awaiting Collection`,
+                    message: `Today's waste pickup for Ward ${wardNum} (${taskData.timeSlot}) is scheduled. The collector has not started yet. Please keep your waste ready!`,
+                    icon: 'schedule-today',
+                    read: readIds.includes(statusId),
+                    timestamp: new Date(),
+                    link: '/user/schedule',
+                  });
+                }
+              }
+            } catch (err) {
+              // Silently fail — API may not be available
+            }
+
+            // Fetch tomorrow's status (so users know a day before)
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            try {
+              const tomorrowRes = await axios.get(`http://localhost:3000/api/ward-tasks/status/${wardNum}/${tomorrowStr}`);
+              if (tomorrowRes.data?.success && tomorrowRes.data?.data) {
+                const tData = tomorrowRes.data.data;
+                // Only show if there's a pickup tomorrow (not 'no-pickup')
+                if (tData.status !== 'no-pickup') {
+                  const tmrwId = `pickup-tomorrow-ward${wardNum}-${tomorrowStr}`;
+                  const tomorrowDayName = DAY_NAMES[tomorrow.getDay()];
+                  const collectorNote = wardCollector ? ` Collector: ${wardCollector.name}.` : '';
+                  liveStatusNotifs.push({
+                    id: tmrwId,
+                    type: 'pickup-tomorrow-reminder',
+                    title: `📅 Pickup Tomorrow — ${tomorrowDayName}`,
+                    message: `Reminder: Waste collection for Ward ${wardNum} is scheduled for tomorrow (${tomorrowDayName}) at ${tData.timeSlot}.${collectorNote} Please prepare your waste tonight!`,
+                    icon: 'schedule-tomorrow',
+                    read: readIds.includes(tmrwId),
+                    timestamp: new Date(new Date().setHours(new Date().getHours() - 1)),
+                    link: '/user/schedule',
+                  });
+                }
+              }
+            } catch (err) {
+              // Silently fail
+            }
+        }
+
+        // When we have live status, filter out the client-side schedule notifs for today/tomorrow
+        // to avoid duplicates (live status is more accurate)
+        const hasLiveTodayStatus = liveStatusNotifs.some(n => 
+          n.type === 'pickup-completed' || n.type === 'pickup-inprogress' || n.type === 'pickup-scheduled'
+        );
+        const hasLiveTomorrowStatus = liveStatusNotifs.some(n => n.type === 'pickup-tomorrow-reminder');
+
+        const filteredScheduleNotifs = scheduleNotifs.filter(n => {
+          // Remove client-side today notification if we have live status
+          if (hasLiveTodayStatus && (n.icon === 'schedule-urgent' || n.icon === 'schedule-today')) return false;
+          // Remove client-side tomorrow notification if we have live tomorrow status
+          if (hasLiveTomorrowStatus && n.icon === 'schedule-tomorrow') return false;
+          return true;
+        });
+
+        // Combine and sort: live status first, then schedule, then reports
+        const allNotifications = [...liveStatusNotifs, ...filteredScheduleNotifs, ...reportNotifications];
+        allNotifications.sort((a, b) => {
+          // Priority: schedule-urgent > schedule-today > schedule-tomorrow > rest by timestamp
+          const getPriority = (n) => {
+            if (n.icon === 'pickup-done') return -1;
+            if (n.type === 'pickup-inprogress') return 0;
+            if (n.type === 'pickup-scheduled') return 1;
+            if (n.icon === 'schedule-urgent') return 2;
+            if (n.icon === 'schedule-today') return 3;
+            if (n.type === 'pickup-tomorrow-reminder') return 4;
+            if (n.icon === 'schedule-tomorrow') return 5;
+            return 6;
+          };
+          const pa = getPriority(a);
+          const pb = getPriority(b);
+          if (pa !== pb) return pa - pb;
+          return b.timestamp - a.timestamp;
+        });
+
+        setNotifications(allNotifications);
+        const unread = allNotifications.filter(n => !n.read).length;
+        setUnreadCount(unread);
+
+        // Send email reminder for today's pickup (only once per session)
+        if (!emailSentRef.current && userWard) {
+          const todaySchedule = scheduleNotifs.find(
+            n => n.icon === 'schedule-urgent' || n.icon === 'schedule-today'
+          );
+          if (todaySchedule) {
+            const emailKey = `scheduleEmailSent-${userWard}-${new Date().toISOString().split('T')[0]}`;
+            if (!localStorage.getItem(emailKey)) {
+              try {
+                await axios.post('/api/users/schedule-reminder', {
+                  ward: userWard,
+                });
+                localStorage.setItem(emailKey, 'true');
+                emailSentRef.current = true;
+                console.log('📧 Schedule reminder email sent for ward', userWard);
+              } catch (emailErr) {
+                console.error('Failed to send schedule reminder email:', emailErr);
+              }
+            } else {
+              emailSentRef.current = true;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching report notifications:', error);
+        // Still show schedule notifications even if report fetch fails
+        const scheduleNotifs = buildScheduleNotifications();
+        if (scheduleNotifs.length > 0) {
+          setNotifications(scheduleNotifs);
+          setUnreadCount(scheduleNotifs.filter(n => !n.read).length);
+        }
+      }
+    };
+
+    fetchReportNotifications();
+
+    // Poll every 30 seconds for status updates
+    const interval = setInterval(fetchReportNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [isLoaded, wardNum, wardCollector]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -86,16 +373,26 @@ function NotificationCenter() {
     setNotifications(notifications.map(notif =>
       notif.id === id ? { ...notif, read: true } : notif
     ));
-    setUnreadCount(Math.max(0, unreadCount - 1));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+    // Persist read state in localStorage
+    const readIds = JSON.parse(localStorage.getItem('userReadNotifications') || '[]');
+    if (!readIds.includes(id)) {
+      readIds.push(id);
+      localStorage.setItem('userReadNotifications', JSON.stringify(readIds));
+    }
   };
 
   const deleteNotification = (id) => {
+    const wasUnread = notifications.find(n => n.id === id && !n.read);
     setNotifications(notifications.filter(notif => notif.id !== id));
+    if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = () => {
+    const allIds = notifications.map(n => n.id);
     setNotifications(notifications.map(notif => ({ ...notif, read: true })));
     setUnreadCount(0);
+    localStorage.setItem('userReadNotifications', JSON.stringify(allIds));
   };
 
   const clearAll = () => {
@@ -105,18 +402,22 @@ function NotificationCenter() {
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case 'schedule':
-        return <BsCalendarEvent className="text-blue-500 text-lg" />;
       case 'resolved':
         return <BsCheckCircle className="text-emerald-500 text-lg" />;
       case 'progress':
         return <BsClock className="text-amber-500 text-lg" />;
-      case 'reminder':
-        return <BsBell className="text-purple-500 text-lg" />;
       case 'pending':
-        return <BsExclamationTriangle className="text-red-500 text-lg" />;
-      case 'awareness':
-        return <BsExclamationTriangle className="text-green-500 text-lg" />;
+        return <BsExclamationTriangle className="text-blue-500 text-lg" />;
+      case 'schedule-urgent':
+        return <BsTruck className="text-red-500 text-lg animate-pulse" />;
+      case 'schedule-today':
+        return <BsTruck className="text-emerald-600 text-lg" />;
+      case 'schedule-tomorrow':
+        return <BsCalendarEvent className="text-blue-600 text-lg" />;
+      case 'schedule-upcoming':
+        return <BsCalendarEvent className="text-gray-500 text-lg" />;
+      case 'pickup-done':
+        return <BsCheckAll className="text-emerald-600 text-lg" />;
       default:
         return <BsBell className="text-gray-500 text-lg" />;
     }
@@ -162,7 +463,7 @@ function NotificationCenter() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-4 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fadeInDown">
+        <div className="fixed inset-x-0 top-14 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-4 mx-2 sm:mx-0 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fadeInDown max-h-[80vh] sm:max-h-none">
           {/* Header */}
           <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 flex items-center justify-between z-10">
             <h3 className="text-white font-bold text-lg flex items-center gap-2">

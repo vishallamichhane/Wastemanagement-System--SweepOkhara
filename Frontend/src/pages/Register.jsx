@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { FaGoogle, FaApple } from "react-icons/fa";
-import { authClient } from "../libs/auth";
+import { useSignUp } from "@clerk/clerk-react";
 
 // Typing Animation Component
 const TypingText = ({ text, delay = 0 }) => {
@@ -41,12 +40,16 @@ const TypingText = ({ text, delay = 0 }) => {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { signUp, isLoaded: isSignUpLoaded, setActive } = useSignUp();
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    phone: "",
     address: "",
     ward: "",
+    houseNumber: "",
     password: "",
     confirmPassword: "",
   });
@@ -83,12 +86,6 @@ export default function RegisterPage() {
       newErrors.email = "Please enter a valid email";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^[0-9]{10}$/.test(formData.phone)) {
-      newErrors.phone = "Please enter a valid 10-digit phone number";
-    }
-
     if (!formData.address.trim()) {
       newErrors.address = "Address is required";
     }
@@ -114,28 +111,340 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    
     try {
-      e.preventDefault();
       if (validateForm()) {
-        // Store user data in localStorage for dummy authentication
-        const { data, error } = await authClient.signUp.email({
-          name: formData.fullName,
-          email: formData.email,
+        if (!isSignUpLoaded) {
+          setErrors({ submit: "Authentication not ready. Please try again." });
+          return;
+        }
+
+        setIsSubmitting(true);
+        console.log("Submitting registration with Clerk...");
+        
+        // Parse first and last name from full name
+        const nameParts = formData.fullName.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        // Generate username from email or full name
+        const username = formData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+        // Create sign up with Clerk
+        const result = await signUp.create({
+          emailAddress: formData.email,
           password: formData.password,
-          phone: formData.phone,
-          address: formData.address,
-          ward: formData.ward,
-        }, {
-          onError: (err) => { console.error("Sign up error:", err); },
-          onSuccess: (data) => { console.log("Sign up successful:", data); }
-        })
-        console.log(data)
-        if (data) navigate('/user');
+          firstName: firstName,
+          lastName: lastName,
+          username: username,
+          unsafeMetadata: {
+            address: formData.address,
+            ward: formData.ward,
+            houseNumber: formData.houseNumber,
+          },
+        });
+
+        console.log("Sign up result:", result);
+
+        // Send email verification code
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        
+        // Set pending verification state
+        setPendingVerification(true);
+        console.log("Verification email sent");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Sign up error:", error);
+      let errorMsg = error.errors?.[0]?.message || error.message || "Registration failed";
+      
+      // Provide helpful context for password breach errors
+      if (errorMsg.includes("data breach") || errorMsg.includes("breached")) {
+        errorMsg = "⚠️ This password has been compromised in a data breach. Please choose a stronger, unique password for your security.";
+      }
+      
+      setErrors({ submit: errorMsg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // Handle resending verification code
+  const handleResendCode = async () => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    setErrors({});
+    
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setErrors({ verification: "✓ New verification code sent! Check your email." });
+      console.log("Verification code resent successfully");
+    } catch (error) {
+      console.error("Resend code error:", error);
+      const errorMsg = error.errors?.[0]?.message || "Failed to resend code";
+      setErrors({ verification: errorMsg });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle email verification code submission
+  const handleVerification = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    
+    if (!verificationCode.trim()) {
+      setErrors({ verification: "Please enter the verification code" });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Attempt to verify the email with the provided code
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      });
+
+      console.log("Verification result:", completeSignUp);
+      console.log("SignUp status:", completeSignUp.status);
+      console.log("Missing requirements:", completeSignUp.missingFields);
+      console.log("Unverified fields:", completeSignUp.unverifiedFields);
+
+      // Check if the email verification was successful
+      if (completeSignUp.verifications?.emailAddress?.status === "verified") {
+        console.log("Email verified successfully!");
+        
+        // Check if signup is complete or needs additional steps
+        if (completeSignUp.status === "complete") {
+          console.log("Signup complete! Setting session...");
+          
+          // Set the session as active
+          await setActive({ session: completeSignUp.createdSessionId });
+          
+          console.log("Session activated, saving user to MongoDB...");
+          
+          // Extract username from the completeSignUp object
+          const username = completeSignUp.username || formData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+          
+          console.log("User data to save:", {
+            clerkId: completeSignUp.createdUserId,
+            username: username,
+            email: formData.email,
+            fullName: formData.fullName,
+            address: formData.address,
+            ward: formData.ward,
+          });
+          
+          // Save user data to MongoDB
+          try {
+            console.log('📤 Sending request to:', 'http://localhost:3000/api/users/create');
+            
+            const response = await fetch('http://localhost:3000/api/users/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                clerkId: completeSignUp.createdUserId,
+                username: username,
+                email: formData.email,
+                firstName: formData.fullName.trim().split(' ')[0] || '',
+                lastName: formData.fullName.trim().split(' ').slice(1).join(' ') || '',
+                fullName: formData.fullName,
+                address: formData.address,
+                ward: formData.ward,
+                houseNumber: formData.houseNumber,
+              }),
+            });
+
+            console.log('📥 Response status:', response.status);
+            
+            const result = await response.json();
+            console.log('📥 Response data:', result);
+            
+            if (result.success) {
+              console.log('✅ User saved to MongoDB:', result.user);
+            } else {
+              console.error('⚠️ MongoDB save failed:', result.error);
+              console.error('⚠️ Full response:', result);
+            }
+          } catch (mongoError) {
+            console.error('❌ MongoDB save error:', mongoError);
+            console.error('❌ Error details:', mongoError.message);
+            console.error('❌ Error stack:', mongoError.stack);
+            // Don't block user navigation on MongoDB error
+          }
+          
+          console.log("Navigating to dashboard...");
+          
+          // Navigate to user dashboard
+          navigate('/user');
+        } else if (completeSignUp.status === "missing_requirements") {
+          // Handle missing requirements - this might need phone verification or other fields
+          console.log("Missing requirements detected");
+          
+          // Check what's missing
+          const missingFields = completeSignUp.missingFields || [];
+          const unverifiedFields = completeSignUp.unverifiedFields || [];
+          
+          console.log("Missing fields:", missingFields);
+          console.log("Unverified fields:", unverifiedFields);
+          
+          // If no other requirements, try to complete the signup
+          if (missingFields.length === 0 && unverifiedFields.length === 0) {
+            console.log("No missing fields, attempting to set session...");
+            await setActive({ session: completeSignUp.createdSessionId });
+            
+            // Extract username from the completeSignUp object
+            const username = completeSignUp.username || formData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+            
+            console.log("User data to save:", {
+              clerkId: completeSignUp.createdUserId,
+              username: username,
+              email: formData.email,
+              fullName: formData.fullName,
+              address: formData.address,
+              ward: formData.ward,
+            });
+            
+            // Save user data to MongoDB
+            try {
+              console.log('📤 Sending request to:', 'http://localhost:3000/api/users/create');
+              
+              const response = await fetch('http://localhost:3000/api/users/create', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  clerkId: completeSignUp.createdUserId,
+                  username: username,
+                  email: formData.email,
+                  firstName: formData.fullName.trim().split(' ')[0] || '',
+                  lastName: formData.fullName.trim().split(' ').slice(1).join(' ') || '',
+                  fullName: formData.fullName,
+                  address: formData.address,
+                  ward: formData.ward,
+                  houseNumber: formData.houseNumber,
+                }),
+              });
+
+              console.log('📥 Response status:', response.status);
+              
+              const result = await response.json();
+              console.log('📥 Response data:', result);
+              
+              if (result.success) {
+                console.log('✅ User saved to MongoDB:', result.user);
+              } else {
+                console.error('⚠️ MongoDB save failed:', result.error);
+                console.error('⚠️ Full response:', result);
+              }
+            } catch (mongoError) {
+              console.error('❌ MongoDB save error:', mongoError);
+              console.error('❌ Error details:', mongoError.message);
+              console.error('❌ Error stack:', mongoError.stack);
+            }
+            
+            navigate('/user');
+          } else {
+            setErrors({ 
+              verification: `Additional verification needed. Missing: ${missingFields.join(', ') || 'None'}. Unverified: ${unverifiedFields.join(', ') || 'None'}` 
+            });
+          }
+        } else {
+          // Unknown status
+          console.log("Signup not complete. Status:", completeSignUp.status);
+          setErrors({ verification: `Verification incomplete. Status: ${completeSignUp.status}. Please try again.` });
+        }
+      } else {
+        // Email not verified
+        setErrors({ verification: "Email verification failed. Please check the code and try again." });
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      console.error("Error details:", error.errors);
+      
+      // Handle rate limiting
+      if (error.status === 429) {
+        setErrors({ verification: "Too many attempts. Please wait a few minutes and try again." });
+        return;
+      }
+      
+      // Handle specific error codes
+      const errorCode = error.errors?.[0]?.code || "";
+      const errorMsg = error.errors?.[0]?.message || error.message || "Verification failed";
+      
+      if (errorCode === "form_code_incorrect") {
+        setErrors({ verification: "Incorrect verification code. Please check and try again." });
+      } else if (errorCode === "verification_expired") {
+        setErrors({ verification: "Verification code has expired. Please request a new one." });
+      } else {
+        setErrors({ verification: errorMsg });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Show verification form if pending
+  if (pendingVerification) {
+    return (
+      <div className="relative min-h-screen overflow-hidden flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md px-6"
+        >
+          <div className="rounded-xl p-8 bg-white/10 backdrop-blur-md border border-white/25 text-white">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold">Verify Your Email</h2>
+              <p className="text-gray-300 mt-2">We sent a code to {formData.email}</p>
+            </div>
+            
+            <form onSubmit={handleVerification} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Enter verification code"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-emerald-400"
+              />
+              {errors.verification && (
+                <p className={`text-sm ${errors.verification.includes('✓') ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {errors.verification}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Verifying..." : "Verify Email"}
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={isSubmitting}
+                className="w-full text-gray-300 hover:text-white py-2 text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Didn't receive code? Resend
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden flex">
@@ -223,21 +532,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Phone Number */}
-            <div>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="10-digit phone (e.g., 9841234567)"
-                className="w-full bg-transparent border-b border-white/40 text-white placeholder-white/70 placeholder:text-sm text-sm py-2 px-1 focus:outline-none focus:border-emerald-400 transition-colors"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
-              )}
-            </div>
-
             {/* Address */}
             <div>
               <input
@@ -245,7 +539,7 @@ export default function RegisterPage() {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder="Street Address (e.g., 123 Main St)"
+                placeholder="Your Address"
                 className="w-full bg-transparent border-b border-white/40 text-white placeholder-white/70 placeholder:text-sm text-sm py-2 px-1 focus:outline-none focus:border-emerald-400 transition-colors"
               />
               {errors.address && (
@@ -270,6 +564,21 @@ export default function RegisterPage() {
               </select>
               {errors.ward && (
                 <p className="mt-1 text-sm text-red-500">{errors.ward}</p>
+              )}
+            </div>
+
+            {/* House Number */}
+            <div>
+              <input
+                type="text"
+                name="houseNumber"
+                value={formData.houseNumber}
+                onChange={handleChange}
+                placeholder="House Number (Optional)"
+                className="w-full bg-transparent border-b border-white/40 text-white placeholder-white/70 placeholder:text-sm text-sm py-2 px-1 focus:outline-none focus:border-emerald-400 transition-colors"
+              />
+              {errors.houseNumber && (
+                <p className="mt-1 text-sm text-red-500">{errors.houseNumber}</p>
               )}
             </div>
 
@@ -328,35 +637,18 @@ export default function RegisterPage() {
             {/* Sign up Button */}
             <motion.button
               type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-4"
+              disabled={isSubmitting}
+              whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+              whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign up
+              {isSubmitting ? "Signing up..." : "Sign up"}
             </motion.button>
 
-            {/* Social sign up */}
-            <div className="flex items-center gap-3 mt-5 text-gray-200 text-xs">
-              <span className="flex-1 h-px bg-white/20" />
-              <span>Or continue with</span>
-              <span className="flex-1 h-px bg-white/20" />
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 border border-white/30 hover:border-white/60 text-white text-sm py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <FaGoogle size={16} />
-                Google
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 border border-white/30 hover:border-white/60 text-white text-sm py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <FaApple size={18} />
-                Apple
-              </button>
-            </div>
+            {/* Display submission errors */}
+            {errors.submit && (
+              <p className="mt-3 text-sm text-red-500 text-center">{errors.submit}</p>
+            )}
 
             {/* Sign in Link */}
             <p className="text-center text-gray-200 mt-4 text-sm">

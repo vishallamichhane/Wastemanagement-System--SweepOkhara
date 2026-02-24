@@ -11,7 +11,9 @@ import {
   FiLogOut,
   FiSearch,
   FiUser,
-  FiSettings
+  FiSettings,
+  FiMenu,
+  FiX
 } from 'react-icons/fi';
 import { 
   BsTruck,
@@ -259,6 +261,8 @@ const CollectorMapView = () => {
   const [activeNav, setActiveNav] = useState("map");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -283,6 +287,9 @@ const CollectorMapView = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowProfileDropdown(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -290,6 +297,17 @@ const CollectorMapView = () => {
 
   const handleLogout = () => {
     setShowProfileDropdown(false);
+    
+    console.log('🚪 Collector logging out...');
+    
+    // Clear collector data from localStorage
+    localStorage.removeItem('collectorToken');
+    localStorage.removeItem('collectorData');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    
+    console.log('✅ Collector logged out successfully');
+    
     navigate('/login');
   };
 
@@ -396,33 +414,33 @@ const CollectorMapView = () => {
       </div>
 
       {/* SAME NAVBAR AS ASSIGNED TASKS PAGE */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+      <nav ref={mobileMenuRef} className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
         isNavVisible ? 'translate-y-0' : '-translate-y-full'
       } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
       }`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
           {/* Logo - Match Collector Dashboard */}
           <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-3 group cursor-pointer">
+            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
               <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
                 <GiBroom className="text-white text-xl" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                   SweePokhara
                 </span>
               </div>
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+              <span className="hidden sm:inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
             </div>
           </Link>
 
-          {/* Navigation */}
-          <div className="flex items-center space-x-6">
+          {/* Navigation - Desktop */}
+          <div className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => {
                 setActiveNav('home');
@@ -531,11 +549,44 @@ const CollectorMapView = () => {
               )}
             </div>
           </div>
+
+          {/* Mobile: notification + hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            <CollectorNotificationCenter />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg text-gray-700 hover:bg-emerald-50 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <FiX className="text-2xl" /> : <FiMenu className="text-2xl" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile slide-down menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-emerald-100 bg-white/95 backdrop-blur-xl px-4 py-3 space-y-1">
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/dashboard'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiHome /> Dashboard
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/tasks'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiCalendar /> Schedule
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/reports'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <BsExclamationTriangle /> Reports
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiUser /> Profile
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold">
+              <FiLogOut /> Logout
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Spacer for fixed nav */}
-      <div className="h-24"></div>
+      <div className="h-16 sm:h-20 md:h-24"></div>
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
@@ -551,15 +602,15 @@ const CollectorMapView = () => {
           
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
                 Collection Route Map
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-base sm:text-lg">
                 Visualize your route and manage collection points in real-time
               </p>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl px-4 py-2">
                 <p className="text-sm text-emerald-700 font-medium flex items-center gap-2">
                   <TbRoute />
@@ -593,55 +644,55 @@ const CollectorMapView = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Total Bins</p>
-                <p className="text-3xl font-bold text-gray-900">{assignedBins.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{assignedBins.length}</p>
                 <p className="text-xs text-gray-500 mt-1">In current route</p>
               </div>
-              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center">
-                <BsFillTrashFill className="text-emerald-600 text-2xl" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-emerald-100 rounded-full flex items-center justify-center">
+                <BsFillTrashFill className="text-emerald-600 text-xl sm:text-2xl" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-gray-900">{pendingBins.length}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pendingBins.length}</p>
                 <p className="text-xs text-gray-500 mt-1">Awaiting collection</p>
               </div>
-              <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
-                <BsClock className="text-amber-600 text-2xl" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-amber-100 rounded-full flex items-center justify-center">
+                <BsClock className="text-amber-600 text-xl sm:text-2xl" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Route Distance</p>
-                <p className="text-3xl font-bold text-gray-900">{collectorData.currentRoute.totalDistance}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{collectorData.currentRoute.totalDistance}</p>
                 <p className="text-xs text-gray-500 mt-1">Total coverage</p>
               </div>
-              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
-                <GiPathDistance className="text-blue-600 text-2xl" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                <GiPathDistance className="text-blue-600 text-xl sm:text-2xl" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Progress</p>
-                <p className="text-3xl font-bold text-gray-900">{progressPercentage}%</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{progressPercentage}%</p>
                 <p className="text-xs text-gray-500 mt-1">Collection completed</p>
               </div>
-              <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
-                <BsCheckCircle className="text-purple-600 text-2xl" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                <BsCheckCircle className="text-purple-600 text-xl sm:text-2xl" />
               </div>
             </div>
           </div>
@@ -649,7 +700,7 @@ const CollectorMapView = () => {
 
         {/* Search and Filters */}
         <div className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
             <div className="relative flex-1 w-full">
               <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input 
@@ -661,7 +712,7 @@ const CollectorMapView = () => {
               />
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               {["all", "pending", "in-progress", "high"].map(filter => (
                 <button
                   key={filter}
@@ -688,7 +739,7 @@ const CollectorMapView = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Map Container - 2/3 width */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[600px] border border-emerald-100" style={{ zIndex: 0, position: "relative" }}>
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[350px] sm:h-[450px] lg:h-[600px] border border-emerald-100" style={{ zIndex: 0, position: "relative" }}>
                 {typeof window !== 'undefined' && MapContainer ? (
                   <MapContainer
                     center={mapCenter}
@@ -989,9 +1040,9 @@ const CollectorMapView = () => {
         )}
 
         {/* Legend */}
-        <div className="mt-8 bg-white rounded-2xl shadow-lg p-6 border border-emerald-100">
+        <div className="mt-6 sm:mt-8 bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-emerald-100">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Map Legend</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
               <div className="w-6 h-6 rounded-full border-3 border-red-500 flex items-center justify-center">
                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>

@@ -196,7 +196,7 @@ export default function SmartSegregationPage() {
     <>
 
       {/* Main content */}
-      <main className="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-12 relative z-10">
+      <main className="flex-grow max-w-6xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-10 mb-16 pb-20 sm:pb-0 space-y-8 sm:space-y-10 md:space-y-12 relative z-10">
         {/* Back button and header */}
         <section className="animate-slide-down">
           <button
@@ -208,23 +208,23 @@ export default function SmartSegregationPage() {
           </button>
           
           <div className="text-center mb-8">
-            <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent mb-4">
               Smart Segregation
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
               Master the art of waste separation to maximize recycling and minimize environmental impact.
             </p>
           </div>
         </section>
 
         {/* Hero Section */}
-        <section className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-green-100/50 animate-fade-in">
-          <div className="flex flex-col lg:flex-row items-center gap-8">
+        <section className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-green-100/50 animate-fade-in">
+          <div className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8">
             <div className="lg:w-1/2">
               <img 
                 src={segregationImage} 
                 alt="Smart Waste Segregation" 
-                className="w-full h-80 object-cover rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-500"
+                className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-500"
               />
             </div>
             <div className="lg:w-1/2">
@@ -253,10 +253,10 @@ export default function SmartSegregationPage() {
 
         {/* Benefits Grid */}
         <section className="animate-slide-up">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-8 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6 sm:mb-8 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
             Benefits of Smart Segregation
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {benefits.map((benefit, index) => (
               <div 
                 key={benefit.title}
@@ -278,10 +278,10 @@ export default function SmartSegregationPage() {
 
         {/* Waste Categories */}
         <section className="animate-slide-up">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-12 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6 sm:mb-8 md:mb-12 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
             Waste Categories Guide
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {wasteCategories.map((category, index) => (
               <div 
                 key={category.title}
@@ -334,12 +334,12 @@ export default function SmartSegregationPage() {
         </section>
 
         {/* Step-by-Step Guide */}
-        <section className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-green-100/50 animate-fade-in">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-12 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
+        <section className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-green-100/50 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6 sm:mb-8 md:mb-12 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
             Smart Segregation in 4 Steps
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {segregationSteps.map((step, index) => (
               <div key={step.step} className="text-center group">
                 <div className="relative mb-6">
@@ -367,10 +367,10 @@ export default function SmartSegregationPage() {
 
         {/* Common Mistakes & Solutions */}
         <section className="animate-slide-up">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-8 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6 sm:mb-8 bg-gradient-to-r from-blue-700 to-green-600 bg-clip-text text-transparent">
             Common Mistakes & Solutions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {commonMistakes.map((item, index) => (
               <div 
                 key={index}
@@ -401,9 +401,9 @@ export default function SmartSegregationPage() {
         </section>
 
         {/* Pro Tips */}
-        <section className="bg-gradient-to-r from-blue-500 to-green-600 rounded-3xl p-8 text-white shadow-2xl">
-          <h2 className="text-3xl font-bold text-center mb-8">Pro Tips for Effective Segregation</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="bg-gradient-to-r from-blue-500 to-green-600 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-2xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Pro Tips for Effective Segregation</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
                 <BsLightbulb className="text-yellow-300" />

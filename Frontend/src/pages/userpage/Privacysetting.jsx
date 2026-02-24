@@ -123,7 +123,7 @@ export default function PrivacySettingsPage() {
     <>
 
       {/* Main content */}
-      <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-8 relative z-10">
+      <main className="flex-grow max-w-4xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-10 mb-16 pb-20 sm:pb-0 space-y-6 sm:space-y-8 relative z-10">
         {/* Back button and header */}
         <section className="animate-slide-down">
           <button
@@ -140,20 +140,19 @@ export default function PrivacySettingsPage() {
                 <BsShieldCheck className="text-2xl" />
               </div>
             </div>
-            <h1 className="text-4xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
               Privacy Settings
             </h1>
-            <p className="text-gray-600 mt-2 text-lg font-medium max-w-2xl mx-auto">
+            <p className="text-gray-600 mt-2 text-base sm:text-lg font-medium max-w-2xl mx-auto">
               Control your privacy and data sharing preferences
             </p>
           </div>
         </section>
 
         {/* Privacy Settings Cards */}
-        <div className="space-y-6">
-          {/* Profile Visibility */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in">
-            <div className="flex items-center gap-3 mb-6">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="bg-blue-100 p-2 rounded-xl">
                 <BsPerson className="text-blue-600 text-xl" />
               </div>
@@ -188,13 +187,13 @@ export default function PrivacySettingsPage() {
           </div>
 
           {/* Contact Preferences */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in-delay">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in-delay">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="bg-green-100 p-2 rounded-xl">
                 <BsEye className="text-green-600 text-xl" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">Contact Information</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800">Contact Information</h3>
                 <p className="text-gray-600">Manage what contact information is visible to others</p>
               </div>
             </div>
@@ -224,13 +223,13 @@ export default function PrivacySettingsPage() {
           </div>
 
           {/* Message Settings */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="bg-purple-100 p-2 rounded-xl">
                 <FiLock className="text-purple-600 text-xl" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">Message Settings</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800">Message Settings</h3>
                 <p className="text-gray-600">Control who can send you messages</p>
               </div>
             </div>
@@ -260,13 +259,13 @@ export default function PrivacySettingsPage() {
           </div>
 
           {/* Data & Privacy */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in-delay">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in-delay">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className="bg-amber-100 p-2 rounded-xl">
                 <BsShieldCheck className="text-amber-600 text-xl" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-800">Data & Privacy</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800">Data & Privacy</h3>
                 <p className="text-gray-600">Manage how your data is used and collected</p>
               </div>
             </div>
@@ -296,7 +295,7 @@ export default function PrivacySettingsPage() {
           </div>
 
           {/* Privacy Information */}
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200 animate-fade-in">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-blue-200 animate-fade-in">
             <div className="flex items-start gap-4">
               <div className="bg-blue-100 p-3 rounded-xl flex-shrink-0">
                 <BsShieldCheck className="text-blue-600 text-2xl" />

@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+/* Hide Clerk "Last used" badge on social login buttons */
+.cl-badge,
+.cl-tagPrimaryText,
+.cl-lastAuthenticationStrategyBadge,
+[data-localization-key*="badge__"] {
+  display: none !important;
+}

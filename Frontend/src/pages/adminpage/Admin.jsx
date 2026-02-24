@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { 
   FiHome, 
@@ -24,6 +24,8 @@ import {
 } from "react-icons/bs";
 import { GiBroom } from "react-icons/gi";
 import { TbReportAnalytics } from "react-icons/tb";
+import axios from "axios";
+import { WARD_SCHEDULES } from "../../data/wardSchedules";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import UserManagement from "./UserManagement";
 import CollectorManagement from "./CollectorManagement";
@@ -32,31 +34,7 @@ import BinManagement from "./BinManagement";
 import SystemAnalytics from "./SystemAnalytics";
 import MapOverview from "./MapOverview";
 
-// Dummy Data - Can be replaced with API calls
-const dummyAdminData = {
-  id: "ADMIN-001",
-  name: "Admin Pokhara",
-  email: "admin@sweepokhara.com",
-  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin001",
-};
-
-const systemStats = {
-  totalUsers: 2450,
-  totalCollectors: 47,
-  activeCollections: 23,
-  fullBins: 128,
-  revenueToday: "₹12,450",
-  efficiencyRate: "94%",
-  pendingReports: 18,
-  avgResponseTime: "2.3h"
-};
-
-const userActivity = [
-  { id: "USR-001", name: "Ramesh Thapa", type: "Resident", reports: 3, lastActive: "2h ago", status: "active" },
-  { id: "USR-002", name: "Sunita Gurung", type: "Business", reports: 7, lastActive: "1d ago", status: "active" },
-  { id: "USR-003", name: "Hotel Mountain View", type: "Commercial", reports: 12, lastActive: "3h ago", status: "active" },
-  { id: "USR-004", name: "Tourist Info Center", type: "Government", reports: 5, lastActive: "5d ago", status: "inactive" },
-];
+// Admin stats will be fetched from the backend
 
 // Stats Card Component
 const StatCard = ({ title, value, change, icon: Icon, color, trend = "up" }) => {
@@ -72,10 +50,10 @@ const StatCard = ({ title, value, change, icon: Icon, color, trend = "up" }) => 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform border border-gray-100">
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl ${colorClasses[color]}`}>
+        <div className={`p-3 rounded-xl ${colorClasses[color]}`}> 
           <Icon className="text-2xl" />
         </div>
-        <div className={`flex items-center text-sm font-medium ${trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
+        <div className={`flex items-center text-sm font-medium ${trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}> 
           {change && (
             <>
               {trend === 'up' ? '↑' : '↓'} {change}
@@ -83,7 +61,7 @@ const StatCard = ({ title, value, change, icon: Icon, color, trend = "up" }) => 
           )}
         </div>
       </div>
-      <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
+      <h3 className="text-3xl font-bold text-gray-900 mb-1">{String(value)}</h3>
       <p className="text-gray-600 text-sm">{title}</p>
     </div>
   );
@@ -99,6 +77,33 @@ const AdminDashboard = () => {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Real system stats from backend
+  const [systemStats, setSystemStats] = useState({
+    totalUsers: 0,
+    totalCollectors: 0,
+    activeCollectors: 0,
+    totalReports: 0,
+    pendingReports: 0,
+    resolvedReports: 0,
+    inProgressReports: 0,
+    receivedReports: 0
+  });
+
+  // Fetch real stats from backend
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get('/api/admin/stats');
+        if (res.data) {
+          setSystemStats(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Handle scroll for navbar hide/show animation
   React.useEffect(() => {
@@ -119,49 +124,190 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Sample Notifications Data
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "alert",
-      title: "High CPU Usage Detected",
-      message: "System CPU usage is at 85%. Please monitor performance.",
-      timestamp: "5 minutes ago",
-      icon: BsExclamationTriangle,
-      color: "red",
-      read: false
-    },
-    {
-      id: 2,
-      type: "success",
-      title: "Collection Task Completed",
-      message: "Collection Team A completed their daily route successfully.",
-      timestamp: "2 hours ago",
-      icon: BsCheckCircle,
-      color: "emerald",
-      read: false
-    },
-    {
-      id: 3,
-      type: "info",
-      title: "New Report Submitted",
-      message: "5 new waste management reports submitted by users.",
-      timestamp: "4 hours ago",
-      icon: FiBell,
-      color: "blue",
-      read: false
-    },
-    {
-      id: 4,
-      type: "warning",
-      title: "Bin Maintenance Due",
-      message: "3 bins require routine maintenance this week.",
-      timestamp: "1 day ago",
-      icon: FiAlertTriangle,
-      color: "amber",
-      read: true
-    }
-  ]);
+  // Real Notifications Data - fetched from backend
+  const [notifications, setNotifications] = useState([]);
+
+  // Helper: time ago string
+  const timeAgo = useCallback((date) => {
+    const now = new Date();
+    const diff = now - new Date(date);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins} min${mins > 1 ? "s" : ""} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+    return new Date(date).toLocaleDateString();
+  }, []);
+
+  // Fetch real data and build notifications
+  useEffect(() => {
+    const buildNotifications = async () => {
+      const notifs = [];
+      let idCounter = 1;
+
+      try {
+        // Fetch reports
+        const reportsRes = await axios.get("/api/admin/reports");
+        const reports = reportsRes.data || [];
+
+        // Sort reports by newest first
+        const sortedReports = [...reports].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        // 1) Recent new reports (last 3 newest)
+        const recentReports = sortedReports.slice(0, 3);
+        recentReports.forEach((r) => {
+          notifs.push({
+            id: idCounter++,
+            type: "info",
+            title: `New Report: ${r.reportLabel}`,
+            message: `${r.userName || "A user"} reported "${r.reportLabel}" at ${r.location} (Ward ${r.ward}).`,
+            timestamp: timeAgo(r.createdAt),
+            icon: FiBell,
+            color: "blue",
+            read: false,
+          });
+        });
+
+        // 2) High priority unresolved reports
+        const highPriority = sortedReports.filter(
+          (r) => r.priority === "high" && r.status !== "resolved"
+        );
+        if (highPriority.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "alert",
+            title: `${highPriority.length} High Priority Report${highPriority.length > 1 ? "s" : ""}`,
+            message: `${highPriority.length} high priority issue${highPriority.length > 1 ? "s" : ""} pending. Locations: ${highPriority.slice(0, 2).map((r) => r.location).join(", ")}${highPriority.length > 2 ? "..." : ""}.`,
+            timestamp: timeAgo(highPriority[0].createdAt),
+            icon: BsExclamationTriangle,
+            color: "red",
+            read: false,
+          });
+        }
+
+        // 3) Recently resolved reports
+        const resolved = sortedReports.filter((r) => r.status === "resolved");
+        if (resolved.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "success",
+            title: `${resolved.length} Report${resolved.length > 1 ? "s" : ""} Resolved`,
+            message: `${resolved.length} report${resolved.length > 1 ? "s have" : " has"} been resolved. Latest: "${resolved[0].reportLabel}" at ${resolved[0].location}.`,
+            timestamp: timeAgo(resolved[0].updatedAt || resolved[0].createdAt),
+            icon: BsCheckCircle,
+            color: "emerald",
+            read: true,
+          });
+        }
+
+        // 4) Unassigned reports (no collector assigned)
+        const unassigned = sortedReports.filter(
+          (r) => !r.assignedCollectorId && r.status !== "resolved"
+        );
+        if (unassigned.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "warning",
+            title: `${unassigned.length} Unassigned Report${unassigned.length > 1 ? "s" : ""}`,
+            message: `${unassigned.length} report${unassigned.length > 1 ? "s are" : " is"} pending collector assignment. Wards: ${[...new Set(unassigned.map((r) => r.ward))].join(", ")}.`,
+            timestamp: timeAgo(unassigned[0].createdAt),
+            icon: FiAlertTriangle,
+            color: "amber",
+            read: false,
+          });
+        }
+
+        // 5) In-progress reports summary
+        const inProgress = sortedReports.filter((r) => r.status === "in-progress");
+        if (inProgress.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "info",
+            title: `${inProgress.length} Report${inProgress.length > 1 ? "s" : ""} In Progress`,
+            message: `${inProgress.length} report${inProgress.length > 1 ? "s are" : " is"} currently being handled by collectors.`,
+            timestamp: timeAgo(inProgress[0].updatedAt || inProgress[0].createdAt),
+            icon: TbReportAnalytics,
+            color: "blue",
+            read: true,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch reports for notifications:", err);
+      }
+
+      try {
+        // Fetch collectors
+        const collectorsRes = await axios.get("/api/collectors");
+        const collectors = collectorsRes.data?.data || collectorsRes.data || [];
+
+        // 6) Inactive collectors
+        const inactive = collectors.filter((c) => c.status !== "active");
+        if (inactive.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "warning",
+            title: `${inactive.length} Inactive Collector${inactive.length > 1 ? "s" : ""}`,
+            message: `${inactive.map((c) => c.name || c.collectorId).join(", ")} ${inactive.length > 1 ? "are" : "is"} currently inactive.`,
+            timestamp: "Now",
+            icon: FiTruck,
+            color: "amber",
+            read: false,
+          });
+        }
+
+        // 7) Active collectors summary
+        const active = collectors.filter((c) => c.status === "active");
+        if (active.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "success",
+            title: `${active.length} Active Collector${active.length > 1 ? "s" : ""}`,
+            message: `${active.length} collector${active.length > 1 ? "s are" : " is"} currently active and handling collections.`,
+            timestamp: "Now",
+            icon: BsTruck,
+            color: "emerald",
+            read: true,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch collectors for notifications:", err);
+      }
+
+      // 8) Schedule-based notification: today's pickups
+      try {
+        const today = new Date().getDay();
+        const wardsToday = Object.entries(WARD_SCHEDULES)
+          .filter(([, info]) => info.pickupDays.includes(today))
+          .map(([ward, info]) => ({ ward, ...info }));
+
+        if (wardsToday.length > 0) {
+          notifs.push({
+            id: idCounter++,
+            type: "info",
+            title: `${wardsToday.length} Ward${wardsToday.length > 1 ? "s" : ""} Scheduled Today`,
+            message: `Collection scheduled for: ${wardsToday.slice(0, 4).map((w) => w.name).join(", ")}${wardsToday.length > 4 ? ` and ${wardsToday.length - 4} more` : ""}.`,
+            timestamp: "Today",
+            icon: GiBroom,
+            color: "blue",
+            read: true,
+          });
+        }
+      } catch (err) {
+        console.error("Schedule notification error:", err);
+      }
+
+      // Set notifications and unread count
+      setNotifications(notifs);
+      const unreadCount = notifs.filter((n) => !n.read).length;
+      setUnreadNotifications(unreadCount);
+    };
+
+    buildNotifications();
+  }, [timeAgo]);
 
   const handleExportData = () => {
     alert("Exporting data... This would download system analytics.");
@@ -186,7 +332,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 text-gray-900 flex flex-col">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-gray-100 text-gray-900 flex flex-col">
       {/* Top Navigation Bar */}
       <nav className={`bg-white/95 backdrop-blur-md border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm transition-all duration-500 ${
         isNavVisible ? 'translate-y-0' : '-translate-y-full'
@@ -205,11 +351,11 @@ const AdminDashboard = () => {
               </button>
               
               <Link to="/" className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
+                <div className="p-2 bg-linear-to-r from-emerald-600 to-teal-500 rounded-xl">
                   <GiBroom className="text-white text-xl" />
                 </div>
                 <div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                  <span className="text-xl font-bold bg-linear-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                     SweePokhara
                   </span>
                   <span className="block text-xs text-gray-500 font-medium">Administration Portal</span>
@@ -251,7 +397,7 @@ const AdminDashboard = () => {
                 {notificationOpen && (
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-fadeInDown">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 flex items-center justify-between">
+                    <div className="bg-linear-to-r from-emerald-600 to-teal-600 text-white p-4 flex items-center justify-between">
                       <h3 className="font-bold">Notifications ({notifications.length})</h3>
                       <button
                         onClick={() => setNotificationOpen(false)}
@@ -282,7 +428,7 @@ const AdminDashboard = () => {
                               }`}
                             >
                               <div className="flex items-start space-x-3">
-                                <div className={`p-2 rounded-lg ${colorClasses[notif.color]} flex-shrink-0 mt-1`}>
+                                <div className={`p-2 rounded-lg ${colorClasses[notif.color]} shrink-0 mt-1`}>
                                   <IconComponent className="text-lg" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -295,7 +441,7 @@ const AdminDashboard = () => {
                                     e.stopPropagation();
                                     handleRemoveNotification(notif.id);
                                   }}
-                                  className="text-gray-400 hover:text-gray-600 flex-shrink-0 transition-colors"
+                                  className="text-gray-400 hover:text-gray-600 shrink-0 transition-colors"
                                 >
                                   <FiSearch className="rotate-45 text-lg" />
                                 </button>
@@ -349,15 +495,15 @@ const AdminDashboard = () => {
               {/* Admin Profile */}
               <div className="flex items-center space-x-3">
                 <div className="text-right hidden md:block">
-                  <p className="text-sm font-semibold">{dummyAdminData.name}</p>
+                  <p className="text-sm font-semibold">Admin Pokhara</p>
                   <p className="text-xs text-gray-500">System Administrator</p>
                 </div>
                 <div className="relative group">
-                  <img 
-                    src={dummyAdminData.avatar} 
-                    alt="Admin"
-                    className="w-10 h-10 rounded-full border-2 border-emerald-500 group-hover:scale-105 transition-transform duration-300"
-                  />
+                  <div 
+                    className="w-10 h-10 rounded-full border-2 border-emerald-500 group-hover:scale-105 transition-transform duration-300 bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center"
+                  >
+                    <BsShieldCheck className="text-white text-lg" />
+                  </div>
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
                     <BsShieldCheck className="text-white text-xs" />
                   </div>
@@ -383,18 +529,16 @@ const AdminDashboard = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <img 
-                    src={dummyAdminData.avatar}
-                    alt="Admin"
-                    className="w-12 h-12 rounded-full border-3 border-emerald-500"
-                  />
+                  <div className="w-12 h-12 rounded-full border-3 border-emerald-500 bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center">
+                    <BsShieldCheck className="text-white text-xl" />
+                  </div>
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
                     <BsShieldCheck className="text-white text-xs" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{dummyAdminData.name}</h3>
-                  <p className="text-xs text-gray-500">{dummyAdminData.email}</p>
+                  <h3 className="font-bold text-gray-900">Admin Pokhara</h3>
+                  <p className="text-xs text-gray-500">admin@sweepokhara.com</p>
                 </div>
               </div>
             </div>
@@ -417,7 +561,7 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab("users")}
                 className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                   activeTab === "users"
-                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
                     : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
                 }`}
               >
@@ -432,7 +576,7 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab("collectors")}
                 className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                   activeTab === "collectors"
-                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
                     : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
                 }`}
               >
@@ -447,14 +591,14 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab("reports")}
                 className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                   activeTab === "reports"
-                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
                     : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
                 }`}
               >
                 <TbReportAnalytics size={20} />
                 <span className="font-medium">Reports & Analytics</span>
                 <span className="ml-auto text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                  {systemStats.pendingReports}
+                  {systemStats.pendingReports + systemStats.receivedReports}
                 </span>
               </button>
 
@@ -462,22 +606,19 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab("bins")}
                 className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                   activeTab === "bins"
-                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
                     : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
                 }`}
               >
                 <BsFillTrashFill size={20} />
                 <span className="font-medium">Bin Management</span>
-                <span className="ml-auto text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
-                  {systemStats.fullBins}
-                </span>
               </button>
 
               <button
                 onClick={() => setActiveTab("map")}
                 className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                   activeTab === "map"
-                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
                     : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
                 }`}
               >
@@ -489,7 +630,7 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab("analytics")}
                 className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
                   activeTab === "analytics"
-                    ? "active bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
+                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
                     : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
                 }`}
               >
@@ -507,7 +648,7 @@ const AdminDashboard = () => {
 
             {/* System Status */}
             <div className="p-4 border-t border-gray-200">
-              <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-xl p-4">
+              <div className="bg-linear-to-r from-gray-900 to-gray-800 text-white rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-gray-300">SYSTEM STATUS</span>
                   <div className="flex items-center">
@@ -525,7 +666,7 @@ const AdminDashboard = () => {
         </aside>
 
         {/* Main Dashboard Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 lg:ml-64">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-linear-to-br from-gray-50 via-blue-50 to-gray-100 lg:ml-64">
           <div className="p-4 lg:p-8 min-h-full">
             {/* Conditional Rendering based on activeTab */}
             {activeTab === "users" ? (
@@ -580,72 +721,57 @@ const AdminDashboard = () => {
 
           {/* System Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard 
-              title="Total Users" 
-              value={systemStats.totalUsers} 
-              change="+12%"
+            <StatCard
+              title="Total Users"
+              value={typeof systemStats.totalUsers === 'number' && !isNaN(systemStats.totalUsers) ? systemStats.totalUsers : 0}
               icon={BsPeople}
               color="blue"
               trend="up"
             />
-            <StatCard 
-              title="Active Collectors" 
-              value={systemStats.totalCollectors} 
-              change="+3"
+            <StatCard
+              title="Total Collectors"
+              value={typeof systemStats.totalCollectors === 'number' && !isNaN(systemStats.totalCollectors) ? systemStats.totalCollectors : 0}
               icon={BsTruck}
               color="green"
               trend="up"
             />
-            <StatCard 
-              title="Full Bins" 
-              value={systemStats.fullBins} 
-              change="+8"
+            <StatCard
+              title="Total Reports"
+              value={typeof systemStats.totalReports === 'number' && !isNaN(systemStats.totalReports) ? systemStats.totalReports : 0}
               icon={BsFillTrashFill}
               color="amber"
               trend="up"
             />
-            <StatCard 
-              title="Pending Reports" 
-              value={systemStats.pendingReports} 
-              change="-2"
-              icon={BsExclamationTriangle}
-              color="red"
-              trend="down"
+            <StatCard
+              title="Total Bins"
+              value={0}
+              icon={BsFillTrashFill}
+              color="purple"
+              trend="up"
             />
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Recent Reports */}
-            <div className="lg:col-span-2 space-y-8">
-
-
-
-            </div>
-
-            {/* Right Column - Performance & Notifications */}
-            <div className="space-y-8">
-            </div>
-          </div>
+          {/* Remove extra dashboard content, only show StatCards above */}
 
           {/* Footer Stats */}
           <div className="mt-8 pt-8 border-t border-gray-200">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-gray-900">99.8%</p>
-                <p className="text-sm text-gray-600">System Uptime</p>
+                <p className="text-2xl font-bold text-gray-900">{systemStats.totalUsers}</p>
+                <p className="text-sm text-gray-600">Total Users</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">245</p>
-                <p className="text-sm text-gray-600">Daily Active Users</p>
+                <p className="text-2xl font-bold text-gray-900">{systemStats.totalCollectors}</p>
+                <p className="text-sm text-gray-600">Total Collectors</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">94%</p>
-                <p className="text-sm text-gray-600">User Satisfaction</p>
+                <p className="text-2xl font-bold text-gray-900">{systemStats.resolvedReports}</p>
+                <p className="text-sm text-gray-600">Resolved Reports</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">2.3h</p>
-                <p className="text-sm text-gray-600">Avg. Issue Resolution</p>
+                <p className="text-2xl font-bold text-gray-900">{systemStats.inProgressReports}</p>
+                <p className="text-sm text-gray-600">In Progress Reports</p>
               </div>
             </div>
           </div>

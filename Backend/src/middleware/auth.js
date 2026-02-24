@@ -1,81 +1,114 @@
-
 import jwt from 'jsonwebtoken';
-import { auth } from '../libs/auth.js';
+import { getAuth, clerkClient } from '@clerk/express';
+import Collector from '../models/collector.js';
 
-const verifyAuth = async (req, res, next) => {
-  try {
-    const session = await auth.api.getSession({
-      headers: req.headers,
-    });
+// Collector authentication middleware
+const protectCollector = async (req, res, next) => {
+  let token;
 
-    if (!session && !session.user) {
-      return res.status(401).json({ message: 'Not authorized, no session' });
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      // Get token from header
+      token = req.headers.authorization.split(' ')[1];
+
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+
+      // Check if it's a collector token
+      if (decoded.role !== 'collector') {
+        return res.status(401).json({ message: 'Not authorized as collector' });
+      }
+
+      // Get collector from token (excluding password)
+      req.collector = await Collector.findById(decoded.id).select('-password');
+
+      if (!req.collector) {
+        return res.status(401).json({ message: 'Collector not found' });
+      }
+
+      // Check if collector is active
+      if (req.collector.status !== 'active') {
+        return res.status(401).json({ message: 'Collector account is inactive' });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Collector authentication error:', error);
+      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
-
-    req.user = session.user;
-    next();
-
-  } catch (error) {
-    console.error("Authentication error:", error);
-  }
-}
-
-
-// // Protect routes - verify JWT token
-// const protect = async (req, res, next) => {
-//   let token;
-
-//   console.log(req.headers.authorization);
-//   if (
-
-//     req.headers.authorization &&
-//     req.headers.authorization.startsWith('Bearer')
-//   ) {
-//     try {
-//       // Get token from header
-      
-//       token = req.headers.authorization.split(' ')[1];
-
-//       // Verify token
-//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-//       // Get user from token
-//       req.user = await User.findById(decoded.id).select('-password');
-
-//       next();
-//     } catch (error) {
-//       console.error(error);
-//       res.status(401).json({ message: 'Not authorized, token failed' });
-//     }
-//   }
-
-//   if (!token) {
-//     res.status(401).json({ message: 'Not authorized, no token' });
-//   }
-// };
-
-// Admin middleware
-const admin = async (req, res, next) => {
-
-  try {
-    const session = await auth.api.getSession({
-      headers: req.headers,
-    });
-
-    if (!session && !session.user) {
-      return res.status(401).json({ message: 'Not authorized, no session' });
-    }
-
-    if (session.user.role !== "admin") {
-      return res.status(403).json({ message: 'Not authorized as admin' });
-    }
-
-    req.user = session.user;
-    next();
-
-  } catch (error) {
-    console.error("Authentication error:", error);
+  } else {
+    return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 
-export{ verifyAuth, admin };
+// Verify user authentication using Clerk
+const verifyAuth = async (req, res, next) => {
+  try {
+    const auth = getAuth(req);
+
+    if (!auth || !auth.userId) {
+      return res.status(401).json({ message: 'Not authorized, no session' });
+    }
+
+    // Get full user data from Clerk
+    const user = await clerkClient.users.getUser(auth.userId);
+    
+    // Map Clerk user to expected format
+    req.user = {
+      id: user.id,
+      email: user.emailAddresses?.[0]?.emailAddress || '',
+      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || '',
+      emailVerified: user.emailAddresses?.[0]?.verification?.status === 'verified',
+      image: user.imageUrl,
+      // Get custom metadata (phone, address, ward, role)
+      phone: user.publicMetadata?.phone || user.unsafeMetadata?.phone || '',
+      address: user.publicMetadata?.address || user.unsafeMetadata?.address || '',
+      ward: user.publicMetadata?.ward || user.unsafeMetadata?.ward || '',
+      role: user.publicMetadata?.role || 'user',
+    };
+    
+    next();
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return res.status(401).json({ message: 'Not authorized' });
+  }
+};
+
+// Admin middleware using Clerk
+const admin = async (req, res, next) => {
+  try {
+    const auth = getAuth(req);
+
+    if (!auth || !auth.userId) {
+      return res.status(401).json({ message: 'Not authorized, no session' });
+    }
+
+    // Get full user data from Clerk
+    const user = await clerkClient.users.getUser(auth.userId);
+    const role = user.publicMetadata?.role || 'user';
+
+    if (role !== "admin") {
+      return res.status(403).json({ message: 'Not authorized as admin' });
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.emailAddresses?.[0]?.emailAddress || '',
+      name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || '',
+      role: role,
+      phone: user.publicMetadata?.phone || user.unsafeMetadata?.phone || '',
+      address: user.publicMetadata?.address || user.unsafeMetadata?.address || '',
+      ward: user.publicMetadata?.ward || user.unsafeMetadata?.ward || '',
+    };
+    
+    next();
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return res.status(401).json({ message: 'Not authorized' });
+  }
+};
+
+export { verifyAuth, admin, protectCollector };

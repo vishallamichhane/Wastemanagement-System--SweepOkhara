@@ -1,11 +1,74 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { BsCalendarEvent, BsMapFill, BsExclamationTriangle, BsCheckCircle, BsClock, BsTrash } from "react-icons/bs";
+import { BsCalendarEvent, BsMapFill, BsExclamationTriangle, BsCheckCircle, BsClock, BsTrash, BsTruck } from "react-icons/bs";
 import useScrollToTop from '../../hooks/useScrollToTop';
+import { useUser } from "@clerk/clerk-react";
+import { useDarkMode } from "../../context/DarkModeContext";
+import { WARD_SCHEDULES } from '../../data/wardSchedules';
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 
 export default function UserHomePage() {
   useScrollToTop();
+  const { user: clerkUser, isLoaded } = useUser();
+  const user = clerkUser ? {
+    name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username,
+    email: clerkUser.emailAddresses?.[0]?.emailAddress || '',
+  } : null;
+  const { isDarkMode } = useDarkMode();
+
+  // Get user's ward and compute real schedule
+  const userWard = clerkUser?.publicMetadata?.ward || clerkUser?.unsafeMetadata?.ward || 'Ward 1';
+  const wardNum = parseInt(String(userWard).replace(/\D/g, '')) || 1;
+  const schedule = WARD_SCHEDULES[`Ward ${wardNum}`];
+  const [todayStatus, setTodayStatus] = useState(null); // null | 'scheduled' | 'in-progress' | 'completed' | 'no-pickup'
+
+  // Compute upcoming pickup dates from real schedule
+  const isTodayPickup = schedule ? schedule.pickupDays.includes(new Date().getDay()) : false;
+  const getUpcomingPickups = () => {
+    if (!schedule) return [];
+    const now = new Date();
+    const today = now.getDay();
+    const pickups = [];
+    // Start from offset 1 (tomorrow) to avoid showing today in the upcoming list
+    // Today's status is shown separately via the status badge
+    for (let offset = 0; offset < 14 && pickups.length < 3; offset++) {
+      const dayIndex = (today + offset) % 7;
+      if (schedule.pickupDays.includes(dayIndex)) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + offset);
+        pickups.push({ date: d, dayName: DAY_NAMES[dayIndex], offset, timeSlot: schedule.timeSlot });
+      }
+    }
+    return pickups;
+  };
+  const upcomingPickups = getUpcomingPickups();
+
+  // Fetch today's real task status
+  useEffect(() => {
+    if (!schedule) return;
+    const todayDow = new Date().getDay();
+    if (!schedule.pickupDays.includes(todayDow)) {
+      setTodayStatus('no-pickup');
+      return;
+    }
+    const todayStr = new Date().toISOString().split('T')[0];
+    fetch(`http://localhost:3000/api/ward-tasks/status/${wardNum}/${todayStr}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data) setTodayStatus(data.data.status);
+      })
+      .catch(() => setTodayStatus('scheduled'));
+    const interval = setInterval(() => {
+      fetch(`http://localhost:3000/api/ward-tasks/status/${wardNum}/${todayStr}`)
+        .then(r => r.json())
+        .then(data => { if (data.success && data.data) setTodayStatus(data.data.status); })
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [wardNum, schedule]);
 
   return (
     <>
@@ -14,10 +77,14 @@ export default function UserHomePage() {
         {/* Welcome and Report button row */}
         <section className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 animate-slide-down">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
-              Welcome, User!
+            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-extrabold ${
+              isDarkMode 
+                ? 'text-emerald-400 bg-gradient-to-r from-emerald-400 to-teal-400' 
+                : 'text-green-800 bg-gradient-to-r from-green-700 to-emerald-600'
+            } bg-clip-text text-transparent`}>
+              Welcome, {user?.name?.split(' ')[0] || 'User'}!
             </h1>
-            <p className="text-gray-600 mt-1 sm:mt-2 text-base sm:text-lg font-medium">
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mt-1 sm:mt-2 text-base sm:text-lg font-medium`}>
               Your dashboard for a cleaner Pokhara.
             </p>
           </div>
@@ -70,28 +137,88 @@ export default function UserHomePage() {
           </div>
 
           {/* Waste Pickup Schedules */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-green-100/50 animate-fade-in-delay">
-            <h2 className="text-lg sm:text-xl font-bold text-green-800 mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
-              <BsCalendarEvent className="text-2xl sm:text-3xl text-green-600 animate-pulse-slow" />
+          <div className={`${
+            isDarkMode 
+              ? 'bg-gray-800/80 border-gray-700/50' 
+              : 'bg-white/80 border-green-100/50'
+          } backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border animate-fade-in-delay`}>
+            <h2 className={`text-lg sm:text-xl font-bold ${
+              isDarkMode ? 'text-emerald-400' : 'text-green-800'
+            } mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3`}>
+              <BsCalendarEvent className={`text-2xl sm:text-3xl ${
+                isDarkMode ? 'text-emerald-500' : 'text-green-600'
+              } animate-pulse-slow`} />
               <span>Pickup Schedule</span>
             </h2>
-            <ul className="space-y-3 sm:space-y-4 text-gray-700">
-              <li className="border-l-4 border-blue-500 pl-3 sm:pl-4 py-2 bg-blue-50/50 rounded-r-lg hover:bg-blue-50 transition-colors duration-300">
-                <span className="font-bold text-blue-700 block text-xs sm:text-sm">TOMORROW</span>
-                <span className="text-gray-600 text-xs sm:text-sm">General & Recyclable Waste</span>
-              </li>
-              <li className="border-l-4 border-green-500 pl-3 sm:pl-4 py-2 bg-green-50/50 rounded-r-lg hover:bg-green-50 transition-colors duration-300">
-                <span className="font-bold text-green-700 block text-xs sm:text-sm">JULY 1ST, 2024</span>
-                <span className="text-gray-600 text-xs sm:text-sm">Organic Waste Collection</span>
-              </li>
-              <li className="border-l-4 border-gray-400 pl-3 sm:pl-4 py-2 bg-gray-50/50 rounded-r-lg hover:bg-gray-50 transition-colors duration-300">
-                <span className="font-bold text-gray-700 block text-xs sm:text-sm">JULY 8TH, 2024</span>
-                <span className="text-gray-600 text-xs sm:text-sm">General & Recyclable Waste</span>
-              </li>
+
+            {/* Today's Status Badge */}
+            {isTodayPickup && todayStatus && todayStatus !== 'no-pickup' ? (
+              <div className={`mb-3 sm:mb-4 p-2.5 sm:p-3 rounded-xl border flex items-center gap-2.5 ${
+                todayStatus === 'completed'
+                  ? isDarkMode ? 'bg-emerald-900/40 border-emerald-700 text-emerald-300' : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                  : todayStatus === 'in-progress'
+                  ? isDarkMode ? 'bg-blue-900/40 border-blue-700 text-blue-300' : 'bg-blue-50 border-blue-300 text-blue-800'
+                  : isDarkMode ? 'bg-amber-900/40 border-amber-700 text-amber-300' : 'bg-amber-50 border-amber-300 text-amber-800'
+              }`}>
+                {todayStatus === 'completed' ? (
+                  <><BsCheckCircle className="text-lg shrink-0" /><div><p className="font-bold text-xs sm:text-sm">Collected ✓</p><p className="text-xs opacity-75">Today's pickup done</p></div></>
+                ) : todayStatus === 'in-progress' ? (
+                  <><BsTruck className="text-lg shrink-0 animate-pulse" /><div><p className="font-bold text-xs sm:text-sm">Truck On the Way</p><p className="text-xs opacity-75">Collection in progress</p></div></>
+                ) : (
+                  <><BsClock className="text-lg shrink-0" /><div><p className="font-bold text-xs sm:text-sm">Scheduled</p><p className="text-xs opacity-75">Awaiting collection</p></div></>
+                )}
+              </div>
+            ) : !isTodayPickup && (
+              <div className={`mb-3 sm:mb-4 p-2.5 sm:p-3 rounded-xl border flex items-center gap-2.5 ${
+                isDarkMode ? 'bg-gray-700/40 border-gray-600 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-500'
+              }`}>
+                <BsTrash className="text-lg shrink-0" />
+                <div>
+                  <p className="font-bold text-xs sm:text-sm">No Pickup Today</p>
+                  <p className="text-xs opacity-75">Next pickup: {upcomingPickups[0]?.dayName || '—'}</p>
+                </div>
+              </div>
+            )}
+
+            <ul className={`space-y-3 sm:space-y-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              {upcomingPickups.map((pickup, idx) => {
+                const dateStr = `${MONTH_NAMES[pickup.date.getMonth()]} ${pickup.date.getDate()}, ${pickup.date.getFullYear()}`;
+                const isToday = pickup.offset === 0;
+                const isTomorrow = pickup.offset === 1;
+                const borderColor = isToday ? 'border-green-500' : isTomorrow ? 'border-blue-500' : isDarkMode ? 'border-gray-500' : 'border-gray-300';
+                const bgColor = isToday
+                  ? isDarkMode ? 'bg-green-900/30 hover:bg-green-900/50' : 'bg-green-50/50 hover:bg-green-50'
+                  : isTomorrow
+                  ? isDarkMode ? 'bg-blue-900/30 hover:bg-blue-900/50' : 'bg-blue-50/50 hover:bg-blue-50'
+                  : isDarkMode ? 'bg-gray-700/30 hover:bg-gray-700/50' : 'bg-gray-50/50 hover:bg-gray-50';
+                const labelColor = isToday
+                  ? isDarkMode ? 'text-green-400' : 'text-green-700'
+                  : isTomorrow
+                  ? isDarkMode ? 'text-blue-400' : 'text-blue-700'
+                  : isDarkMode ? 'text-gray-300' : 'text-gray-700';
+
+                return (
+                  <li key={idx} className={`border-l-4 ${borderColor} pl-3 sm:pl-4 py-2 ${bgColor} rounded-r-lg transition-colors duration-300`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${labelColor} text-xs sm:text-sm`}>
+                        {isToday ? 'TODAY' : isTomorrow ? 'TOMORROW' : pickup.dayName}
+                      </span>
+                      <span className={`${isDarkMode ? 'text-gray-500' : 'text-gray-400'} text-xs`}>
+                        {dateStr}
+                      </span>
+                    </div>
+                    <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-xs sm:text-sm`}>
+                      {pickup.dayName} • {pickup.timeSlot}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
             <Link 
               to="/user/schedule"
-              className="text-green-600 mt-3 sm:mt-5 block text-xs sm:text-sm font-semibold hover:text-green-700 transition-colors duration-300 inline-flex items-center gap-1 group/link"
+              className={`${
+                isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-green-600 hover:text-green-700'
+              } mt-3 sm:mt-5 block text-xs sm:text-sm font-semibold transition-colors duration-300 inline-flex items-center gap-1 group/link`}
             >
               View full calendar
               <span className="group-hover/link:translate-x-1 transition-transform duration-300">→</span>
@@ -101,13 +228,21 @@ export default function UserHomePage() {
 
         {/* Awareness Info */}
         <section className="animate-slide-up">
-          <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4 sm:mb-6 md:mb-8 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+          <h2 className={`text-xl sm:text-2xl font-bold ${
+            isDarkMode 
+              ? 'text-emerald-400 bg-gradient-to-r from-emerald-400 to-teal-400' 
+              : 'text-green-800 bg-gradient-to-r from-green-700 to-emerald-600'
+          } bg-clip-text text-transparent mb-4 sm:mb-6 md:mb-8`}>
             Eco Awareness
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
             {/* Card 1 */}
             <Link to="/user/awareness1" className="block">
-              <article className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border border-green-100/50 group h-full">
+              <article className={`${
+                isDarkMode 
+                  ? 'bg-gray-800/80 border-gray-700/50' 
+                  : 'bg-white/80 border-green-100/50'
+              } backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border group h-full`}>
                 <div className="h-40 sm:h-44 md:h-48 overflow-hidden">
                   <img 
                     src="https://i.pinimg.com/736x/de/0b/3a/de0b3a9531a93b36d25c78b3523307a0.jpg" 
@@ -116,13 +251,17 @@ export default function UserHomePage() {
                   />
                 </div>
                 <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                  <h3 className="text-green-800 font-bold text-base sm:text-lg mb-2 sm:mb-3 group-hover:text-green-700 transition-colors">
+                  <h3 className={`${
+                    isDarkMode ? 'text-emerald-400 group-hover:text-emerald-300' : 'text-green-800 group-hover:text-green-700'
+                  } font-bold text-base sm:text-lg mb-2 sm:mb-3 transition-colors`}>
                     The 3 R's: Reduce, Reuse, Recycle
                   </h3>
-                  <p className="text-gray-600 text-sm sm:text-base flex-grow mb-3 sm:mb-4">
+                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm sm:text-base flex-grow mb-3 sm:mb-4`}>
                     Learn how to minimize waste and its impact on the environment through sustainable practices.
                   </p>
-                  <div className="text-green-600 text-sm sm:text-base font-semibold hover:text-green-700 transition-colors duration-300 inline-flex items-center gap-2 group/link">
+                  <div className={`${
+                    isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-green-600 hover:text-green-700'
+                  } text-sm sm:text-base font-semibold transition-colors duration-300 inline-flex items-center gap-2 group/link`}>
                     Read More
                     <span className="group-hover/link:translate-x-1 transition-transform duration-300">→</span>
                   </div>
@@ -132,7 +271,11 @@ export default function UserHomePage() {
 
             {/* Card 2 */}
             <Link to="/user/awareness2" className="block">
-              <article className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border border-green-100/50 group h-full">
+              <article className={`${
+                isDarkMode 
+                  ? 'bg-gray-800/80 border-gray-700/50' 
+                  : 'bg-white/80 border-green-100/50'
+              } backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border group h-full`}>
                 <div className="h-40 sm:h-44 md:h-48 overflow-hidden">
                   <img
                     src="https://i.pinimg.com/1200x/bf/33/6c/bf336c5cca4848a14997a569d1ce3445.jpg"
@@ -142,13 +285,17 @@ export default function UserHomePage() {
                   />
                 </div>
                 <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                  <h3 className="text-green-800 font-bold text-base sm:text-lg mb-2 sm:mb-3 group-hover:text-green-700 transition-colors">
+                  <h3 className={`${
+                    isDarkMode ? 'text-emerald-400 group-hover:text-emerald-300' : 'text-green-800 group-hover:text-green-700'
+                  } font-bold text-base sm:text-lg mb-2 sm:mb-3 transition-colors`}>
                     Composting at Home
                   </h3>
-                  <p className="text-gray-600 text-sm sm:text-base flex-grow mb-3 sm:mb-4">
+                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm sm:text-base flex-grow mb-3 sm:mb-4`}>
                     Turn your kitchen scraps into nutrient-rich soil for your garden with easy composting methods.
                   </p>
-                  <div className="text-green-600 text-sm sm:text-base font-semibold hover:text-green-700 transition-colors duration-300 inline-flex items-center gap-2 group/link">
+                  <div className={`${
+                    isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-green-600 hover:text-green-700'
+                  } text-sm sm:text-base font-semibold transition-colors duration-300 inline-flex items-center gap-2 group/link`}>
                     Read More
                     <span className="group-hover/link:translate-x-1 transition-transform duration-300">→</span>
                   </div>
@@ -158,7 +305,11 @@ export default function UserHomePage() {
 
             {/* Card 3 */}
             <Link to="/user/awareness3" className="block">
-              <article className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border border-green-100/50 group h-full">
+              <article className={`${
+                isDarkMode 
+                  ? 'bg-gray-800/80 border-gray-700/50' 
+                  : 'bg-white/80 border-green-100/50'
+              } backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] border group h-full`}>
                 <div className="h-40 sm:h-44 md:h-48 overflow-hidden">
                   <img
                     src="https://i.pinimg.com/1200x/63/7e/33/637e33cb367435cf7f39e57d1b52676d.jpg"
@@ -168,13 +319,17 @@ export default function UserHomePage() {
                   />
                 </div>
                 <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-grow">
-                  <h3 className="text-green-800 font-bold text-base sm:text-lg mb-2 sm:mb-3 group-hover:text-green-700 transition-colors">
+                  <h3 className={`${
+                    isDarkMode ? 'text-emerald-400 group-hover:text-emerald-300' : 'text-green-800 group-hover:text-green-700'
+                  } font-bold text-base sm:text-lg mb-2 sm:mb-3 transition-colors`}>
                     Smart Segregation
                   </h3>
-                  <p className="text-gray-600 text-sm sm:text-base flex-grow mb-3 sm:mb-4">
+                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm sm:text-base flex-grow mb-3 sm:mb-4`}>
                     Master the art of waste separation to maximize recycling and minimize environmental impact.
                   </p>
-                  <div className="text-green-600 text-sm sm:text-base font-semibold hover:text-green-700 transition-colors duration-300 inline-flex items-center gap-2 group/link">
+                  <div className={`${
+                    isDarkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-green-600 hover:text-green-700'
+                  } text-sm sm:text-base font-semibold transition-colors duration-300 inline-flex items-center gap-2 group/link`}>
                     Read More
                     <span className="group-hover/link:translate-x-1 transition-transform duration-300">→</span>
                   </div>

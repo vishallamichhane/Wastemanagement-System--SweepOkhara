@@ -39,180 +39,6 @@ import { MdOutlineRoute, MdWorkHistory } from "react-icons/md";
 import { GiPathDistance } from "react-icons/gi";
 
 // -------------------------
-// DUMMY COLLECTOR DATA - Replace with actual backend API
-// -------------------------
-const dummyCollectors = [
-  {
-    id: "COL-001",
-    name: "Rajesh Kumar",
-    email: "rajesh.kumar@sweepokhara.com",
-    phone: "+977 9800000001",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector001",
-    status: "active",
-    badge: "Gold",
-    rating: 4.8,
-    efficiency: 96,
-    totalCollections: 1247,
-    thisMonth: 156,
-    assignedRoute: "Route A - Lakeside",
-    vehicle: { id: "TRK-01", type: "Waste Truck", capacity: "2.5 Tons", registration: "PHA-01-1234" },
-    ward: "Ward 5",
-    joinDate: "2022-03-15",
-    lastActive: "10 mins ago",
-    tasksToday: { total: 15, completed: 12, pending: 3 },
-    distanceCovered: "45.2 km",
-    attendance: 99.1
-  },
-  {
-    id: "COL-002",
-    name: "Suresh Yadav",
-    email: "suresh.yadav@sweepokhara.com",
-    phone: "+977 9800000002",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector002",
-    status: "active",
-    badge: "Silver",
-    rating: 4.5,
-    efficiency: 92,
-    totalCollections: 987,
-    thisMonth: 142,
-    assignedRoute: "Route B - City Center",
-    vehicle: { id: "TRK-02", type: "Waste Truck", capacity: "2.5 Tons", registration: "PHA-02-2345" },
-    ward: "Ward 3",
-    joinDate: "2022-06-20",
-    lastActive: "25 mins ago",
-    tasksToday: { total: 14, completed: 10, pending: 4 },
-    distanceCovered: "38.7 km",
-    attendance: 97.5
-  },
-  {
-    id: "COL-003",
-    name: "Amit Sharma",
-    email: "amit.sharma@sweepokhara.com",
-    phone: "+977 9800000003",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector003",
-    status: "inactive",
-    badge: "Bronze",
-    rating: 4.2,
-    efficiency: 88,
-    totalCollections: 654,
-    thisMonth: 0,
-    assignedRoute: "Route C - Mahendra Pul",
-    vehicle: { id: "TRK-03", type: "Waste Truck", capacity: "2.0 Tons", registration: "PHA-03-3456" },
-    ward: "Ward 2",
-    joinDate: "2023-01-10",
-    lastActive: "2 days ago",
-    tasksToday: { total: 0, completed: 0, pending: 0 },
-    distanceCovered: "0 km",
-    attendance: 85.2
-  },
-  {
-    id: "COL-004",
-    name: "Priya Singh",
-    email: "priya.singh@sweepokhara.com",
-    phone: "+977 9800000004",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector004",
-    status: "active",
-    badge: "Gold",
-    rating: 4.7,
-    efficiency: 94,
-    totalCollections: 1089,
-    thisMonth: 148,
-    assignedRoute: "Route D - Baseline",
-    vehicle: { id: "TRK-04", type: "Waste Truck", capacity: "2.5 Tons", registration: "PHA-04-4567" },
-    ward: "Ward 4",
-    joinDate: "2022-08-05",
-    lastActive: "5 mins ago",
-    tasksToday: { total: 16, completed: 14, pending: 2 },
-    distanceCovered: "52.1 km",
-    attendance: 98.8
-  },
-  {
-    id: "COL-005",
-    name: "Bikash Adhikari",
-    email: "bikash.adhikari@sweepokhara.com",
-    phone: "+977 9800000005",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector005",
-    status: "on-leave",
-    badge: "Silver",
-    rating: 4.4,
-    efficiency: 91,
-    totalCollections: 876,
-    thisMonth: 98,
-    assignedRoute: "Route E - Damside",
-    vehicle: { id: "TRK-05", type: "Waste Truck", capacity: "2.0 Tons", registration: "PHA-05-5678" },
-    ward: "Ward 6",
-    joinDate: "2022-11-18",
-    lastActive: "1 week ago",
-    tasksToday: { total: 0, completed: 0, pending: 0 },
-    distanceCovered: "0 km",
-    attendance: 92.3
-  },
-  {
-    id: "COL-006",
-    name: "Krishna Bahadur",
-    email: "krishna.bahadur@sweepokhara.com",
-    phone: "+977 9800000006",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector006",
-    status: "active",
-    badge: "Bronze",
-    rating: 4.0,
-    efficiency: 86,
-    totalCollections: 432,
-    thisMonth: 112,
-    assignedRoute: "Route F - Chipledhunga",
-    vehicle: { id: "TRK-06", type: "Waste Truck", capacity: "2.0 Tons", registration: "PHA-06-6789" },
-    ward: "Ward 1",
-    joinDate: "2023-05-22",
-    lastActive: "1 hour ago",
-    tasksToday: { total: 12, completed: 8, pending: 4 },
-    distanceCovered: "28.4 km",
-    attendance: 94.1
-  },
-  {
-    id: "COL-007",
-    name: "Deepak Poudel",
-    email: "deepak.poudel@sweepokhara.com",
-    phone: "+977 9800000007",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector007",
-    status: "active",
-    badge: "Silver",
-    rating: 4.6,
-    efficiency: 93,
-    totalCollections: 765,
-    thisMonth: 134,
-    assignedRoute: "Route G - Nayabazar",
-    vehicle: { id: "TRK-07", type: "Waste Truck", capacity: "2.5 Tons", registration: "PHA-07-7890" },
-    ward: "Ward 7",
-    joinDate: "2023-02-14",
-    lastActive: "15 mins ago",
-    tasksToday: { total: 13, completed: 11, pending: 2 },
-    distanceCovered: "41.8 km",
-    attendance: 96.7
-  },
-  {
-    id: "COL-008",
-    name: "Suman Tamang",
-    email: "suman.tamang@sweepokhara.com",
-    phone: "+977 9800000008",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector008",
-    status: "active",
-    badge: "Gold",
-    rating: 4.9,
-    efficiency: 97,
-    totalCollections: 1456,
-    thisMonth: 162,
-    assignedRoute: "Route H - Bagar",
-    vehicle: { id: "TRK-08", type: "Waste Truck", capacity: "3.0 Tons", registration: "PHA-08-8901" },
-    ward: "Ward 8",
-    joinDate: "2021-12-01",
-    lastActive: "2 mins ago",
-    tasksToday: { total: 18, completed: 16, pending: 2 },
-    distanceCovered: "58.3 km",
-    attendance: 99.5
-  }
-];
-
-// -------------------------
 // STATUS BADGE COMPONENT
 // -------------------------
 const StatusBadge = ({ status }) => {
@@ -491,131 +317,230 @@ const CollectorDetailModal = ({ collector, onClose }) => {
 // -------------------------
 // ADD COLLECTOR MODAL
 // -------------------------
-const AddCollectorModal = ({ onClose, onAdd }) => {
+const AddCollectorModal = ({ onClose, onAdd, assignedWards = [] }) => {
   const [formData, setFormData] = useState({
+    collectorId: '',
+    password: '',
     name: '',
     email: '',
     phone: '',
-    ward: '',
-    assignedRoute: '',
+    assignedWards: [],
     vehicleId: ''
   });
+  const [wardsError, setWardsError] = useState('');
+
+  // Set of already assigned wards (from other collectors)
+  const alreadyAssignedWards = new Set(assignedWards);
+
+  // Auto-generate Collector ID
+  const generateCollectorId = () => {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const collectorId = `COL-${randomNum}`;
+    setFormData({...formData, collectorId});
+  };
+
+  const handleWardToggle = (ward) => {
+    const currentWards = formData.assignedWards || [];
+    if (currentWards.includes(ward)) {
+      setFormData({...formData, assignedWards: currentWards.filter(w => w !== ward)});
+    } else {
+      setFormData({...formData, assignedWards: [...currentWards, ward]});
+    }
+    setWardsError('');
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate minimum 5 wards
+    if (!formData.assignedWards || formData.assignedWards.length < 5) {
+      setWardsError('Please select at least 5 wards for the collector');
+      return;
+    }
+    
     onAdd(formData);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-        <div className="p-6 border-b border-gray-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        {/* Header - Fixed */}
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <BsPersonPlus className="text-emerald-600" />
-              Add New Collector
-            </h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-              <FiX className="w-5 h-5 text-gray-500" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg">
+                <BsPersonPlus className="text-white text-lg" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Add New Collector</h2>
+                <p className="text-xs text-gray-600">Fill in the details to create a new collector account</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-white/80 rounded-full transition-colors">
+              <FiX className="w-5 h-5 text-gray-500 hover:text-gray-700" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              placeholder="Enter collector's full name"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              placeholder="collector@sweepokhara.com"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              placeholder="+977 98XXXXXXXX"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        {/* Form - Scrollable */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-4">
+            {/* Collector ID & Password Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Collector ID</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.collectorId}
+                    onChange={(e) => setFormData({...formData, collectorId: e.target.value})}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-gray-50"
+                    placeholder="COL-XXXX"
+                    required
+                    readOnly
+                  />
+                  <button
+                    type="button"
+                    onClick={generateCollectorId}
+                    className="px-3 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap font-medium"
+                  >
+                    Generate
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Password</label>
+                <input
+                  type="text"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  placeholder="Set password"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Name & Email Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Full Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  placeholder="collector@sweepokhara.com"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Phone Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ward</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Phone Number</label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                placeholder="+977 98XXXXXXXX"
+                required
+              />
+            </div>
+
+            {/* Assigned Wards - Multi-select */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+                Assigned Wards (Select at least 5)
+              </label>
+              <div className="border border-gray-300 rounded-lg p-3 bg-white max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {[...Array(33)].map((_, i) => {
+                    const wardNum = i + 1;
+                    const isSelected = formData.assignedWards?.includes(wardNum);
+                    const isDisabled = alreadyAssignedWards.has(wardNum);
+                    return (
+                      <button
+                        key={wardNum}
+                        type="button"
+                        onClick={() => !isDisabled && handleWardToggle(wardNum)}
+                        disabled={isDisabled}
+                        title={isDisabled ? `Ward ${wardNum} is already assigned to another collector` : `Select Ward ${wardNum}`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                          isDisabled
+                            ? 'bg-red-100 text-red-400 cursor-not-allowed line-through'
+                            : isSelected
+                              ? 'bg-emerald-600 text-white shadow-md'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {wardNum}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-gray-600">
+                    Selected: <span className="font-semibold text-emerald-600">{formData.assignedWards?.length || 0}</span> ward(s)
+                  </p>
+                  {alreadyAssignedWards.size > 0 && (
+                    <p className="text-xs text-red-500">
+                      <span className="line-through">Unavailable</span>: {alreadyAssignedWards.size} ward(s)
+                    </p>
+                  )}
+                </div>
+                {wardsError && (
+                  <p className="text-xs text-red-600 font-medium">{wardsError}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Vehicle */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Assign Vehicle</label>
               <select
-                value={formData.ward}
-                onChange={(e) => setFormData({...formData, ward: e.target.value})}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                value={formData.vehicleId}
+                onChange={(e) => setFormData({...formData, vehicleId: e.target.value})}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white"
                 required
               >
-                <option value="">Select Ward</option>
-                {[...Array(8)].map((_, i) => (
-                  <option key={i} value={`Ward ${i + 1}`}>Ward {i + 1}</option>
-                ))}
+                <option value="">Select Vehicle</option>
+                <option value="TRK-09">TRK-09 - Waste Truck (2.5 Tons)</option>
+                <option value="TRK-10">TRK-10 - Waste Truck (2.0 Tons)</option>
+                <option value="TRK-11">TRK-11 - Waste Truck (3.0 Tons)</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Route</label>
-              <select
-                value={formData.assignedRoute}
-                onChange={(e) => setFormData({...formData, assignedRoute: e.target.value})}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                required
-              >
-                <option value="">Select Route</option>
-                <option value="Route A - Lakeside">Route A - Lakeside</option>
-                <option value="Route B - City Center">Route B - City Center</option>
-                <option value="Route C - Mahendra Pul">Route C - Mahendra Pul</option>
-                <option value="Route D - Baseline">Route D - Baseline</option>
-                <option value="Route E - Damside">Route E - Damside</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Assign Vehicle</label>
-            <select
-              value={formData.vehicleId}
-              onChange={(e) => setFormData({...formData, vehicleId: e.target.value})}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              required
-            >
-              <option value="">Select Vehicle</option>
-              <option value="TRK-09">TRK-09 - Waste Truck (2.5 Tons)</option>
-              <option value="TRK-10">TRK-10 - Waste Truck (2.0 Tons)</option>
-              <option value="TRK-11">TRK-11 - Waste Truck (3.0 Tons)</option>
-            </select>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          {/* Footer - Fixed */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-semibold border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all"
+              className="flex-1 px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-lg hover:from-emerald-700 hover:to-teal-700 transition-all"
             >
-              Add Collector
+              Create Collector
             </button>
           </div>
         </form>
@@ -628,7 +553,7 @@ const AddCollectorModal = ({ onClose, onAdd }) => {
 // MAIN COLLECTOR MANAGEMENT COMPONENT
 // -------------------------
 const CollectorManagement = () => {
-  const [collectors, setCollectors] = useState(dummyCollectors);
+  const [collectors, setCollectors] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [badgeFilter, setBadgeFilter] = useState("all");
@@ -636,7 +561,64 @@ const CollectorManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState("table"); // 'table' or 'grid'
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [maxCollectors, setMaxCollectors] = useState(6);
+  const [remainingSlots, setRemainingSlots] = useState(6);
   const itemsPerPage = 6;
+
+  // Fetch collectors from backend
+  useEffect(() => {
+    fetchCollectors();
+  }, []);
+
+  const fetchCollectors = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:3000/api/collectors');
+      const result = await response.json();
+      
+      if (result.success) {
+        // Map backend data to frontend format
+        const formattedCollectors = result.data.map(collector => ({
+          id: collector.collectorId,
+          name: collector.name,
+          email: collector.email,
+          phone: collector.phoneNumber,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${collector.collectorId}`,
+          status: collector.status,
+          badge: collector.badge,
+          rating: collector.rating,
+          efficiency: collector.efficiency,
+          totalCollections: collector.totalCollections,
+          thisMonth: 0,
+          assignedRoute: `Wards: ${collector.assignedWards?.join(', ') || 'N/A'}`,
+          assignedWards: collector.assignedWards,
+          vehicle: { id: collector.vehicleId, type: 'Waste Truck', capacity: '2.5 Tons', registration: 'N/A' },
+          ward: `${collector.assignedWards?.length || 0} wards`,
+          joinDate: new Date(collector.createdAt).toISOString().split('T')[0],
+          lastActive: '10 mins ago',
+          tasksToday: { total: 15, completed: 12, pending: 3 },
+          distanceCovered: '0 km',
+          attendance: 0,
+          _id: collector._id
+        }));
+        
+        setCollectors(formattedCollectors);
+        setMaxCollectors(result.maxLimit);
+        setRemainingSlots(result.remaining);
+      } else {
+        // If no collectors yet, use empty array
+        setCollectors([]);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching collectors:', err);
+      setError('Failed to load collectors');
+      setCollectors([]);
+      setLoading(false);
+    }
+  };
 
   // Filter collectors
   const filteredCollectors = collectors.filter(collector => {
@@ -644,7 +626,7 @@ const CollectorManagement = () => {
       collector.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       collector.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       collector.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      collector.assignedRoute.toLowerCase().includes(searchQuery.toLowerCase());
+      (collector.assignedRoute && collector.assignedRoute.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesStatus = statusFilter === "all" || collector.status === statusFilter;
     const matchesBadge = badgeFilter === "all" || collector.badge === badgeFilter;
@@ -669,25 +651,49 @@ const CollectorManagement = () => {
     totalCollectionsToday: collectors.reduce((sum, c) => sum + c.tasksToday.completed, 0)
   };
 
-  const handleAddCollector = (data) => {
-    const newCollector = {
-      id: `COL-${String(collectors.length + 1).padStart(3, '0')}`,
-      ...data,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.name.replace(/\s/g, '')}`,
-      status: 'active',
-      badge: 'Bronze',
-      rating: 0,
-      efficiency: 0,
-      totalCollections: 0,
-      thisMonth: 0,
-      vehicle: { id: data.vehicleId, type: 'Waste Truck', capacity: '2.5 Tons', registration: 'NEW-REG' },
-      joinDate: new Date().toISOString().split('T')[0],
-      lastActive: 'Just now',
-      tasksToday: { total: 0, completed: 0, pending: 0 },
-      distanceCovered: '0 km',
-      attendance: 0
-    };
-    setCollectors([...collectors, newCollector]);
+  const handleAddCollector = async (data) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Check if max limit reached before making API call
+      if (collectors.length >= maxCollectors) {
+        alert(`Maximum limit of ${maxCollectors} collectors reached!`);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('http://localhost:3000/api/collectors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          collectorId: data.collectorId,
+          password: data.password,
+          name: data.name,
+          email: data.email,
+          phoneNumber: data.phone,
+          assignedWards: data.assignedWards,
+          vehicleId: data.vehicleId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh the collectors list
+        await fetchCollectors();
+        alert('Collector created successfully!');
+      } else {
+        alert(result.message || 'Failed to create collector');
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Error creating collector:', err);
+      alert('Failed to create collector. Please try again.');
+      setLoading(false);
+    }
   };
 
   const handleDeleteCollector = (id) => {
@@ -707,6 +713,22 @@ const CollectorManagement = () => {
 
   return (
     <div className="space-y-6 animate-fadeInUp">
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {!loading && (
+        <>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -716,12 +738,25 @@ const CollectorManagement = () => {
             </div>
             Collector Management
           </h1>
-          <p className="text-gray-600 mt-1">Manage and monitor waste collection team</p>
+          <p className="text-gray-600 mt-1">
+            Manage and monitor waste collection team 
+            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
+              remainingSlots > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}>
+              {collectors.length}/{maxCollectors} Collectors {remainingSlots > 0 ? `(${remainingSlots} slots remaining)` : '(Max limit reached)'}
+            </span>
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+            disabled={remainingSlots <= 0}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+              remainingSlots > 0 
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-lg' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            title={remainingSlots <= 0 ? 'Maximum collector limit reached' : 'Add new collector'}
           >
             <FiPlus className="w-4 h-4" />
             Add Collector
@@ -1127,7 +1162,10 @@ const CollectorManagement = () => {
         <AddCollectorModal 
           onClose={() => setShowAddModal(false)}
           onAdd={handleAddCollector}
+          assignedWards={collectors.flatMap(c => c.assignedWards || [])}
         />
+      )}
+      </>
       )}
     </div>
   );

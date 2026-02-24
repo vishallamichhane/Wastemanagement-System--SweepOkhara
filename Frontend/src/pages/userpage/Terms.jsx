@@ -140,7 +140,7 @@ export default function TermsOfServicePage() {
     <>
 
       {/* Main content */}
-      <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-10 relative z-10">
+      <main className="flex-grow max-w-5xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-10 mb-16 pb-20 sm:pb-0 space-y-6 sm:space-y-8 md:space-y-10 relative z-10">
         {/* Back button and header */}
         <section className="animate-slide-down">
             <Link to= "/user">
@@ -158,10 +158,10 @@ export default function TermsOfServicePage() {
                 <GiContract className="text-3xl" />
               </div>
             </div>
-            <h1 className="text-5xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
               Terms of Service
             </h1>
-            <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+            <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
               Please read these terms carefully before using SweepOkhara.
             </p>
             <div className="mt-6 text-sm text-gray-500">
@@ -171,7 +171,7 @@ export default function TermsOfServicePage() {
         </section>
 
         {/* Important Notice */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200 animate-fade-in">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-amber-200 animate-fade-in">
           <div className="flex items-start gap-4">
             <div className="bg-amber-100 p-3 rounded-xl flex-shrink-0">
               <BsExclamationTriangle className="text-amber-600 text-2xl" />
@@ -187,9 +187,9 @@ export default function TermsOfServicePage() {
 
         {/* Key Highlights */}
         <section className="animate-fade-in">
-          <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-8 border border-emerald-200">
-            <h2 className="text-2xl font-bold text-emerald-800 mb-6 text-center">Our Commitment to You</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-emerald-200">
+            <h2 className="text-xl sm:text-2xl font-bold text-emerald-800 mb-4 sm:mb-6 text-center">Our Commitment to You</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {keyHighlights.map((highlight, index) => (
                 <div key={index} className="flex items-center gap-3 p-4 bg-white/50 rounded-xl border border-emerald-100">
                   <span className="text-2xl flex-shrink-0">{highlight.icon}</span>
@@ -201,9 +201,9 @@ export default function TermsOfServicePage() {
         </section>
 
         {/* Quick Navigation */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Navigate Terms</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {sections.map((section) => (
               <a
                 key={section.id}
@@ -225,17 +225,17 @@ export default function TermsOfServicePage() {
         <div className="space-y-8">
           {sections.map((section, index) => (
             <section key={section.id} id={section.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-green-100/50">
-                <div className="flex items-center gap-4 mb-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg border border-green-100/50">
+                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                   <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3 rounded-xl text-white shadow-lg">
                     {section.icon}
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800">{section.title}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{section.title}</h2>
                 </div>
-                <p className="text-gray-700 leading-relaxed text-lg mb-6">{section.content}</p>
+                <p className="text-gray-700 leading-relaxed text-base sm:text-lg mb-4 sm:mb-6">{section.content}</p>
                 
                 {section.points && section.points.length > 0 && (
-                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                  <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
                     <ul className="space-y-3">
                       {section.points.map((point, pointIndex) => (
                         <li key={pointIndex} className="flex items-start gap-3">
@@ -254,18 +254,18 @@ export default function TermsOfServicePage() {
         </div>
 
         {/* Additional Terms */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-green-100/50 animate-fade-in">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Additional Terms</h3>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg border border-green-100/50 animate-fade-in">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Additional Terms</h3>
           
-          <div className="space-y-6">
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Modifications to Terms</h4>
               <p className="text-gray-700">
                 We reserve the right to modify these terms at any time. We will notify users of any changes by updating the "Effective Date" at the top of this page. Your continued use of SweepOkhara after any changes constitutes acceptance of the new terms.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Contact Information</h4>
               <p className="text-gray-700 mb-4">
                 For questions about these Terms of Service, please contact us:
@@ -284,7 +284,7 @@ export default function TermsOfServicePage() {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Severability</h4>
               <p className="text-gray-700">
                 If any provision of these Terms is found to be unenforceable or invalid, that provision will be limited or eliminated to the minimum extent necessary so that these Terms will otherwise remain in full force and effect and enforceable.
@@ -295,7 +295,7 @@ export default function TermsOfServicePage() {
 
         {/* Agreement Section */}
         <div className="text-center animate-fade-in">
-          <div className="inline-flex flex-col items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-green-100/50 max-w-2xl mx-auto">
+          <div className="inline-flex flex-col items-center gap-4 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg border border-green-100/50 max-w-2xl mx-auto">
             <div className="bg-emerald-100 p-3 rounded-full">
               <BsShieldCheck className="text-emerald-600 text-2xl" />
             </div>

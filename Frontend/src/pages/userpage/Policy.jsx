@@ -73,7 +73,7 @@ export default function PrivacyPolicyPage() {
   return (
     <>  
       {/* Main content */}
-      <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-10 relative z-10">
+      <main className="flex-grow max-w-5xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-10 mb-16 pb-20 sm:pb-0 space-y-6 sm:space-y-8 md:space-y-10 relative z-10">
         {/* Back button and header */}
         <section className="animate-slide-down">
           <button
@@ -90,10 +90,10 @@ export default function PrivacyPolicyPage() {
                 <BsShieldCheck className="text-3xl" />
               </div>
             </div>
-            <h1 className="text-5xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
               Privacy Policy
             </h1>
-            <p className="text-gray-600 text-xl max-w-3xl mx-auto">
+            <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
               Protecting your privacy is our commitment. Learn how we handle your information.
             </p>
             <div className="mt-6 text-sm text-gray-500">
@@ -103,9 +103,9 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Quick Navigation */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Navigation</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
             {sections.map((section) => (
               <a
                 key={section.id}
@@ -125,9 +125,9 @@ export default function PrivacyPolicyPage() {
 
         {/* Core Principles */}
         <section className="animate-fade-in">
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-200">
-            <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">Our Privacy Principles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-200">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 text-center">Our Privacy Principles</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {principles.map((principle, index) => (
                 <div key={index} className="flex items-start gap-3 p-4 bg-white/50 rounded-xl">
                   <span className="text-2xl flex-shrink-0">{principle.icon}</span>
@@ -142,39 +142,39 @@ export default function PrivacyPolicyPage() {
         <div className="space-y-8">
           {sections.map((section, index) => (
             <section key={section.id} id={section.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-green-100/50">
-                <div className="flex items-center gap-4 mb-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg border border-green-100/50">
+                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                   <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3 rounded-xl text-white shadow-lg">
                     {section.icon}
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800">{section.title}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{section.title}</h2>
                 </div>
-                <p className="text-gray-700 leading-relaxed text-lg">{section.content}</p>
+                <p className="text-gray-700 leading-relaxed text-base sm:text-lg">{section.content}</p>
               </div>
             </section>
           ))}
         </div>
 
         {/* Additional Information */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-green-100/50 animate-fade-in">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Additional Information</h3>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg border border-green-100/50 animate-fade-in">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Additional Information</h3>
           
-          <div className="space-y-6">
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Cookies and Tracking</h4>
               <p className="text-gray-700">
                 We use cookies and similar tracking technologies to track activity on our platform and hold certain information. Cookies are files with a small amount of data which may include an anonymous unique identifier. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Children's Privacy</h4>
               <p className="text-gray-700">
                 Our Service does not address anyone under the age of 13. We do not knowingly collect personally identifiable information from anyone under the age of 13. If you are a parent or guardian and you are aware that your child has provided us with personal data, please contact us.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Policy Updates</h4>
               <p className="text-gray-700">
                 We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. You are advised to review this Privacy Policy periodically for any changes.
@@ -186,7 +186,7 @@ export default function PrivacyPolicyPage() {
        
         {/* Agreement Section */}
         <div className="text-center animate-fade-in">
-          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50">
+          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50">
             <BsCheckCircle className="text-emerald-600 text-2xl" />
             <p className="text-gray-700 font-medium">
               By using SweepOkhara, you acknowledge that you have read and understood this Privacy Policy.

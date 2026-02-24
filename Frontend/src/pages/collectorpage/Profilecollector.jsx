@@ -15,7 +15,9 @@ import {
   FiPhone,
   FiMail,
   FiCheckCircle,
-  FiUser
+  FiUser,
+  FiMenu,
+  FiX
 } from 'react-icons/fi';
 import { 
   BsBell, 
@@ -122,10 +124,10 @@ const ProfileStatCard = ({ title, value, icon: Icon, color, unit, trend }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
       <div className="flex items-center justify-between mb-4">
-        <div className={`w-14 h-14 rounded-full ${colorClasses[color]} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-          <Icon className="text-2xl" />
+        <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full ${colorClasses[color]} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className="text-xl sm:text-2xl" />
         </div>
         {trend && (
           <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -136,7 +138,7 @@ const ProfileStatCard = ({ title, value, icon: Icon, color, unit, trend }) => {
         )}
       </div>
       <div>
-        <p className="text-3xl font-bold text-gray-900 mb-1">
+        <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
           {value} {unit && <span className="text-lg text-gray-600">{unit}</span>}
         </p>
         <p className="text-sm text-gray-600">{title}</p>
@@ -152,10 +154,10 @@ const AchievementCard = ({ achievement }) => {
   const Icon = achievement.icon;
   
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border border-gray-100">
-      <div className="flex items-start gap-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-          <Icon className="text-2xl text-amber-600" />
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border border-gray-100">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0">
+          <Icon className="text-xl sm:text-2xl text-amber-600" />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
@@ -213,7 +215,111 @@ const CollectorProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(collectorProfileData);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  // Fetch actual collector profile data
+  useEffect(() => {
+    const fetchCollectorProfile = async () => {
+      try {
+        const token = localStorage.getItem('collectorToken');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        const response = await fetch('http://localhost:3000/api/collectors/profile', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('collectorToken');
+            localStorage.removeItem('collectorData');
+            localStorage.removeItem('userRole');
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch profile');
+        }
+
+        const result = await response.json();
+        const collector = result.data;
+
+        // Transform backend data to match frontend structure
+        const transformedData = {
+          personal: {
+            id: collector.collectorId,
+            name: collector.name,
+            role: "Waste Collector",
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${collector.collectorId}`,
+            joinDate: new Date(collector.joinDate).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            employeeId: collector.collectorId,
+            status: collector.status.charAt(0).toUpperCase() + collector.status.slice(1),
+            badge: `${collector.badge} Tier`
+          },
+          contact: {
+            phone: collector.phoneNumber,
+            email: collector.email,
+            address: `Ward ${collector.assignedWards.join(', ')}, Pokhara, Nepal`,
+            emergencyContact: collector.phoneNumber
+          },
+          performance: {
+            rating: collector.rating || 4.0,
+            totalCollections: collector.totalCollections || 0,
+            thisMonth: 0, // Can be calculated from tasks
+            efficiency: collector.efficiency || 85,
+            accuracy: 95, // Default value
+            attendance: 98, // Default value
+            safetyScore: 96 // Default value
+          },
+          achievements: collectorProfileData.achievements, // Keep default achievements
+          stats: {
+            totalDistance: "0 km", // Can be calculated
+            binsCollected: String(collector.totalCollections || 0),
+            workingHours: "0 hrs", // Can be calculated
+            fuelEfficiency: "8.2 km/L",
+            carbonSaved: "0 tons"
+          },
+          vehicle: {
+            id: collector.vehicleId,
+            type: "Waste Collection Truck",
+            capacity: "2.5 Tons",
+            registration: collector.vehicleId,
+            lastService: "N/A",
+            nextService: "N/A",
+            status: "Active",
+            fuelType: "Diesel"
+          },
+          currentTasks: {
+            today: 0,
+            pending: 0,
+            inProgress: 0,
+            completed: 0
+          },
+          assignedWards: collector.assignedWards
+        };
+
+        setProfileData(transformedData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching collector profile:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchCollectorProfile();
+  }, [navigate]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -238,6 +344,9 @@ const CollectorProfile = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowProfileDropdown(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -245,6 +354,17 @@ const CollectorProfile = () => {
 
   const handleLogout = () => {
     setShowProfileDropdown(false);
+    
+    console.log('🚪 Collector logging out...');
+    
+    // Clear all collector session data
+    localStorage.removeItem('collectorToken');
+    localStorage.removeItem('collectorData');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    
+    console.log('✅ Collector logged out successfully');
+    
     navigate('/login');
   };
 
@@ -262,10 +382,36 @@ const CollectorProfile = () => {
     setIsEditing(true);
   };
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    // In real app, save to backend here
-    console.log('Profile saved');
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem('collectorToken');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch('http://localhost:3000/api/collectors/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: profileData.contact.phone,
+          email: profileData.contact.email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      setIsEditing(false);
+      console.log('Profile updated successfully');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    }
   };
 
   const formatJoinDuration = (joinDate) => {
@@ -281,6 +427,18 @@ const CollectorProfile = () => {
     return `${months} month${months > 1 ? 's' : ''}`;
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-semibold">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50 text-gray-900 flex flex-col">
       {/* Background Elements */}
@@ -290,33 +448,33 @@ const CollectorProfile = () => {
       </div>
 
       {/* UPDATED NAVBAR - Same as Collector Dashboard */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+      <nav ref={mobileMenuRef} className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
         isNavVisible ? 'translate-y-0' : '-translate-y-full'
       } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
       }`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
-          {/* Logo - Match Collector Dashboard */}
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-10 py-3 sm:py-4">
+          {/* Logo */}
           <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-3 group cursor-pointer">
+            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
               <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
                 <GiBroom className="text-white text-xl" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                   SweePokhara
                 </span>
               </div>
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+              <span className="hidden sm:inline-block px-2 sm:px-3 py-1 bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
             </div>
           </Link>
 
-          {/* Navigation */}
-          <div className="flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => {
                 setActiveNav('home');
@@ -425,14 +583,67 @@ const CollectorProfile = () => {
               )}
             </div>
           </div>
+
+          {/* Mobile: Hamburger + Notification */}
+          <div className="flex md:hidden items-center space-x-3">
+            <CollectorNotificationCenter />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-emerald-700 hover:bg-emerald-50 transition-all duration-300"
+            >
+              {mobileMenuOpen ? <FiX className="text-2xl" /> : <FiMenu className="text-2xl" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu Panel */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-emerald-100 bg-white/95 backdrop-blur-xl px-4 py-3 space-y-1">
+            <button
+              onClick={() => { setMobileMenuOpen(false); navigate('/collector/dashboard'); }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200"
+            >
+              <FiHome />
+              <span className="font-semibold">Dashboard</span>
+            </button>
+            <button
+              onClick={() => { setMobileMenuOpen(false); navigate('/collector/tasks'); }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200"
+            >
+              <FiCalendar />
+              <span className="font-semibold">Schedule</span>
+            </button>
+            <button
+              onClick={() => { setMobileMenuOpen(false); navigate('/collector/reports'); }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200"
+            >
+              <BsExclamationTriangle />
+              <span className="font-semibold">Reports</span>
+            </button>
+            <button
+              onClick={() => { setMobileMenuOpen(false); navigate('/collector/profile'); }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-emerald-700 bg-emerald-50 transition-all duration-200"
+            >
+              <FiUser />
+              <span className="font-semibold">Profile</span>
+            </button>
+            <div className="border-t border-gray-100 my-1"></div>
+            <button
+              onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200"
+            >
+              <FiLogOut />
+              <span className="font-semibold">Logout</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Spacer for fixed nav */}
-      <div className="h-24"></div>
+      <div className="h-16 sm:h-20 md:h-24"></div>
 
       {/* Main Content */}
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 w-full">
         {/* Back Button and Header */}
         <div className="mb-8">
           <button 
@@ -445,28 +656,28 @@ const CollectorProfile = () => {
           
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Profile Header */}
-            <div className="flex items-start space-x-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative group">
                 <img 
                   src={profileData.personal.avatar} 
                   alt={profileData.personal.name}
-                  className="w-32 h-32 rounded-2xl border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                  className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-2xl border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 rounded-full border-3 border-white flex items-center justify-center">
                   <MdOutlineVerified className="text-white text-lg" />
                 </div>
               </div>
               
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">{profileData.personal.name}</h1>
+              <div className="text-center sm:text-left">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-2">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{profileData.personal.name}</h1>
                   <span className="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-semibold rounded-full">
                     {profileData.personal.badge}
                   </span>
                 </div>
-                <p className="text-xl text-gray-600 mb-3">{profileData.personal.role}</p>
+                <p className="text-base sm:text-xl text-gray-600 mb-3">{profileData.personal.role}</p>
                 
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <FiStar className="text-amber-500" />
                     <span className="font-semibold text-gray-700">{profileData.performance.rating}/5</span>
@@ -490,9 +701,9 @@ const CollectorProfile = () => {
 
         {/* Profile Content */}
         <div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Contact Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-emerald-100">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <BsPeople className="text-emerald-600" />
                 Contact Information
@@ -534,7 +745,7 @@ const CollectorProfile = () => {
               </div>
 
             {/* Employment Details */}
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-emerald-100">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Employment Details</h2>
                 
                 <div className="space-y-3">

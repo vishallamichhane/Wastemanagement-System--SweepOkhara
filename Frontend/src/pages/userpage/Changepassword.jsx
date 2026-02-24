@@ -4,10 +4,12 @@ import { BsLock, BsEye, BsEyeSlash, BsCheckCircle, BsXCircle, BsArrowLeft } from
 import { FiLock } from "react-icons/fi";
 import Header from "./components/Header";
 import useScrollToTop from '../../hooks/useScrollToTop';
+import { useUser } from "@clerk/clerk-react";
 
 export default function ChangePasswordPage() {
   useScrollToTop();
   const navigate = useNavigate();
+  const { user } = useUser();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -82,33 +84,6 @@ export default function ChangePasswordPage() {
     }
   };
 
-  // Dummy backend endpoints simulation
-  const dummyBackend = {
-    validateCurrentPassword: async (password) => {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Dummy validation - in real app, this would check against stored hash
-      return password !== "wrongpassword123"; // Only reject if password is "wrongpassword123"
-    },
-
-    changePassword: async (currentPassword, newPassword) => {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Dummy success - in real app, this would hash and store the new password
-      if (currentPassword === "wrongpassword123") {
-        throw new Error("Current password is incorrect");
-      }
-      
-      if (newPassword.length < 8) {
-        throw new Error("New password must be at least 8 characters");
-      }
-      
-      return { success: true, message: "Password changed successfully" };
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -128,24 +103,25 @@ export default function ChangePasswordPage() {
         throw new Error("Password must be at least 8 characters");
       }
 
-      // Simulate current password validation
-      const isValid = await dummyBackend.validateCurrentPassword(formData.currentPassword);
-      if (!isValid) {
-        throw new Error("Current password is incorrect");
-      }
-
-      // Simulate password change
-      const result = await dummyBackend.changePassword(formData.currentPassword, formData.newPassword);
+      // Use Clerk to change password
+      await user.updatePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
       
-      if (result.success) {
-        setPasswordChanged(true);
-        // Reset form
-        setFormData({
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: ""
-        });
-      }
+      setPasswordChanged(true);
+      // Reset form
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      
+      // Optionally redirect after success
+      setTimeout(() => {
+        navigate('/user/profile');
+      }, 2000);
+      
     } catch (err) {
       setError(err.message || "An error occurred. Please try again.");
     } finally {
@@ -168,9 +144,9 @@ export default function ChangePasswordPage() {
 
   return (
     <>
-  <div className="h-20"></div>
+  <div className="h-16 sm:h-20"></div>
       {/* Main content */}
-      <main className="flex-grow max-w-lg mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-8 relative z-10">
+      <main className="flex-grow max-w-lg mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-10 mb-16 pb-20 sm:pb-0 space-y-6 sm:space-y-8 relative z-10">
         {/* Back button and header */}
         <section className="animate-slide-down">
           <button
@@ -187,7 +163,7 @@ export default function ChangePasswordPage() {
                 <BsLock className="text-2xl" />
               </div>
             </div>
-            <h1 className="text-4xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-green-800 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
               Change Password
             </h1>
             <p className="text-gray-600 mt-2 text-lg font-medium">
@@ -198,7 +174,7 @@ export default function ChangePasswordPage() {
 
         {/* Success Message */}
         {passwordChanged && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 animate-fade-in">
+          <div className="bg-green-50 border border-green-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 animate-fade-in">
             <div className="flex items-center gap-3 mb-3">
               <BsCheckCircle className="text-green-600 text-2xl" />
               <h3 className="text-lg font-bold text-green-800">Password Changed Successfully!</h3>
@@ -210,8 +186,8 @@ export default function ChangePasswordPage() {
         )}
 
         {/* Password Change Form */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100/50 animate-fade-in">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50 animate-fade-in">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Current Password */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -384,7 +360,7 @@ export default function ChangePasswordPage() {
         </div>
 
         {/* Security Tips */}
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200 animate-fade-in-delay">
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-blue-200 animate-fade-in-delay">
           <h3 className="text-lg font-bold text-blue-800 mb-3">Security Tips</h3>
           <ul className="space-y-2 text-blue-700 text-sm">
             <li className="flex items-start gap-2">

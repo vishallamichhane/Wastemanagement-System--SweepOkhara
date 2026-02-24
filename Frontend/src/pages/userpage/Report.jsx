@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
 import {
   BsBell,
@@ -8,16 +8,23 @@ import {
   BsCheckCircle,
   BsUpload,
   BsGeoAlt,
+  BsExclamationTriangle,
+  BsTelephone,
+  BsHouse,
+  BsMapFill,
 } from "react-icons/bs";
 import { FiLogOut, FiChevronLeft, FiMapPin } from "react-icons/fi";
 import Header from "./components/Header";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import axios from "axios";
-
-
+import { useUser } from "@clerk/clerk-react";
 
 const ReportIssue = () => {
   useScrollToTop();
+  const navigate = useNavigate();
+  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileError, setProfileError] = useState('');
   const [issueType, setIssueType] = useState("missed-pickup");
   const [issueLabel, setIssueLabel] = useState("Missed Pickup");
   const [location, setLocation] = useState("");
@@ -33,9 +40,16 @@ const ReportIssue = () => {
     latitude: "",
     longitude: "",
   });
+  const [selectedWard, setSelectedWard] = useState("");
+  const [locationRequested, setLocationRequested] = useState(false);
 
-  console.log("User Coordinates:", userCoordinates);
-  console.log("Pinned Location:", pinnedLocation);
+  // Derive profile completeness from Clerk user
+  const userPhone = clerkUser?.publicMetadata?.phone || clerkUser?.unsafeMetadata?.phone || '';
+  const userHouseNumber = clerkUser?.publicMetadata?.houseNumber || clerkUser?.unsafeMetadata?.houseNumber || '';
+  const userWard = clerkUser?.publicMetadata?.ward || clerkUser?.unsafeMetadata?.ward || '';
+  const isProfileComplete = !!(userPhone && userHouseNumber);
+
+  // No blocking modal on load — check happens at submit time
 
   const issueTypes = [
     { id: "missed-pickup", label: "Missed Pickup", icon: "🚛" },
@@ -197,54 +211,140 @@ const ReportIssue = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check profile completeness at submit time
+    if (!isProfileComplete) {
+      const missing = [];
+      if (!userPhone) missing.push('Phone Number');
+      if (!userHouseNumber) missing.push('House Number');
+      setProfileError(`Please add your ${missing.join(', ').toLowerCase()} to use the other features. Go to Profile Settings to add your details.`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setProfileError('');
+
     if (!location) {
       setLocationError("Please provide a location for the issue");
       return;
     }
 
+    if (!selectedWard) {
+      setLocationError("Please select a ward");
+      return;
+    }
+
+    // Validate that real GPS coordinates are captured
+    if (!pinnedLocation.latitude || !pinnedLocation.longitude) {
+      setLocationError("Please enable location access to get exact GPS coordinates");
+      return;
+    }
+
+    const lat = parseFloat(pinnedLocation.latitude);
+    const lng = parseFloat(pinnedLocation.longitude);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      setLocationError("Invalid GPS coordinates. Please use the 'Use My Current Location' button");
+      return;
+    }
+
     setIsSubmitting(true);
 
+    const formData = new FormData();
 
-    // Prepare form data
-    const formData = {
-      reportType: issueType,
-      reportLabel: issueLabel,
-      location,
-      description,
-      coordinates: userCoordinates,
-      latitude: parseFloat(pinnedLocation.latitude),
-      longitude: parseFloat(pinnedLocation.longitude),
-      reportImage: photos[0],
-    };
+    formData.append("reportType", issueType)
+    formData.append("reportLabel", issueLabel)
+    formData.append("location", location)
+    formData.append("description", description)
+    formData.append("ward", parseInt(selectedWard))
+    formData.append("coordinates", JSON.stringify(userCoordinates))
+    formData.append("latitude", parseFloat(pinnedLocation.latitude))
+    formData.append("longitude", parseFloat(pinnedLocation.longitude))
+
+    photos.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    console.log("📤 Submitting report with data:");
+    console.log("Ward:", selectedWard);
+    console.log("Latitude:", pinnedLocation.latitude);
+    console.log("Longitude:", pinnedLocation.longitude);
+    console.log("Location:", location);
+    console.log("Issue Type:", issueType);
+    console.log("Description:", description);
 
     try {
-      const res = await axios.post("/api/reports", formData, {
+      const res = await axios.post("http://localhost:3000/api/reports", formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          'Content-Type': 'multipart/form-data',
         },
+        withCredentials: true
       });
-      console.log(res)
+      console.log("✅ Report submitted successfully:", res);
       alert("The report has been submitted successfully.");
-      console.log(res)
+      console.log(res);
+      setIssueType("missed-pickup");
+      setIssueLabel("Missed Pickup");
+      setLocation("");
+      setDescription("");
+      setPhotos([]);
+      setSelectedWard("");
+      setUserCoordinates(null);
+      setPinnedLocation({ latitude: "", longitude: "" });
+      // setShowSuccess(true);
     } catch (error) {
-      console.error("Error submitting report:", error);
-      setLocationError("Failed to submit report. Please try again.");
+      console.error("❌ Error submitting report:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      console.error("Error message:", error.message);
+      
+      const errorMessage = error.response?.data?.message || error.message || "Failed to submit report";
+      setLocationError(`Failed to submit report: ${errorMessage}. Please try again.`);
+      alert(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Check geolocation availability on component mount
+  // Check geolocation availability on component mount and request location
   useEffect(() => {
     if (!isGeolocationAvailable()) {
       setLocationError("Geolocation is not supported by your browser");
+    } else if (!locationRequested) {
+      // Automatically request location when component loads
+      setLocationRequested(true);
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        getCurrentLocation();
+      }, 500);
     }
-  }, []);
+  }, [locationRequested]);
 
   return (
     <>
       {/* Main Content */}
-      <main className="flex-grow max-w-4xl mx-auto px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-20 sm:pb-8">
+        {/* Profile Incomplete Error Banner */}
+        {profileError && (
+          <div className="mb-6 bg-red-600 text-white rounded-xl shadow-lg px-5 py-4 flex items-start gap-3 animate-fade-in-up">
+            <BsExclamationTriangle className="text-xl mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-bold text-sm">Profile Incomplete!</p>
+              <p className="text-red-100 text-xs mt-1">{profileError}</p>
+            </div>
+            <button
+              onClick={() => navigate('/user/profile')}
+              className="bg-white text-red-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+            >
+              Go to Profile
+            </button>
+            <button
+              onClick={() => setProfileError('')}
+              className="text-red-200 hover:text-white transition-colors text-lg leading-none flex-shrink-0"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
           <Link
@@ -255,10 +355,10 @@ const ReportIssue = () => {
             <span className="font-semibold">Back to Home</span>
           </Link>
 
-          <h1 className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-2 sm:mb-3">
             Report an Issue
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
             Help us keep Pokhara clean. Let us know about any waste-related
             problems.
           </p>
@@ -268,16 +368,16 @@ const ReportIssue = () => {
         <form
           onSubmit={handleSubmit}
           encType="multipart/form-data"
-          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 transform hover:scale-[1.005] transition-all duration-500 border border-emerald-100"
+          className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 transform hover:scale-[1.005] transition-all duration-500 border border-emerald-100"
         >
           {/* Type of Issue Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <span className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+              <span className="w-2 h-6 sm:h-8 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
               Type of Issue
             </h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
               {issueTypes.map((type) => (
                 <button
                   key={type.id}
@@ -325,6 +425,38 @@ const ReportIssue = () => {
           {/* Divider */}
           <div className="border-t border-gray-200 my-8"></div>
 
+          {/* Ward Selection Section */}
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+              <FiMapPin className="text-emerald-600 text-xl" />
+              Select Ward
+            </h3>
+            
+            <select
+              value={selectedWard}
+              onChange={(e) => {
+                setSelectedWard(e.target.value);
+                setLocationError("");
+              }}
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-300 outline-none bg-white text-gray-700 font-semibold"
+              required
+            >
+              <option value="">-- Select Your Ward --</option>
+              {Array.from({ length: 33 }, (_, i) => i + 1).map((ward) => (
+                <option key={ward} value={ward}>
+                  Ward {ward}
+                </option>
+              ))}
+            </select>
+            
+            <p className="text-xs text-gray-600 mt-2">
+              Select the ward number where the issue is located (1-33)
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-8"></div>
+
           {/* Location Section */}
           <div className="mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
@@ -350,7 +482,7 @@ const ReportIssue = () => {
                   type="button"
                   onClick={getCurrentLocation}
                   disabled={isDetectingLocation || !isGeolocationAvailable()}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
                 >
                   {isDetectingLocation ? (
                     <>
@@ -366,21 +498,33 @@ const ReportIssue = () => {
                 </button>
 
                 {userCoordinates && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg">
-                    <BsPinMap className="text-emerald-500" />
-                    <span>
-                      GPS: {userCoordinates.latitude.toFixed(6)},{" "}
-                      {userCoordinates.longitude.toFixed(6)}
-                    </span>
-                  </div>
-                )}
-              </div>
+                <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
+                  <BsCheckCircle className="text-emerald-500 text-lg" />
+                  <span className="font-semibold">
+                    Location captured! GPS: {userCoordinates.latitude.toFixed(6)},{" "}
+                    {userCoordinates.longitude.toFixed(6)}
+                  </span>
+                </div>
+              )}
+            </div>
 
+            {/* Show info message when location is being requested on load */}
+            {isDetectingLocation && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm animate-fade-in">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div>
+                    <p className="font-semibold">Requesting your location...</p>
+                    <p className="text-xs mt-1">Please allow location access when prompted by your browser</p>
+                  </div>
+                </div>
+              </div>
+            )}
               {/* Optional Exact Coordinates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-semibold text-gray-800">
-                    Latitude (optional)
+                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                    Latitude <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -392,12 +536,14 @@ const ReportIssue = () => {
                       }))
                     }
                     placeholder="e.g., 28.209600"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                    readOnly={userCoordinates !== null}
+                    className={`mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none ${userCoordinates ? 'bg-emerald-50 cursor-not-allowed' : ''}`}
+                    required
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-gray-800">
-                    Longitude (optional)
+                  <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+                    Longitude <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -409,12 +555,14 @@ const ReportIssue = () => {
                       }))
                     }
                     placeholder="e.g., 83.985600"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+                    readOnly={userCoordinates !== null}
+                    className={`mt-1 w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none ${userCoordinates ? 'bg-emerald-50 cursor-not-allowed' : ''}`}
+                    required
                   />
                 </div>
               </div>
               <p className="text-xs text-gray-600">
-                Adding lat/long helps admins verify the exact spot.
+                <span className="text-red-500 font-semibold">* Required:</span> Exact GPS coordinates are required to locate the issue precisely. Please use "Use My Current Location" button.
               </p>
 
               {/* Location Error Message */}
@@ -485,7 +633,7 @@ const ReportIssue = () => {
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 hover:border-emerald-400 hover:bg-emerald-50/50 group">
+                <div className="border-2 border-dashed border-gray-300 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 text-center cursor-pointer transition-all duration-300 hover:border-emerald-400 hover:bg-emerald-50/50 group">
                   <BsUpload className="text-3xl text-gray-400 mb-3 mx-auto group-hover:text-emerald-500 transition-colors duration-300" />
                   <p className="text-lg font-semibold text-gray-700 mb-2">
                     Upload a file or drag and drop
@@ -498,7 +646,7 @@ const ReportIssue = () => {
 
               {/* Preview Uploaded Photos */}
               {photos.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
                   {photos.map((photo, index) => (
                     <div key={index} className="relative group animate-fade-in">
                       <img
@@ -521,12 +669,12 @@ const ReportIssue = () => {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-6">
+          <div className="flex justify-center pt-4 sm:pt-6">
             <button
               type="submit"
-              disabled={isSubmitting || !location || !description}
-              className={`px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl transition-all duration-500 transform hover:scale-105 ${
-                isSubmitting || !location || !description
+              disabled={isSubmitting || isDetectingLocation || !location || !description || !selectedWard || !pinnedLocation.latitude || !pinnedLocation.longitude}
+              className={`w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-2xl transition-all duration-500 transform hover:scale-105 ${
+                isSubmitting || isDetectingLocation || !location || !description || !selectedWard || !pinnedLocation.latitude || !pinnedLocation.longitude
                   ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                   : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-3xl"
               }`}
@@ -535,6 +683,11 @@ const ReportIssue = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Submitting Report...
+                </div>
+              ) : isDetectingLocation ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Getting Location...
                 </div>
               ) : (
                 "Submit Report"

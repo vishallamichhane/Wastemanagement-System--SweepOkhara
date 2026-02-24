@@ -1,141 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { GiBroom } from 'react-icons/gi';
-import { BsBell, BsEye, BsFilter, BsSearch, BsClock, BsCheckCircle, BsExclamationTriangle, BsArrowClockwise } from 'react-icons/bs';
-import { FiLogOut, FiChevronLeft } from 'react-icons/fi';
-import Header from './components/Header';
-import useScrollToTop from '../../hooks/useScrollToTop';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { GiBroom } from "react-icons/gi";
+import {
+  BsBell,
+  BsEye,
+  BsFilter,
+  BsSearch,
+  BsClock,
+  BsCheckCircle,
+  BsExclamationTriangle,
+  BsArrowClockwise,
+} from "react-icons/bs";
+import { FiLogOut, FiChevronLeft } from "react-icons/fi";
+import Header from "./components/Header";
+import useScrollToTop from "../../hooks/useScrollToTop";
+import axios from "axios";
 
 const MyReports = () => {
   useScrollToTop();
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Sample reports data
-  const sampleReports = [
-    {
-      id: '803F9A',
-      date: 'July 15, 2024',
-      issueType: 'Overflowing Bin',
-      status: 'resolved',
-      description: 'Public bin near Lakeside overflowing with tourist waste',
-      location: 'Lakeside Road, Pokhara-6',
-      latitude: '28.2096',
-      longitude: '83.9586',
-      assignedTo: 'Cleanup Team A',
-      priority: 'medium',
-      images: 2,
-      photos: ['photo1.jpg', 'photo2.jpg'],
-      contactName: 'Ram Sharma',
-      contactPhone: '+977-9841234567'
-    },
-    {
-      id: '48168C',
-      date: 'July 12, 2024',
-      issueType: 'Missed Pickup',
-      status: 'in-progress',
-      description: 'Regular waste pickup missed in residential area',
-      location: 'Birauta, Pokhara-8',
-      latitude: '28.2380',
-      longitude: '83.9956',
-      assignedTo: 'Collection Team B',
-      priority: 'high',
-      images: 1,
-      photos: ['photo3.jpg'],
-      contactName: 'Sita Gurung',
-      contactPhone: '+977-9849876543'
-    },
-    {
-      id: 'E2H5K7',
-      date: 'July 11, 2024',
-      issueType: 'Illegal Dumping',
-      status: 'received',
-      description: 'Construction waste dumped illegally near riverbank',
-      location: 'Seti River Bank, Pokhara-9',
-      latitude: '28.2126',
-      longitude: '83.9630',
-      assignedTo: 'Pending Assignment',
-      priority: 'high',
-      images: 3,
-      photos: ['photo4.jpg', 'photo5.jpg', 'photo6.jpg'],
-      contactName: 'Hari Thapa',
-      contactPhone: '+977-9851122334'
-    },
-    {
-      id: '9F632N',
-      date: 'July 05, 2024',
-      issueType: 'Damaged Bin',
-      status: 'resolved',
-      description: 'Public bin damaged and needs replacement',
-      location: 'Chipledhunga, Pokhara-3',
-      latitude: '28.2180',
-      longitude: '83.9856',
-      assignedTo: 'Maintenance Team',
-      priority: 'medium',
-      images: 1,
-      photos: ['photo7.jpg'],
-      contactName: 'Krishna Rai',
-      contactPhone: '+977-9845567890'
-    },
-    {
-      id: '1C3P8Q',
-      date: 'June 28, 2024',
-      issueType: 'Overflowing Bin',
-      status: 'resolved',
-      description: 'Market area bin overflowing during peak hours',
-      location: 'Old Bazaar, Pokhara-1',
-      latitude: '28.2090',
-      longitude: '83.9850',
-      assignedTo: 'Cleanup Team C',
-      priority: 'high',
-      images: 2,
-      photos: ['photo8.jpg', 'photo9.jpg'],
-      contactName: 'Maya Tamang',
-      contactPhone: '+977-9843332211'
-    },
-    {
-      id: '7D4G2M',
-      date: 'June 25, 2024',
-      issueType: 'Street Litter',
-      status: 'in-progress',
-      description: 'Accumulated litter on main street',
-      location: 'New Road, Pokhara-2',
-      latitude: '28.2110',
-      longitude: '83.9890',
-      assignedTo: 'Street Cleaning Team',
-      priority: 'medium',
-      images: 0,
-      photos: [],
-      contactName: 'Bhim Bahadur',
-      contactPhone: '+977-9847778899'
-    }
-  ];
-
   const statusConfig = {
-    'received': { label: 'Received', color: 'text-blue-600', bgColor: 'bg-blue-100', dotColor: 'bg-blue-500' },
-    'in-progress': { label: 'In Progress', color: 'text-amber-600', bgColor: 'bg-amber-100', dotColor: 'bg-amber-500' },
-    'resolved': { label: 'Resolved', color: 'text-emerald-600', bgColor: 'bg-emerald-100', dotColor: 'bg-emerald-500' }
+    received: {
+      label: "Received",
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+      dotColor: "bg-blue-500",
+    },
+    "in-progress": {
+      label: "In Progress",
+      color: "text-amber-600",
+      bgColor: "bg-amber-100",
+      dotColor: "bg-amber-500",
+    },
+    resolved: {
+      label: "Resolved",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-100",
+      dotColor: "bg-emerald-500",
+    },
   };
 
   const priorityConfig = {
-    'high': { label: 'High', color: 'text-red-600', bgColor: 'bg-red-100' },
-    'medium': { label: 'Medium', color: 'text-amber-600', bgColor: 'bg-amber-100' },
-    'low': { label: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-100' }
+    high: { label: "High", color: "text-red-600", bgColor: "bg-red-100" },
+    medium: {
+      label: "Medium",
+      color: "text-amber-600",
+      bgColor: "bg-amber-100",
+    },
+    low: { label: "Low", color: "text-blue-600", bgColor: "bg-blue-100" },
   };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setReports(sampleReports);
-      setFilteredReports(sampleReports);
-      setLoading(false);
-    }, 1000);
+    setLoading(true);
+    axios
+      .get("/api/reports/my-reports")
+      .then((res) => {
+        const refinedData = res.data.map((report) => ({
+          id: report._id.slice(-6).toUpperCase(),
+          date: new Date(report.createdAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          issueType: report.reportLabel,
+          status: report.status,
+          description: report.description,
+          location: report.location,
+          latitude: report.latitude,
+          longitude: report.longitude,
+          assignedTo: report.assignedCollectorName || "Pending Assignment",
+          ward: report.ward || "N/A",
+          priority: report.priority || "medium",
+          images: report.images ? report.images.length : 0,
+          photos: report.images || [],
+          contactName: report.contactName || "N/A",
+          contactPhone: report.contactPhone || "N/A",
+        }));
+        setReports(refinedData);
+        setFilteredReports(refinedData);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -143,16 +95,17 @@ const MyReports = () => {
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(report =>
-        report.issueType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.id.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (report) =>
+          report.issueType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          report.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          report.id.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(report => report.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((report) => report.status === statusFilter);
     }
 
     setFilteredReports(filtered);
@@ -167,17 +120,17 @@ const MyReports = () => {
   };
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'resolved':
+      case "resolved":
         return <BsCheckCircle className="text-emerald-500" />;
-      case 'in-progress':
+      case "in-progress":
         return <BsArrowClockwise className="text-amber-500" />;
-      case 'received':
+      case "received":
         return <BsClock className="text-blue-500" />;
       default:
         return <BsExclamationTriangle className="text-gray-500" />;
@@ -197,36 +150,57 @@ const MyReports = () => {
   return (
     <>
       {/* Main Content */}
-      <main className="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full pb-20 sm:pb-8">
         {/* Header Section */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+          <Link
+            to="/user"
+            className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group"
+          >
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
             <span className="font-semibold">Back to Home</span>
           </Link>
-          
-          <h1 className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-3">
+
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-2 sm:mb-3">
             My Reports
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
             Track the status of all your submitted reports here.
           </p>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
           {[
-            { label: 'Total Reports', value: reports.length, color: 'from-blue-500 to-cyan-500' },
-            { label: 'Resolved', value: reports.filter(r => r.status === 'resolved').length, color: 'from-emerald-500 to-teal-500' },
-            { label: 'In Progress', value: reports.filter(r => r.status === 'in-progress').length, color: 'from-amber-500 to-yellow-500' },
-            { label: 'Received', value: reports.filter(r => r.status === 'received').length, color: 'from-purple-500 to-pink-500' }
+            {
+              label: "Total Reports",
+              value: reports.length,
+              color: "from-blue-500 to-cyan-500",
+            },
+            {
+              label: "Resolved",
+              value: reports.filter((r) => r.status === "resolved").length,
+              color: "from-emerald-500 to-teal-500",
+            },
+            {
+              label: "In Progress",
+              value: reports.filter((r) => r.status === "in-progress").length,
+              color: "from-amber-500 to-yellow-500",
+            },
+            {
+              label: "Received",
+              value: reports.filter((r) => r.status === "received").length,
+              color: "from-purple-500 to-pink-500",
+            },
           ].map((stat, index) => (
-            <div 
+            <div
               key={stat.label}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200 transform hover:scale-105 transition-all duration-300 animate-fade-in-up"
+              className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200 transform hover:scale-105 transition-all duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center text-white text-xl mb-3`}>
+              <div
+                className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center text-white text-xl mb-3`}
+              >
                 {stat.value}
               </div>
               <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
@@ -272,7 +246,10 @@ const MyReports = () => {
             // Loading Skeleton
             <div className="p-8">
               {[...Array(5)].map((_, index) => (
-                <div key={index} className="animate-pulse flex items-center gap-4 p-4 border-b border-gray-200 last:border-b-0">
+                <div
+                  key={index}
+                  className="animate-pulse flex items-center gap-4 p-4 border-b border-gray-200 last:border-b-0"
+                >
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-gray-200 rounded w-1/4"></div>
                     <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -287,8 +264,12 @@ const MyReports = () => {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <BsExclamationTriangle className="text-gray-400 text-3xl" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No reports found</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No reports found
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Try adjusting your search or filter criteria
+              </p>
               <Link
                 to="/user/report"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
@@ -297,49 +278,115 @@ const MyReports = () => {
               </Link>
             </div>
           ) : (
-            // Reports List
-            <div className="overflow-x-auto">
+            <>
+            {/* Mobile Card View */}
+            <div className="block md:hidden divide-y divide-gray-200">
+              {filteredReports.map((report, index) => (
+                <div
+                  key={report.id}
+                  className="p-4 hover:bg-gray-50/50 transition-all duration-300 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg text-sm">
+                      #{report.id}
+                    </span>
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs ${statusConfig[report.status].bgColor} ${statusConfig[report.status].color} font-medium`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${statusConfig[report.status].dotColor} animate-pulse`}
+                      ></span>
+                      {statusConfig[report.status].label}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-base">{getIssueTypeIcon(report.issueType)}</span>
+                    <span className="font-medium text-gray-700 text-sm">{report.issueType}</span>
+                  </div>
+                  <p className="text-gray-500 text-xs mb-1 truncate">{report.location}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-gray-400 text-xs">{report.date}</span>
+                    <button
+                      onClick={() => handleViewDetails(report)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-semibold text-xs shadow hover:shadow-lg hover:scale-105 transition-all duration-300 transform"
+                    >
+                      <BsEye className="text-xs" />
+                      Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-emerald-50 to-teal-50">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">REPORT ID</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">DATE</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">ISSUE TYPE</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">LOCATION</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">STATUS</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">ACTIONS</th>
+                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-gray-700">
+                      REPORT ID
+                    </th>
+                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-gray-700">
+                      DATE
+                    </th>
+                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-gray-700">
+                      ISSUE TYPE
+                    </th>
+                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-gray-700">
+                      LOCATION
+                    </th>
+                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-gray-700">
+                      STATUS
+                    </th>
+                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-gray-700">
+                      ACTIONS
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredReports.map((report, index) => (
-                    <tr 
+                    <tr
                       key={report.id}
                       className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50/50 transition-all duration-300 animate-fade-in-up"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      <td className="px-6 py-4">
-                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg">
+                      <td className="px-4 lg:px-6 py-3 lg:py-4">
+                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 lg:px-3 py-1 rounded-lg text-sm">
                           #{report.id}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 font-medium">{report.date}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 lg:px-6 py-3 lg:py-4 text-gray-600 font-medium text-sm">
+                        {report.date}
+                      </td>
+                      <td className="px-4 lg:px-6 py-3 lg:py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">{getIssueTypeIcon(report.issueType)}</span>
-                          <span className="font-medium text-gray-700">{report.issueType}</span>
+                          <span className="text-lg">
+                            {getIssueTypeIcon(report.issueType)}
+                          </span>
+                          <span className="font-medium text-gray-700 text-sm">
+                            {report.issueType}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 max-w-xs truncate">{report.location}</td>
-                      <td className="px-6 py-4">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${statusConfig[report.status].bgColor} ${statusConfig[report.status].color} font-medium`}>
-                          <span className={`w-2 h-2 rounded-full ${statusConfig[report.status].dotColor} animate-pulse`}></span>
+                      <td className="px-4 lg:px-6 py-3 lg:py-4 text-gray-600 max-w-xs truncate text-sm">
+                        {report.location}
+                      </td>
+                      <td className="px-4 lg:px-6 py-3 lg:py-4">
+                        <div
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${statusConfig[report.status].bgColor} ${statusConfig[report.status].color} font-medium`}
+                        >
+                          <span
+                            className={`w-2 h-2 rounded-full ${statusConfig[report.status].dotColor} animate-pulse`}
+                          ></span>
                           {statusConfig[report.status].label}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <button 
+                      <td className="px-4 lg:px-6 py-3 lg:py-4">
+                        <button
                           onClick={() => handleViewDetails(report)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform">
+                          className="inline-flex items-center gap-2 px-3 lg:px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform"
+                        >
                           <BsEye className="text-sm" />
                           View Details
                         </button>
@@ -349,14 +396,15 @@ const MyReports = () => {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 sm:mt-8 flex justify-center">
           <Link
             to="/user/report"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 transform"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl sm:rounded-2xl font-bold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-500 transform text-sm sm:text-base"
           >
             <span>+</span>
             Report New Issue
@@ -369,12 +417,18 @@ const MyReports = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform animate-fade-in-up">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{getIssueTypeIcon(selectedReport.issueType)}</span>
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 p-4 sm:p-6 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-2xl sm:text-3xl">
+                  {getIssueTypeIcon(selectedReport.issueType)}
+                </span>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{selectedReport.issueType}</h2>
-                  <p className="text-emerald-100">Report #{selectedReport.id}</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-white">
+                    {selectedReport.issueType}
+                  </h2>
+                  <p className="text-emerald-100">
+                    Report #{selectedReport.id}
+                  </p>
                 </div>
               </div>
               <button
@@ -386,21 +440,31 @@ const MyReports = () => {
             </div>
 
             {/* Modal Content */}
-            <div className="p-8 space-y-6">
+            <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
               {/* Status and Priority */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Status</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-2">
+                    Status
+                  </p>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(selectedReport.status)}
-                    <span className={`font-bold ${statusConfig[selectedReport.status].color}`}>
+                    <span
+                      className={`font-bold ${statusConfig[selectedReport.status].color}`}
+                    >
                       {statusConfig[selectedReport.status].label}
                     </span>
                   </div>
                 </div>
-                <div className={`rounded-xl p-4 border ${priorityConfig[selectedReport.priority].bgColor} bg-gradient-to-br`}>
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Priority</p>
-                  <span className={`font-bold ${priorityConfig[selectedReport.priority].color}`}>
+                <div
+                  className={`rounded-xl p-4 border ${priorityConfig[selectedReport.priority].bgColor} bg-gradient-to-br`}
+                >
+                  <p className="text-sm font-semibold text-gray-600 mb-2">
+                    Priority
+                  </p>
+                  <span
+                    className={`font-bold ${priorityConfig[selectedReport.priority].color}`}
+                  >
                     {priorityConfig[selectedReport.priority].label}
                   </span>
                 </div>
@@ -409,48 +473,84 @@ const MyReports = () => {
               {/* Report Details */}
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">📍 Location</p>
-                  <p className="text-lg font-medium text-gray-800">{selectedReport.location}</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-2">
+                    📍 Location
+                  </p>
+                  <p className="text-lg font-medium text-gray-800">
+                    {selectedReport.location}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
-                    <p className="text-sm font-semibold text-blue-600 mb-2">🌐 Latitude</p>
-                    <p className="text-lg font-mono font-bold text-gray-800">{selectedReport.latitude}</p>
+                    <p className="text-sm font-semibold text-blue-600 mb-2">
+                      🌐 Latitude
+                    </p>
+                    <p className="text-lg font-mono font-bold text-gray-800">
+                      {selectedReport.latitude}
+                    </p>
                   </div>
                   <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
-                    <p className="text-sm font-semibold text-purple-600 mb-2">🌐 Longitude</p>
-                    <p className="text-lg font-mono font-bold text-gray-800">{selectedReport.longitude}</p>
+                    <p className="text-sm font-semibold text-purple-600 mb-2">
+                      🌐 Longitude
+                    </p>
+                    <p className="text-lg font-mono font-bold text-gray-800">
+                      {selectedReport.longitude}
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">📅 Report Date</p>
-                  <p className="text-lg font-medium text-gray-800">{selectedReport.date}</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-2">
+                    📅 Report Date
+                  </p>
+                  <p className="text-lg font-medium text-gray-800">
+                    {selectedReport.date}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">📝 Description</p>
-                  <p className="text-gray-700 leading-relaxed">{selectedReport.description}</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-2">
+                    📝 Description
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    {selectedReport.description}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">🖼️ Attached Images</p>
-                  <p className="text-lg font-medium text-gray-800">{selectedReport.images} image(s)</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-2">
+                    🖼️ Attached Images
+                  </p>
+                  <p className="text-lg font-medium text-gray-800">
+                    {selectedReport.images} image(s)
+                  </p>
                   {selectedReport.images > 0 && (
                     <div className="mt-3 space-y-2">
                       <div className="grid grid-cols-3 gap-2">
                         {selectedReport.photos.map((photo, index) => (
-                          <div key={index} className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300">
-                            <span className="text-xs text-gray-500">📷 {photo}</span>
+                          <div
+                            key={index}
+                            className="aspect-square overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100"
+                          >
+                            <img
+                              src={photo}
+                              alt={`Report image ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
                           </div>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-500 italic">* Photo preview feature coming soon</p>
+                      <p className="text-xs text-gray-500 italic">
+                        * Photo preview feature coming soon
+                      </p>
                     </div>
                   )}
                   {selectedReport.images === 0 && (
-                    <p className="text-sm text-gray-500 mt-2 italic">No images attached</p>
+                    <p className="text-sm text-gray-500 mt-2 italic">
+                      No images attached
+                    </p>
                   )}
                 </div>
               </div>
@@ -469,21 +569,22 @@ const MyReports = () => {
         </div>
       )}
 
-
       {/* Enhanced animations */}
       <style jsx>{`
         /* Floating background elements */
         @keyframes float-slow {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0px) rotate(0deg);
           }
           50% {
             transform: translateY(-20px) rotate(5deg);
           }
         }
-        
+
         @keyframes float-medium {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0px) rotate(0deg);
           }
           50% {
@@ -505,15 +606,15 @@ const MyReports = () => {
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
         }
-        
+
         .animate-float-medium {
           animation: float-medium 6s ease-in-out infinite;
         }
-        
+
         .animate-fade-in-up {
           animation: fade-in-up 0.6s ease-out both;
         }
-        
+
         .animation-delay-2000 {
           animation-delay: 2s;
         }
@@ -523,18 +624,18 @@ const MyReports = () => {
           width: 8px;
           height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
           background: transparent;
           border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb {
           background: rgba(16, 185, 129, 0.5);
           border-radius: 10px;
           transition: background 0.3s ease;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
           background: rgba(16, 185, 129, 0.8);
         }
@@ -546,14 +647,14 @@ const MyReports = () => {
 // Helper function for issue type icons
 const getIssueTypeIcon = (issueType) => {
   const icons = {
-    'Overflowing Bin': '🗑️',
-    'Missed Pickup': '🚛',
-    'Illegal Dumping': '⚠️',
-    'Damaged Bin': '🔧',
-    'Street Litter': '🧹',
-    'Other Issue': '❓'
+    "Overflowing Bin": "🗑️",
+    "Missed Pickup": "🚛",
+    "Illegal Dumping": "⚠️",
+    "Damaged Bin": "🔧",
+    "Street Litter": "🧹",
+    "Other Issue": "❓",
   };
-  return icons[issueType] || '📋';
+  return icons[issueType] || "📋";
 };
 
 export default MyReports;

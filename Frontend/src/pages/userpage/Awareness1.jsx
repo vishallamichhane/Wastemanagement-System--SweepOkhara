@@ -73,7 +73,7 @@ export default function ThreeRsPage() {
     <>  
 
       {/* Main content */}
-      <main className="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-10 relative z-10">
+      <main className="flex-grow max-w-6xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8 mt-6 sm:mt-10 mb-16 pb-20 sm:pb-0 space-y-6 sm:space-y-8 md:space-y-10 relative z-10">
         {/* Back button and header */}
         <section className="animate-slide-down">
           <button
@@ -85,23 +85,23 @@ export default function ThreeRsPage() {
           </button>
           
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-extrabold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent mb-4">
               The 3 R's: Reduce, Reuse, Recycle
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
               Learn how to minimize waste and its impact on the environment through these simple yet powerful steps.
             </p>
           </div>
         </section>
 
         {/* Hero Section */}
-        <section className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-green-100/50 animate-fade-in">
-          <div className="flex flex-col lg:flex-row items-center gap-8">
+        <section className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl border border-green-100/50 animate-fade-in">
+          <div className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8">
             <div className="lg:w-1/2">
               <img 
                 src="https://i.pinimg.com/1200x/80/c3/74/80c3749038c5f4ac70ca2888554bb039.jpg" 
                 alt="3 R's Concept" 
-                className="w-full h-80 object-cover rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-500"
+                className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-500"
               />
             </div>
             <div className="lg:w-1/2">
@@ -114,7 +114,7 @@ export default function ThreeRsPage() {
                 By balancing these principles, we can conserve natural resources, save energy, reduce pollution, 
                 and create a sustainable future for our community.
               </p>
-              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-2xl border border-emerald-200">
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 sm:p-6 rounded-2xl border border-emerald-200">
                 <p className="text-emerald-800 font-semibold text-center">
                   Every small action counts! Together, we can make Sweepokhara cleaner and greener.
                 </p>
@@ -125,10 +125,10 @@ export default function ThreeRsPage() {
 
         {/* Principles Grid */}
         <section className="animate-slide-up">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-12 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6 sm:mb-8 md:mb-12 bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
             The Three Principles
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {principles.map((principle, index) => (
               <div 
                 key={principle.title}

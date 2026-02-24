@@ -240,20 +240,20 @@ export default function MapStatusPage() {
     <>
 
       {/* Content */}
-      <main className="flex-grow mx-auto p-6 w-full max-w-7xl flex flex-col">
+      <main className="flex-grow mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 w-full max-w-7xl flex flex-col pb-20 sm:pb-6">
         {/* Header Section */}
-        <div className="mb-8">
-          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <Link to="/user" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-3 sm:mb-4 group">
             <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
-            <span className="font-semibold">Back to Home</span>
+            <span className="font-semibold text-sm sm:text-base">Back to Home</span>
           </Link>
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-1 sm:mb-2">
                 {viewMode === "map" ? "Live Asset Map" : "Asset Overview"}
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg">
                 {viewMode === "map" 
                   ? "Real-time tracking of waste collection vehicles and trash bin status across Pokhara" 
                   : "Comprehensive overview of all waste management assets and their current status"}
@@ -261,27 +261,27 @@ export default function MapStatusPage() {
             </div>
             
             {/* View Toggle Buttons */}
-            <div className="flex space-x-3 bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-emerald-100">
+            <div className="flex space-x-2 sm:space-x-3 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1.5 sm:p-2 shadow-lg border border-emerald-100">
               <button
                 onClick={() => setViewMode("map")}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                className={`px-3 sm:px-4 md:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 flex items-center gap-1.5 sm:gap-2 ${
                   viewMode === "map"
                     ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
                     : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                 }`}
               >
-                <BsMap className="text-lg" />
+                <BsMap className="text-sm sm:text-lg" />
                 Map View
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                className={`px-3 sm:px-4 md:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 flex items-center gap-1.5 sm:gap-2 ${
                   viewMode === "list"
                     ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
                     : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                 }`}
               >
-                <BsListUl className="text-lg" />
+                <BsListUl className="text-sm sm:text-lg" />
                 List View
               </button>
             </div>
@@ -290,7 +290,7 @@ export default function MapStatusPage() {
 
         {/* MAP OR LIST */}
         {viewMode === "map" ? (
-          <div className="rounded-3xl overflow-hidden shadow-2xl border border-emerald-200 flex-grow bg-white/80 backdrop-blur-sm relative" style={{ height: "70vh", zIndex: 0, position: "relative" }}>
+          <div className="rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-emerald-200 flex-grow bg-white/80 backdrop-blur-sm relative" style={{ height: "min(70vh, 500px)", minHeight: "300px", zIndex: 0, position: "relative" }}>
             <MapContainer
               center={[28.2096, 83.9856]}
               zoom={14}

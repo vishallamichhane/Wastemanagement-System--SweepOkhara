@@ -1,58 +1,25 @@
-import { betterAuth } from "better-auth";
-import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { MongoClient } from "mongodb";
+/**
+ * Clerk Authentication Configuration
+ * 
+ * This module exports Clerk middleware and utilities for authentication.
+ * Replaces the previous Better Auth implementation.
+ */
 
+import { clerkMiddleware, getAuth, requireAuth, clerkClient } from '@clerk/express';
 
-const client = new MongoClient(`${process.env.MONGODB_URI}/auth`);
-const db = client.db();
+// Export Clerk middleware for Express
+export const auth = clerkMiddleware();
 
-export const auth = betterAuth({
-  baseURL: "http://localhost:3000",
-  trustedOrigins: ["http://localhost:5173"],
-  appUrl: "http://localhost:5173",
-  user: {
-    additionalFields: {
-      phone: { type: 'string' },
-      address: { type: 'string' },
-      ward: { type: 'string' },
-      role: { type: 'string', default: 'user' },
-    }
-  },
-  emailAndPassword: { 
-    enabled: true, 
-  },
+// Middleware to require authentication
+export const requireAuthentication = requireAuth();
 
-  // socialProviders: { 
-  //   google: { 
-  //     clientId: process.env.GOOGLE_CLIENT_ID , 
-  //     clientSecret: process.env.GOOGLE_CLIENT_SECRET , 
-  //   }, 
-  // }, 
+// Get user from request (for protected routes)
+export const getUserFromRequest = (req) => {
+  const auth = getAuth(req);
+  return auth;
+};
 
+// Get Clerk client for server-side operations
+export const clerk = clerkClient;
 
-  
-
-    //   emailVerification: {
-    //     sendVerificationEmail: async ({ user, url, token }, request) => {
-    //         void sendEmail({
-    //             to: user.email,
-    //             subject: 'Verify your email address',
-    //             text: `Click the link to verify your email: ${url}`
-    //         })
-    //     },
-
-    //     sendOnSignUp: true
-    // },
-    database: mongodbAdapter(db, {client}),
-});
-
-
-// const data = await auth.api.signUpEmail({
-//     body: {
-//         name: "John Doe", // required
-//         email: "john.doe@example.com", // required
-//         password: "password1234", // required
-//         image: "https://example.com/image.png",
-//         callbackURL: "https://example.com/callback",
-//     },
-// });
+console.log("🔧 Clerk authentication initialized");

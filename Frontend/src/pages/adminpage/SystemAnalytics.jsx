@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -8,60 +8,11 @@ import {
   FiRefreshCw,
   FiAlertTriangle,
   FiCheckCircle,
-  FiZap,
   FiUsers,
   FiTruck,
   FiActivity
 } from "react-icons/fi";
-
-// Analytics Data
-const analyticsData = {
-  timeRange: "this-month",
-  systemHealth: {
-    uptime: 99.8,
-    cpuUsage: 45,
-    memoryUsage: 62,
-    diskUsage: 58,
-    avgResponseTime: 245, // milliseconds
-    errorRate: 0.12
-  },
-  userEngagement: {
-    totalSessions: 15420,
-    activeUsers: 2450,
-    newUsers: 145,
-    avgSessionDuration: 8.5, // minutes
-    bounceRate: 12.3 // percentage
-  },
-  collectionMetrics: {
-    totalCollections: 1024,
-    successfulCollections: 987,
-    missedCollections: 37,
-    avgCollectionTime: 2.3, // hours
-    costPerCollection: 450 // currency units
-  },
-  reportingMetrics: {
-    totalReports: 523,
-    resolvedReports: 487,
-    pendingReports: 36,
-    avgResolutionTime: 18.5, // hours
-    userSatisfaction: 94.2 // percentage
-  },
-  weeklyTrends: [
-    { day: "Mon", collections: 142, reports: 56, users: 320 },
-    { day: "Tue", collections: 158, reports: 63, users: 345 },
-    { day: "Wed", collections: 175, reports: 71, users: 380 },
-    { day: "Thu", collections: 168, reports: 68, users: 370 },
-    { day: "Fri", collections: 189, reports: 82, users: 410 },
-    { day: "Sat", collections: 145, reports: 52, users: 290 },
-    { day: "Sun", collections: 118, reports: 41, users: 210 }
-  ],
-  performanceMetrics: {
-    appLoad: 1.2, // seconds
-    dbQuery: 0.45, // seconds
-    apiResponse: 0.8, // seconds
-    cacheHitRate: 78.5 // percentage
-  }
-};
+import axios from "axios";
 
 // Metric Card Component
 const MetricCard = ({ title, value, unit, change, trend, icon: Icon, color }) => {
@@ -207,10 +158,89 @@ const StatusBadge = ({ status, value, icon: Icon }) => {
 const SystemAnalytics = () => {
   const [timeRange, setTimeRange] = useState("this-month");
   const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [collectors, setCollectors] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [statsRes, collectorsRes, reportsRes] = await Promise.all([
+        axios.get('/api/admin/stats'),
+        axios.get('/api/collectors'),
+        axios.get('/api/admin/reports'),
+      ]);
+      setStats(statsRes.data);
+      setCollectors(collectorsRes.data?.data || collectorsRes.data || []);
+      setReports(reportsRes.data || []);
+    } catch (err) {
+      console.error('Failed to fetch analytics data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  // Compute analytics from real data
+  const analyticsData = useMemo(() => {
+    if (!stats) return null;
+    const activeCollectors = collectors.filter(c => c.status === 'active').length;
+    const inactiveCollectors = collectors.filter(c => c.status !== 'active').length;
+    const totalCollections = collectors.reduce((sum, c) => sum + (c.totalCollections || 0), 0);
+    const resolvedReports = reports.filter(r => r.status === 'resolved').length;
+    const pendingReports = reports.filter(r => r.status !== 'resolved').length;
+    const highPriority = reports.filter(r => r.priority === 'high' && r.status !== 'resolved').length;
+    const resolutionRate = reports.length > 0 ? ((resolvedReports / reports.length) * 100).toFixed(1) : 0;
+
+    // Compute weekly trends from real reports (last 7 days)
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weeklyTrends = dayNames.map(day => ({ day, collections: 0, reports: 0, users: 0 }));
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    reports.forEach(r => {
+      const d = new Date(r.createdAt);
+      if (d >= weekAgo) {
+        const dayIdx = d.getDay();
+        weeklyTrends[dayIdx].reports += 1;
+      }
+    });
+    // Reorder to start from Monday
+    const reordered = [...weeklyTrends.slice(1), weeklyTrends[0]];
+
+    return {
+      userEngagement: {
+        activeUsers: stats.totalUsers,
+        newUsers: stats.totalUsers,
+        avgSessionDuration: 'N/A',
+        bounceRate: 'N/A'
+      },
+      collectionMetrics: {
+        totalCollections,
+        successfulCollections: totalCollections,
+        missedCollections: 0,
+        avgCollectionTime: 'N/A',
+        costPerCollection: 'N/A'
+      },
+      reportingMetrics: {
+        totalReports: stats.totalReports,
+        resolvedReports,
+        pendingReports,
+        avgResolutionTime: 'N/A',
+        userSatisfaction: resolutionRate
+      },
+      weeklyTrends: reordered,
+      totalCollectors: stats.totalCollectors,
+      activeCollectors,
+      inactiveCollectors,
+      highPriority
+    };
+  }, [stats, collectors, reports]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    fetchData().finally(() => setRefreshing(false));
   };
 
   const handleExport = () => {
@@ -244,7 +274,7 @@ const SystemAnalytics = () => {
 
             <button
               onClick={handleRefresh}
-              className={`flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-300 ${refreshing ? "animate-spin" : ""}`}
+              className={`flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-300`}
             >
               <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
             </button>
@@ -260,50 +290,49 @@ const SystemAnalytics = () => {
         </div>
       </div>
 
+      {loading || !analyticsData ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          <span className="ml-3 text-gray-600">Loading analytics...</span>
+        </div>
+      ) : (
+      <>
       {/* System Health Status */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatusBadge status="operational" value="All Systems Operational" icon={FiCheckCircle} />
-        <StatusBadge status="operational" value="99.8% Uptime" icon={FiActivity} />
-        <StatusBadge status="warning" value="2 Non-Critical Alerts" icon={FiAlertTriangle} />
+        <StatusBadge status="operational" value={`${analyticsData.activeCollectors} Active Collectors`} icon={FiActivity} />
+        <StatusBadge status={analyticsData.highPriority > 0 ? "warning" : "operational"} value={`${analyticsData.highPriority} High Priority Reports`} icon={FiAlertTriangle} />
       </div>
 
       {/* Key Performance Indicators - Row 1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard
-          title="System Uptime"
-          value={analyticsData.systemHealth.uptime}
-          unit="%"
-          change={0.5}
-          trend="up"
-          icon={FiActivity}
+          title="Total Users"
+          value={analyticsData.userEngagement.activeUsers}
+          unit=""
+          icon={FiUsers}
           color="green"
         />
         <MetricCard
-          title="Avg Response Time"
-          value={analyticsData.systemHealth.avgResponseTime}
-          unit="ms"
-          change={5.2}
-          trend="down"
-          icon={FiZap}
+          title="Total Collectors"
+          value={analyticsData.totalCollectors}
+          unit=""
+          icon={FiTruck}
           color="blue"
         />
         <MetricCard
-          title="Error Rate"
-          value={analyticsData.systemHealth.errorRate}
-          unit="%"
-          change={0.03}
-          trend="down"
-          icon={FiAlertTriangle}
-          color="red"
+          title="Total Reports"
+          value={analyticsData.reportingMetrics.totalReports}
+          unit=""
+          icon={FiActivity}
+          color="purple"
         />
         <MetricCard
-          title="Active Sessions"
-          value={analyticsData.userEngagement.totalSessions.toLocaleString()}
+          title="Active Collectors"
+          value={analyticsData.activeCollectors}
           unit=""
-          change={12.4}
-          trend="up"
-          icon={FiUsers}
-          color="purple"
+          icon={FiCheckCircle}
+          color="green"
         />
       </div>
 
@@ -313,35 +342,27 @@ const SystemAnalytics = () => {
           title="Total Collections"
           value={analyticsData.collectionMetrics.totalCollections}
           unit=""
-          change={8.7}
-          trend="up"
           icon={FiTruck}
           color="amber"
-        />
-        <MetricCard
-          title="Success Rate"
-          value={analyticsData.collectionMetrics.successfulCollections}
-          unit=""
-          change={2.1}
-          trend="up"
-          icon={FiCheckCircle}
-          color="green"
         />
         <MetricCard
           title="Resolved Reports"
           value={analyticsData.reportingMetrics.resolvedReports}
           unit=""
-          change={15.3}
-          trend="up"
           icon={FiCheckCircle}
           color="green"
         />
         <MetricCard
-          title="User Satisfaction"
+          title="Pending Reports"
+          value={analyticsData.reportingMetrics.pendingReports}
+          unit=""
+          icon={FiAlertTriangle}
+          color="red"
+        />
+        <MetricCard
+          title="Resolution Rate"
           value={analyticsData.reportingMetrics.userSatisfaction}
           unit="%"
-          change={1.8}
-          trend="up"
           icon={FiTrendingUp}
           color="indigo"
         />
@@ -349,14 +370,6 @@ const SystemAnalytics = () => {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Weekly Collections Trend */}
-        <BarChart
-          title="Weekly Collections Trend"
-          data={analyticsData.weeklyTrends}
-          dataKey="collections"
-          color="emerald"
-        />
-
         {/* Weekly Reports Trend */}
         <BarChart
           title="Weekly Reports Trend"
@@ -364,38 +377,27 @@ const SystemAnalytics = () => {
           dataKey="reports"
           color="blue"
         />
-      </div>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <PerformanceGauge
-          title="App Load Time"
-          value={analyticsData.performanceMetrics.appLoad}
-          unit="sec"
-          target={3}
-          color="emerald"
-        />
-        <PerformanceGauge
-          title="Database Query Time"
-          value={analyticsData.performanceMetrics.dbQuery}
-          unit="sec"
-          target={1}
-          color="emerald"
-        />
-        <PerformanceGauge
-          title="API Response Time"
-          value={analyticsData.performanceMetrics.apiResponse}
-          unit="sec"
-          target={2}
-          color="emerald"
-        />
-        <PerformanceGauge
-          title="Cache Hit Rate"
-          value={analyticsData.performanceMetrics.cacheHitRate}
-          unit="%"
-          target={100}
-          color="emerald"
-        />
+        {/* Performance Gauges */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Resolution Performance</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <PerformanceGauge
+              title="Resolution Rate"
+              value={analyticsData.reportingMetrics.resolvedReports}
+              unit="reports"
+              target={analyticsData.reportingMetrics.totalReports || 1}
+              color="emerald"
+            />
+            <PerformanceGauge
+              title="Active Collectors"
+              value={analyticsData.activeCollectors}
+              unit="active"
+              target={analyticsData.totalCollectors || 1}
+              color="emerald"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Detailed Metrics Grid */}
@@ -408,20 +410,20 @@ const SystemAnalytics = () => {
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Active Users</span>
+              <span className="text-sm font-medium text-gray-700">Total Users</span>
               <span className="text-lg font-bold text-purple-600">{analyticsData.userEngagement.activeUsers.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">New Users</span>
-              <span className="text-lg font-bold text-blue-600">+{analyticsData.userEngagement.newUsers}</span>
+              <span className="text-sm font-medium text-gray-700">Total Reports Filed</span>
+              <span className="text-lg font-bold text-blue-600">{analyticsData.reportingMetrics.totalReports}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Avg Session Duration</span>
-              <span className="text-lg font-bold text-amber-600">{analyticsData.userEngagement.avgSessionDuration}m</span>
+              <span className="text-sm font-medium text-gray-700">Reports Per User</span>
+              <span className="text-lg font-bold text-amber-600">{analyticsData.userEngagement.activeUsers > 0 ? (analyticsData.reportingMetrics.totalReports / analyticsData.userEngagement.activeUsers).toFixed(1) : '0'}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Bounce Rate</span>
-              <span className="text-lg font-bold text-red-600">{analyticsData.userEngagement.bounceRate}%</span>
+            <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Resolution Rate</span>
+              <span className="text-lg font-bold text-emerald-600">{analyticsData.reportingMetrics.userSatisfaction}%</span>
             </div>
           </div>
         </div>
@@ -434,27 +436,20 @@ const SystemAnalytics = () => {
           </h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Success Rate</span>
-              <span className="text-lg font-bold text-emerald-600">
-                {(
-                  (analyticsData.collectionMetrics.successfulCollections /
-                    analyticsData.collectionMetrics.totalCollections) *
-                  100
-                ).toFixed(1)}
-                %
-              </span>
+              <span className="text-sm font-medium text-gray-700">Active Collectors</span>
+              <span className="text-lg font-bold text-emerald-600">{analyticsData.activeCollectors}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Missed Collections</span>
-              <span className="text-lg font-bold text-red-600">{analyticsData.collectionMetrics.missedCollections}</span>
+              <span className="text-sm font-medium text-gray-700">Inactive Collectors</span>
+              <span className="text-lg font-bold text-red-600">{analyticsData.inactiveCollectors}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Avg Time per Collection</span>
-              <span className="text-lg font-bold text-indigo-600">{analyticsData.collectionMetrics.avgCollectionTime}h</span>
+              <span className="text-sm font-medium text-gray-700">Total Collections</span>
+              <span className="text-lg font-bold text-indigo-600">{analyticsData.collectionMetrics.totalCollections}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Cost per Collection</span>
-              <span className="text-lg font-bold text-blue-600">₹{analyticsData.collectionMetrics.costPerCollection}</span>
+              <span className="text-sm font-medium text-gray-700">Collections Per Collector</span>
+              <span className="text-lg font-bold text-blue-600">{analyticsData.totalCollectors > 0 ? Math.round(analyticsData.collectionMetrics.totalCollections / analyticsData.totalCollectors) : 0}</span>
             </div>
           </div>
         </div>
@@ -475,86 +470,61 @@ const SystemAnalytics = () => {
               <span className="text-lg font-bold text-amber-600">{analyticsData.reportingMetrics.pendingReports}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Avg Resolution Time</span>
-              <span className="text-lg font-bold text-purple-600">{analyticsData.reportingMetrics.avgResolutionTime}h</span>
+              <span className="text-sm font-medium text-gray-700">High Priority Open</span>
+              <span className="text-lg font-bold text-purple-600">{analyticsData.highPriority}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">User Satisfaction</span>
+              <span className="text-sm font-medium text-gray-700">Resolution Rate</span>
               <span className="text-lg font-bold text-green-600">{analyticsData.reportingMetrics.userSatisfaction}%</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* System Resources */}
+      {/* Summary Stats */}
       <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-8">
-        <h3 className="text-lg font-bold text-gray-900 mb-6">System Resources</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-6">System Summary</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* CPU Usage */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-gray-700">CPU Usage</span>
-              <span className="text-sm font-bold text-gray-900">{analyticsData.systemHealth.cpuUsage}%</span>
+              <span className="text-sm font-medium text-gray-700">Users</span>
+              <span className="text-sm font-bold text-gray-900">{analyticsData.userEngagement.activeUsers}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="h-3 rounded-full bg-emerald-500 transition-all duration-300" style={{ width: '100%' }}></div>
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-medium text-gray-700">Collectors</span>
+              <span className="text-sm font-bold text-gray-900">{analyticsData.totalCollectors}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="h-3 rounded-full bg-blue-500 transition-all duration-300" style={{ width: '100%' }}></div>
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-medium text-gray-700">Resolution Rate</span>
+              <span className="text-sm font-bold text-gray-900">{analyticsData.reportingMetrics.userSatisfaction}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div
                 className={`h-3 rounded-full transition-all duration-300 ${
-                  analyticsData.systemHealth.cpuUsage > 80
-                    ? "bg-red-500"
-                    : analyticsData.systemHealth.cpuUsage > 60
+                  parseFloat(analyticsData.reportingMetrics.userSatisfaction) > 80
+                    ? "bg-emerald-500"
+                    : parseFloat(analyticsData.reportingMetrics.userSatisfaction) > 60
                       ? "bg-amber-500"
-                      : "bg-emerald-500"
+                      : "bg-red-500"
                 }`}
-                style={{ width: `${analyticsData.systemHealth.cpuUsage}%` }}
+                style={{ width: `${analyticsData.reportingMetrics.userSatisfaction}%` }}
               ></div>
             </div>
           </div>
-
-          {/* Memory Usage */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-gray-700">Memory Usage</span>
-              <span className="text-sm font-bold text-gray-900">{analyticsData.systemHealth.memoryUsage}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className={`h-3 rounded-full transition-all duration-300 ${
-                  analyticsData.systemHealth.memoryUsage > 80
-                    ? "bg-red-500"
-                    : analyticsData.systemHealth.memoryUsage > 60
-                      ? "bg-amber-500"
-                      : "bg-emerald-500"
-                }`}
-                style={{ width: `${analyticsData.systemHealth.memoryUsage}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Disk Usage */}
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-gray-700">Disk Usage</span>
-              <span className="text-sm font-bold text-gray-900">{analyticsData.systemHealth.diskUsage}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className={`h-3 rounded-full transition-all duration-300 ${
-                  analyticsData.systemHealth.diskUsage > 80
-                    ? "bg-red-500"
-                    : analyticsData.systemHealth.diskUsage > 60
-                      ? "bg-amber-500"
-                      : "bg-emerald-500"
-                }`}
-                style={{ width: `${analyticsData.systemHealth.diskUsage}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Network Status */}
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-gray-700">Network Status</span>
-              <span className="text-sm font-bold text-emerald-600">Healthy</span>
+              <span className="text-sm font-medium text-gray-700">System Status</span>
+              <span className="text-sm font-bold text-emerald-600">Operational</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div className="h-3 rounded-full bg-emerald-500 transition-all duration-300" style={{ width: "100%" }}></div>
@@ -562,6 +532,8 @@ const SystemAnalytics = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Footer Info */}
       <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
@@ -569,7 +541,7 @@ const SystemAnalytics = () => {
           <span className="font-semibold">Last Updated:</span> Just now
         </p>
         <p className="text-xs text-gray-500 mt-2">
-          Analytics data updates every 5 minutes. For real-time monitoring, please use the system dashboard.
+          All analytics are computed from real database records. Click refresh to update.
         </p>
       </div>
     </div>

@@ -1,12 +1,12 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "./src/server.js",
   "description": "Backend for Waste Management System",
   "type": "module",
   "scripts": {
-    "start": "node ./src/server.js",
-    "dev": "nodemon ./src/server.js",
+    "start": "node ./src/Server.js",
+    "dev": "nodemon ./src/Server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,8 +15,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@clerk/express": "^1.7.73",
     "bcryptjs": "^3.0.3",
-    "better-auth": "^1.4.17",
     "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -25,7 +25,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.4",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "nodemailer": "^8.0.1",
+    "resend": "^6.9.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

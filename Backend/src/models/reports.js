@@ -18,28 +18,55 @@ const reportSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a description'],
     },
+    priority:{
+      type: String,
+      enum: ['low', 'medium', 'high'],
+      default: 'medium',
+    },
     location: {
       type: String,
       required: [true, 'Please add a location'],
     },
+    ward: {
+      type: Number,
+      required: [true, 'Please select a ward'],
+      min: [1, 'Ward number must be between 1 and 33'],
+      max: [33, 'Ward number must be between 1 and 33'],
+    },
     latitude:{
       type: Number,
+      required: [true, 'Latitude is required'],
     },
     longitude:{
-      type: Number,   
+      type: Number,
+      required: [true, 'Longitude is required'],
     },
-    imageUrl: [{
+    images: [{
       type: String,
     }],
     status: {
       type: String,
-      enum: ['Pending', 'In-Progress', 'Resolved'],
-      default: 'Pending',
+      enum: ['received', 'in-progress', 'resolved'],
+      default: 'in-progress',
     },
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
       required: true,
+    },
+    userName: {
+      type: String,
+    },
+    userEmail: {
+      type: String,
+    },
+    assignedCollectorId: {
+      type: String,
+    },
+    assignedCollectorName: {
+      type: String,
+    },
+    assignedVehicleId: {
+      type: String,
     },
   },
   {

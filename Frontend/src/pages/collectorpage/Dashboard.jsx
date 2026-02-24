@@ -11,7 +11,9 @@ import {
   FiSearch,
   FiChevronLeft,
   FiUser,
-  FiSettings
+  FiSettings,
+  FiMenu,
+  FiX
 } from 'react-icons/fi';
 import { 
   BsBell, 
@@ -233,14 +235,14 @@ const StatCard = ({ title, value, color, icon: Icon }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-500 mb-1">{title}</p>
-          <p className={`text-3xl font-bold ${valueColors[color]}`}>{value}</p>
+          <p className={`text-2xl sm:text-3xl font-bold ${valueColors[color]}`}>{value}</p>
         </div>
-        <div className={`w-12 h-12 rounded-full ${colorClasses[color]} flex items-center justify-center`}>
-          <Icon className="text-xl" />
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${colorClasses[color]} flex items-center justify-center`}>
+          <Icon className="text-lg sm:text-xl" />
         </div>
       </div>
     </div>
@@ -252,10 +254,10 @@ const MapSection = () => {
   const [selectedWard, setSelectedWard] = useState('Ward 1');
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-6">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Pokhara City: Real-Time Collection Route</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">Pokhara City: Real-Time Collection Route</h3>
           <p className="text-gray-500 mt-1">Live tracking of collection vehicles and bin status</p>
         </div>
         <div className="mt-4 md:mt-0">
@@ -278,7 +280,7 @@ const MapSection = () => {
         </div>
       </div>
       
-      <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200" style={{ zIndex: 0, position: "relative" }}>
+      <div className="h-[280px] sm:h-[350px] md:h-[400px] rounded-lg overflow-hidden border border-gray-200" style={{ zIndex: 0, position: "relative" }}>
         <MapContainer
           center={[28.2096, 83.9856]}
           zoom={14}
@@ -378,6 +380,26 @@ const CollectorDashboard = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+  
+  // Get collector data from localStorage
+  const [collectorData, setCollectorData] = useState(null);
+  
+  useEffect(() => {
+    const storedData = localStorage.getItem('collectorData');
+    if (storedData) {
+      try {
+        const data = JSON.parse(storedData);
+        setCollectorData(data);
+      } catch (error) {
+        console.error('Error parsing collector data:', error);
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -402,6 +424,9 @@ const CollectorDashboard = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowProfileDropdown(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -409,6 +434,17 @@ const CollectorDashboard = () => {
 
   const handleLogout = () => {
     setShowProfileDropdown(false);
+    
+    console.log('🚪 Collector logging out...');
+    
+    // Clear collector data from localStorage
+    localStorage.removeItem('collectorToken');
+    localStorage.removeItem('collectorData');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    
+    console.log('✅ Collector logged out successfully');
+    
     navigate('/login');
   };
 
@@ -422,6 +458,18 @@ const CollectorDashboard = () => {
     navigate('/collector/dashboard');
   };
 
+  // Show loading if collector data is not yet loaded
+  if (!collectorData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-100 text-gray-900 flex flex-col">
       {/* Background Elements (from Header) */}
@@ -432,33 +480,33 @@ const CollectorDashboard = () => {
       </div>
 
       {/* Enhanced Navbar with Header styling */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
+      <nav ref={mobileMenuRef} className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
         isNavVisible ? 'translate-y-0' : '-translate-y-full'
       } ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
           : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
       }`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
           {/* Left: Logo (from Header) */}
           <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-3 group cursor-pointer">
+            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
               <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
                 <GiBroom className="text-white text-xl" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                   SweePokhara
                 </span>
               </div>
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
+              <span className="hidden sm:inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
             </div>
           </Link>
 
-          {/* Right: Navigation */}
-          <div className="flex items-center space-x-6">
+          {/* Right: Navigation - Desktop */}
+          <div className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => {
                 setActiveNav('home');
@@ -567,24 +615,65 @@ const CollectorDashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Mobile: notification + hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            <CollectorNotificationCenter />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg text-gray-700 hover:bg-emerald-50 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <FiX className="text-2xl" /> : <FiMenu className="text-2xl" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile slide-down menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-emerald-100 bg-white/95 backdrop-blur-xl px-4 py-3 space-y-1">
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/dashboard'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-700 bg-emerald-50/80 font-semibold">
+              <FiHome /> Dashboard
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/tasks'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiCalendar /> Schedule
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/reports'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <BsExclamationTriangle /> Reports
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
+              <FiUser /> Profile
+            </button>
+            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold">
+              <FiLogOut /> Logout
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Spacer for fixed nav */}
-      <div className="h-24"></div>
+      <div className="h-16 sm:h-20 md:h-24"></div>
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Collector Dashboard</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Collector Dashboard</h1>
           <p className="text-gray-600 mt-2">
-            Welcome, <span className="text-emerald-700 font-semibold">{collectorData.name.split(' ')[0]}</span>! Here's your workload overview.
+            Welcome, <span className="text-emerald-700 font-semibold">
+              {collectorData?.name?.split(' ')[0] || 'Collector'}
+            </span>! Here's your workload overview.
           </p>
+          {collectorData?.collectorId && (
+            <p className="text-sm text-gray-500 mt-1">
+              ID: <span className="font-mono font-semibold">{collectorData?.collectorId}</span> | 
+              Assigned to: <span className="font-semibold">{collectorData?.assignedWards?.length || 0} wards</span>
+            </p>
+          )}
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <StatCard 
             title="Total Tasks" 
             value={stats.total} 
@@ -612,9 +701,9 @@ const CollectorDashboard = () => {
         </div>
 
         {/* Primary Button with Header-style animation */}
-        <div className="flex justify-center mb-8">
-          <Link to="/collector/tasks">
-            <button className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold px-10 py-3.5 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:from-emerald-700 hover:to-teal-700 group relative overflow-hidden">
+        <div className="flex justify-center mb-6 sm:mb-8 px-2">
+          <Link to="/collector/tasks" className="w-full sm:w-auto">
+            <button className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold px-6 sm:px-10 py-3 sm:py-3.5 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:from-emerald-700 hover:to-teal-700 group relative overflow-hidden">
               <div className="absolute inset-0 bg-white/20 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               <div className="flex items-center space-x-3 relative z-10">
                 <span>View Assigned Tasks</span>
@@ -630,33 +719,33 @@ const CollectorDashboard = () => {
         </div>
 
         {/* Quick Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800">Today's Collection</h3>
-              <span className="text-sm bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">Active</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Today's Collection</h3>
+              <span className="text-xs sm:text-sm bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">Active</span>
             </div>
-            <p className="text-3xl font-bold text-emerald-700">{collectorData.todayCollections} bins</p>
+            <p className="text-2xl sm:text-3xl font-bold text-emerald-700">{collectorData?.todayCollections || 0} bins</p>
             <p className="text-sm text-gray-500 mt-2">+2 from yesterday</p>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800">Collection Efficiency</h3>
-              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Good</span>
+          <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Collection Efficiency</h3>
+              <span className="text-xs sm:text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Good</span>
             </div>
-            <p className="text-3xl font-bold text-blue-700">94%</p>
+            <p className="text-2xl sm:text-3xl font-bold text-blue-700">{collectorData?.efficiency || 94}%</p>
             <p className="text-sm text-gray-500 mt-2">Above average</p>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800">Current Rating</h3>
+          <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-300 hover:-translate-y-1 transform">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Current Rating</h3>
               <div className="flex items-center space-x-1">
-                <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded-full">{collectorData.rating}/5</span>
+                <span className="text-xs sm:text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded-full">{collectorData?.rating || 4.0}/5</span>
               </div>
             </div>
-            <p className="text-3xl font-bold text-amber-700">{collectorData.rating}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-amber-700">{collectorData?.rating || 4.0}</p>
             <p className="text-sm text-gray-500 mt-2">Based on 124 reviews</p>
           </div>
         </div>
