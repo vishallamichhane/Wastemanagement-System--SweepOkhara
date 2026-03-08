@@ -32,9 +32,11 @@ async function submitReport(req, res) {
     // Validate coordinates
     if (!latitude || !longitude || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
       return res.status(400).json({ 
-        message: "Valid GPS coordinates are required. Please enable location access." 
+        message: "Valid GPS coordinates are required. Please use the location button or pick a spot on the map." 
       });
     }
+    const parsedLat = parseFloat(latitude);
+    const parsedLng = parseFloat(longitude);
 
     const userId = req.user.id;
     const userName = req.user.name || '';
@@ -103,12 +105,12 @@ async function submitReport(req, res) {
       description,
       location,
       ward: wardNumber,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+      latitude: parsedLat,
+      longitude: parsedLng,
       assignedCollector,
     });
 
-    const report = await Report.create({
+    const reportData = {
       userId,
       userName,
       userEmail,
@@ -118,12 +120,14 @@ async function submitReport(req, res) {
       description,
       location,
       ward: wardNumber,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+      latitude: parsedLat,
+      longitude: parsedLng,
       assignedCollectorId: assignedCollector?.collectorId || null,
       assignedCollectorName: assignedCollector?.collectorName || null,
       assignedVehicleId: assignedCollector?.vehicleId || null,
-    });
+    };
+
+    const report = await Report.create(reportData);
 
     console.log("Report created successfully:", report);
 
@@ -141,10 +145,10 @@ async function getReports(req, res) {
   try {
     const reports = await Report.find({});
     
-    // Auto-assign collectors to reports that don't have one yet
+    // Always verify and fix collector assignment based on ward
     const updatedReports = [];
     for (const report of reports) {
-      if (!report.assignedCollectorId && report.ward) {
+      if (report.ward) {
         try {
           const collector = await Collector.findOne({
             assignedWards: report.ward,
@@ -152,15 +156,18 @@ async function getReports(req, res) {
           }).select('collectorId name vehicleId');
 
           if (collector) {
-            // Update the report in database
-            report.assignedCollectorId = collector.collectorId;
-            report.assignedCollectorName = collector.name;
-            report.assignedVehicleId = collector.vehicleId;
-            await report.save();
-            console.log(`✅ Retroactively assigned collector ${collector.name} to report ${report._id} (ward ${report.ward})`);
+            // Fix assignment if missing or incorrect
+            if (report.assignedCollectorId !== collector.collectorId) {
+              const oldCollector = report.assignedCollectorName || 'None';
+              report.assignedCollectorId = collector.collectorId;
+              report.assignedCollectorName = collector.name;
+              report.assignedVehicleId = collector.vehicleId;
+              await report.save();
+              console.log(`✅ Fixed collector assignment for report ${report._id} (ward ${report.ward}): ${oldCollector} → ${collector.name}`);
+            }
           }
         } catch (collectorErr) {
-          console.error('Error retroactively assigning collector:', collectorErr.message);
+          console.error('Error verifying collector assignment:', collectorErr.message);
         }
       }
       updatedReports.push(report);
@@ -178,24 +185,25 @@ async function getUserReports(req, res){
     const userId = req.user.id;
     const reports = await Report.find({userId});
     
-    // Auto-assign collectors to reports that don't have one yet
+    // Always verify and fix collector assignment based on ward
     for (const report of reports) {
-      if (!report.assignedCollectorId && report.ward) {
+      if (report.ward) {
         try {
           const collector = await Collector.findOne({
             assignedWards: report.ward,
             status: 'active'
           }).select('collectorId name vehicleId');
 
-          if (collector) {
+          if (collector && report.assignedCollectorId !== collector.collectorId) {
+            const oldCollector = report.assignedCollectorName || 'None';
             report.assignedCollectorId = collector.collectorId;
             report.assignedCollectorName = collector.name;
             report.assignedVehicleId = collector.vehicleId;
             await report.save();
-            console.log(`✅ Retroactively assigned collector ${collector.name} to user report ${report._id}`);
+            console.log(`✅ Fixed collector for user report ${report._id} (ward ${report.ward}): ${oldCollector} → ${collector.name}`);
           }
         } catch (collectorErr) {
-          console.error('Error retroactively assigning collector:', collectorErr.message);
+          console.error('Error verifying collector assignment:', collectorErr.message);
         }
       }
     }

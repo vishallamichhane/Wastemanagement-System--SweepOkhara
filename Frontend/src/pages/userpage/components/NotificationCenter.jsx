@@ -290,19 +290,30 @@ function NotificationCenter() {
           return true;
         });
 
-        // Combine and sort: live status first, then schedule, then reports
-        const allNotifications = [...liveStatusNotifs, ...filteredScheduleNotifs, ...reportNotifications];
+        // Combine and sort: live status first, then schedule, then bin alerts, then reports
+        // Read bin alert notifications from localStorage (set by Mapview transition detection)
+        const readIds2 = JSON.parse(localStorage.getItem('userReadNotifications') || '[]');
+        const rawBinAlerts = JSON.parse(localStorage.getItem('binAlertNotifications') || '[]');
+        const binAlertNotifications = rawBinAlerts.map(n => ({
+          ...n,
+          timestamp: new Date(n.timestamp),
+          read: readIds2.includes(n.id),
+        }));
+
+        const allNotifications = [...liveStatusNotifs, ...filteredScheduleNotifs, ...binAlertNotifications, ...reportNotifications];
         allNotifications.sort((a, b) => {
           // Priority: schedule-urgent > schedule-today > schedule-tomorrow > rest by timestamp
           const getPriority = (n) => {
             if (n.icon === 'pickup-done') return -1;
             if (n.type === 'pickup-inprogress') return 0;
-            if (n.type === 'pickup-scheduled') return 1;
-            if (n.icon === 'schedule-urgent') return 2;
-            if (n.icon === 'schedule-today') return 3;
-            if (n.type === 'pickup-tomorrow-reminder') return 4;
-            if (n.icon === 'schedule-tomorrow') return 5;
-            return 6;
+            if (n.type === 'bin-full') return 1;
+            if (n.type === 'pickup-scheduled') return 2;
+            if (n.icon === 'schedule-urgent') return 3;
+            if (n.icon === 'schedule-today') return 4;
+            if (n.type === 'bin-emptied') return 5;
+            if (n.type === 'pickup-tomorrow-reminder') return 6;
+            if (n.icon === 'schedule-tomorrow') return 7;
+            return 8;
           };
           const pa = getPriority(a);
           const pb = getPriority(b);
@@ -339,11 +350,18 @@ function NotificationCenter() {
         }
       } catch (error) {
         console.error('Error fetching report notifications:', error);
-        // Still show schedule notifications even if report fetch fails
+        // Still show schedule + bin alert notifications even if report fetch fails
         const scheduleNotifs = buildScheduleNotifications();
-        if (scheduleNotifs.length > 0) {
-          setNotifications(scheduleNotifs);
-          setUnreadCount(scheduleNotifs.filter(n => !n.read).length);
+        const fallbackReadIds = JSON.parse(localStorage.getItem('userReadNotifications') || '[]');
+        const fallbackBinAlerts = JSON.parse(localStorage.getItem('binAlertNotifications') || '[]').map(n => ({
+          ...n,
+          timestamp: new Date(n.timestamp),
+          read: fallbackReadIds.includes(n.id),
+        }));
+        const fallbackAll = [...scheduleNotifs, ...fallbackBinAlerts];
+        if (fallbackAll.length > 0) {
+          setNotifications(fallbackAll);
+          setUnreadCount(fallbackAll.filter(n => !n.read).length);
         }
       }
     };
@@ -418,6 +436,10 @@ function NotificationCenter() {
         return <BsCalendarEvent className="text-gray-500 text-lg" />;
       case 'pickup-done':
         return <BsCheckAll className="text-emerald-600 text-lg" />;
+      case 'bin-full':
+        return <BsTrash2 className="text-red-600 text-lg animate-pulse" />;
+      case 'bin-emptied':
+        return <BsCheckCircle className="text-green-600 text-lg" />;
       default:
         return <BsBell className="text-gray-500 text-lg" />;
     }

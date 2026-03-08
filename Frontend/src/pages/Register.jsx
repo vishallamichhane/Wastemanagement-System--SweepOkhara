@@ -469,13 +469,13 @@ export default function RegisterPage() {
             transition={{ duration: 0.8 }}
           >
             <p className="text-3xl font-extrabold tracking-[0.35em] text-emerald-200 mb-4 drop-shadow-lg">
-              SweePokhara
+              SweepPokhara
             </p>
             <h1 className="text-4xl font-bold mb-4 leading-tight">
               <TypingText text="Let's Get Started" delay={0.3} />
             </h1>
             <p className="text-lg text-gray-300 leading-relaxed max-w-md">
-              <TypingText text="Join SweePokhara and be part of a cleaner, greener future. Track waste collection, report issues, and make a real impact in your community." delay={1.2} />
+              <TypingText text="Join SweepPokhara and be part of a cleaner, greener future. Track waste collection, report issues, and make a real impact in your community." delay={1.2} />
             </p>
           </motion.div>
         </div>

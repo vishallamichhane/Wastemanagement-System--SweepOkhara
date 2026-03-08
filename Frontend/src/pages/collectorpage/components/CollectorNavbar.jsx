@@ -61,7 +61,7 @@ const CollectorNavbar = ({
               </div>
               <div>
                 <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                  SweePokhara
+                  SweepPokhara
                 </span>
               </div>
               <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">

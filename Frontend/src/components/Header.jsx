@@ -1,6 +1,7 @@
 import {useState, useEffect} from 'react'
 import { NavLink, Link } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
+import sweepPokharaLogo from '../assets/images/sweeppokhara-final-logo.png';
 
 
 function Header() {
@@ -34,16 +35,13 @@ function Header() {
           }`}>
             <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-10 py-4">
               <Link to="/" className="transform hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center space-x-3 group cursor-pointer">
-                <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
-                  <GiBroom className="text-white text-xl" />
+                <div className="flex items-center justify-center">
+                  <img 
+                    src={sweepPokharaLogo} 
+                    alt="SweepPokhara Logo" 
+                    className="h-12 w-auto object-contain"
+                  />
                 </div>
-                <div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                    SweePokhara
-                  </span>
-                </div>
-              </div>
               </Link>
 
 

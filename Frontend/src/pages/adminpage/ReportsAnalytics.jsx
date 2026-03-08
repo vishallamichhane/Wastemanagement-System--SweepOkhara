@@ -1,20 +1,23 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   FiSearch,
   FiFilter,
   FiDownload,
   FiMapPin,
   FiEye,
-  FiArrowRight,
   FiRefreshCw,
+  FiCheckCircle,
+  FiXCircle,
 } from "react-icons/fi";
 import {
   BsCheckCircle,
   BsExclamationTriangle,
   BsArrowClockwise,
   BsClock,
+  BsShieldCheck,
 } from "react-icons/bs";
 import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 const statusConfig = {
   received: {
@@ -28,6 +31,12 @@ const statusConfig = {
     color: "text-amber-700",
     bg: "bg-amber-100",
     icon: BsArrowClockwise,
+  },
+  "pending-verification": {
+    label: "Pending Verification",
+    color: "text-orange-700",
+    bg: "bg-orange-100",
+    icon: BsShieldCheck,
   },
   resolved: {
     label: "Resolved",
@@ -159,6 +168,7 @@ const ReportsTable = ({ reports, onView }) => {
 };
 
 const ReportsAnalytics = () => {
+  const { getToken } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -166,12 +176,24 @@ const ReportsAnalytics = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [adminNotes, setAdminNotes] = useState("");
+
+  const getAuthHeaders = useCallback(async () => {
+    try {
+      const token = await getToken();
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
+  }, [getToken]);
 
   const fetchReports = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get("/api/admin/reports");
+      const headers = await getAuthHeaders();
+      const res = await axios.get("/api/admin/reports", { headers });
       setReports(
         (res.data || []).map((r) => ({
           id: r._id.slice(-6).toUpperCase(),
@@ -192,6 +214,11 @@ const ReportsAnalytics = () => {
           photos: r.images || [],
           reportedBy: r.userName || "Unknown User",
           reportedByEmail: r.userEmail || "",
+          completionNote: r.completionNote || "",
+          collectorCompletedAt: r.collectorCompletedAt || null,
+          adminVerified: r.adminVerified || false,
+          adminVerifiedAt: r.adminVerifiedAt || null,
+          adminNotes: r.adminNotes || "",
         }))
       );
     } catch (err) {
@@ -261,6 +288,50 @@ const ReportsAnalytics = () => {
     a.click();
   };
 
+  const handleVerifyReport = async (reportFullId) => {
+    if (!confirm("Are you sure you want to verify and approve this report as resolved? An email will be sent to the user.")) return;
+    setVerifyLoading(true);
+    try {
+      const headers = await getAuthHeaders();
+      headers["Content-Type"] = "application/json";
+      const res = await axios.put(`/api/admin/reports/${reportFullId}/verify`, { adminNotes }, { headers });
+      if (res.data.success) {
+        setModalReport(null);
+        setAdminNotes("");
+        fetchReports();
+      }
+    } catch (err) {
+      console.error("Failed to verify report:", err);
+      alert("Failed to verify report: " + (err.response?.data?.message || err.message));
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleRejectReport = async (reportFullId) => {
+    if (!adminNotes.trim()) {
+      alert("Please provide a reason for rejection in the admin notes.");
+      return;
+    }
+    if (!confirm("Are you sure you want to reject this report? It will be sent back to the collector.")) return;
+    setVerifyLoading(true);
+    try {
+      const headers = await getAuthHeaders();
+      headers["Content-Type"] = "application/json";
+      const res = await axios.put(`/api/admin/reports/${reportFullId}/reject`, { adminNotes }, { headers });
+      if (res.data.success) {
+        setModalReport(null);
+        setAdminNotes("");
+        fetchReports();
+      }
+    } catch (err) {
+      console.error("Failed to reject report:", err);
+      alert("Failed to reject report: " + (err.response?.data?.message || err.message));
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeInUp">
       {/* Header */}
@@ -327,6 +398,7 @@ const ReportsAnalytics = () => {
                   <option value="all">All status</option>
                   <option value="received">Received</option>
                   <option value="in-progress">In Progress</option>
+                  <option value="pending-verification">Pending Verification</option>
                   <option value="resolved">Resolved</option>
                 </select>
               </div>
@@ -547,23 +619,101 @@ const ReportsAnalytics = () => {
                 )}
               </div>
 
+              {/* Collector Completion Info (shown when pending-verification or resolved) */}
+              {(modalReport.status === 'pending-verification' || modalReport.status === 'resolved') && modalReport.collectorCompletedAt && (
+                <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
+                  <p className="text-xs font-semibold text-indigo-600 uppercase mb-2">
+                    🛠️ Collector Completion Details
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-xs text-gray-600">Completed At</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {new Date(modalReport.collectorCompletedAt).toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' })}
+                      </p>
+                    </div>
+                    {modalReport.completionNote && (
+                      <div>
+                        <p className="text-xs text-gray-600">Collector Note</p>
+                        <p className="text-sm text-gray-800">{modalReport.completionNote}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Admin Verification Info (shown when already verified) */}
+              {modalReport.status === 'resolved' && modalReport.adminVerified && (
+                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                  <p className="text-xs font-semibold text-emerald-600 uppercase mb-2">
+                    ✅ Admin Verification
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-xs text-gray-600">Verified At</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {modalReport.adminVerifiedAt ? new Date(modalReport.adminVerifiedAt).toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' }) : 'N/A'}
+                      </p>
+                    </div>
+                    {modalReport.adminNotes && (
+                      <div>
+                        <p className="text-xs text-gray-600">Admin Notes</p>
+                        <p className="text-sm text-gray-800">{modalReport.adminNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Verification Actions */}
+              {modalReport.status === 'pending-verification' && (
+                <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-300">
+                  <p className="text-sm font-bold text-orange-700 uppercase mb-3 flex items-center gap-2">
+                    <BsShieldCheck size={18} />
+                    Admin Verification Required
+                  </p>
+                  <p className="text-sm text-gray-700 mb-3">
+                    The collector has marked this report as completed. Please verify whether the issue has actually been resolved before approving.
+                  </p>
+                  <div className="mb-3">
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">
+                      Admin Notes (required for rejection)
+                    </label>
+                    <textarea
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Add your verification notes here..."
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-400 focus:border-transparent text-sm resize-none"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      disabled={verifyLoading}
+                      onClick={() => handleVerifyReport(modalReport.fullId)}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FiCheckCircle size={16} />
+                      {verifyLoading ? "Processing..." : "Verify & Approve"}
+                    </button>
+                    <button
+                      disabled={verifyLoading}
+                      onClick={() => handleRejectReport(modalReport.fullId)}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FiXCircle size={16} />
+                      {verifyLoading ? "Processing..." : "Reject & Return"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
-                  onClick={() => setModalReport(null)}
+                  onClick={() => { setModalReport(null); setAdminNotes(""); }}
                 >
                   Close
-                </button>
-                <button
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-transform"
-                  onClick={() =>
-                    console.log(
-                      `Assign report ${modalReport.id} to collector`
-                    )
-                  }
-                >
-                  <FiArrowRight className="text-sm" />
-                  Assign to Collector
                 </button>
               </div>
             </div>

@@ -174,13 +174,29 @@ function CollectorNotificationCenter() {
           });
         }
 
-        // Merge: overdue first, then schedule, then reports
-        const allNotifications = [...scheduleNotifications, ...reportNotifications];
+        // --- Bin Alert Notifications from localStorage ---
+        const rawBinAlerts = JSON.parse(localStorage.getItem('binAlertNotifications') || '[]');
+        const binAlertNotifications = rawBinAlerts.map(n => ({
+          ...n,
+          timestamp: new Date(n.timestamp),
+          read: readIds.includes(n.id),
+        }));
+
+        // Merge: overdue first, then bin-full, then schedule, then reports
+        const allNotifications = [...scheduleNotifications, ...binAlertNotifications, ...reportNotifications];
         allNotifications.sort((a, b) => {
           // Overdue notifications always at the very top
-          const aIsOverdue = a.type === 'schedule-overdue' ? 2 : 0;
-          const bIsOverdue = b.type === 'schedule-overdue' ? 2 : 0;
+          const aIsOverdue = a.type === 'schedule-overdue' ? 3 : 0;
+          const bIsOverdue = b.type === 'schedule-overdue' ? 3 : 0;
           if (aIsOverdue !== bIsOverdue) return bIsOverdue - aIsOverdue;
+          // Bin full alerts next (urgent)
+          const aIsBinFull = a.type === 'bin-full' ? 2 : 0;
+          const bIsBinFull = b.type === 'bin-full' ? 2 : 0;
+          if (aIsBinFull !== bIsBinFull) return bIsBinFull - aIsBinFull;
+          // Bin emptied after
+          const aIsBinEmptied = a.type === 'bin-emptied' ? 1 : 0;
+          const bIsBinEmptied = b.type === 'bin-emptied' ? 1 : 0;
+          if (aIsBinEmptied !== bIsBinEmptied) return bIsBinEmptied - aIsBinEmptied;
           // Schedule notifications next
           const aIsSchedule = a.type?.startsWith('schedule-') ? 1 : 0;
           const bIsSchedule = b.type?.startsWith('schedule-') ? 1 : 0;
@@ -269,6 +285,10 @@ function CollectorNotificationCenter() {
         return <BsTrophy className="text-yellow-500 text-lg" />;
       case 'schedule':
         return <BsTruck className="text-indigo-500 text-lg" />;
+      case 'bin-full':
+        return <BsTrash2 className="text-red-600 text-lg animate-pulse" />;
+      case 'bin-emptied':
+        return <BsCheckCircle className="text-green-600 text-lg" />;
       default:
         return <BsBell className="text-gray-500 text-lg" />;
     }

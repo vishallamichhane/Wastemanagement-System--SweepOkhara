@@ -18,6 +18,36 @@ import Header from "./components/Header";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Custom red pin icon for the map marker
+const pinIcon = L.divIcon({
+  html: `<div style="
+    display:flex;align-items:center;justify-content:center;
+    width:32px;height:32px;
+    background:#ef4444;border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+    border:2px solid white;
+  "><div style="
+    width:10px;height:10px;background:white;border-radius:50%;
+  "></div></div>`,
+  className: "",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
+// Component to handle map click events
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
 
 const ReportIssue = () => {
   useScrollToTop();
@@ -42,6 +72,8 @@ const ReportIssue = () => {
   });
   const [selectedWard, setSelectedWard] = useState("");
   const [locationRequested, setLocationRequested] = useState(false);
+  const [gpsDenied, setGpsDenied] = useState(false);
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   // Derive profile completeness from Clerk user
   const userPhone = clerkUser?.publicMetadata?.phone || clerkUser?.unsafeMetadata?.phone || '';
@@ -103,8 +135,10 @@ const ReportIssue = () => {
         setIsDetectingLocation(false);
         switch (error.code) {
           case error.PERMISSION_DENIED:
+            setGpsDenied(true);
+            setShowMapPicker(true);
             setLocationError(
-              "Location access denied. Please allow location access in your browser settings.",
+              "Location access denied. Please tap on the map below to pin your exact location.",
             );
             break;
           case error.POSITION_UNAVAILABLE:
@@ -128,66 +162,94 @@ const ReportIssue = () => {
     );
   };
 
-  // Reverse geocoding function to get address from coordinates
+  // Reverse geocoding — uses Nominatim (best local detail for Nepal/Pokhara)
   const reverseGeocode = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=en`,
+      );
+
+      if (!response.ok) throw new Error("Nominatim unavailable");
+
+      const data = await response.json();
+      console.log("📍 Nominatim response:", data);
+
+      if (data.address) {
+        const a = data.address;
+
+        // Build a precise, human-readable address
+        // Priority: most-specific → least-specific, skip duplicates
+        const parts = [];
+
+        // 1. Point-of-interest / amenity / tourism name (e.g. "Lakeside", "Zero KM")
+        const poi = a.tourism || a.amenity || a.shop || a.leisure || a.building;
+        if (poi) parts.push(poi);
+
+        // 2. Neighbourhood / hamlet / quarter (e.g. "Baidam", "Chipledhunga")
+        const area = a.neighbourhood || a.hamlet || a.quarter || a.isolated_dwelling;
+        if (area && !parts.includes(area)) parts.push(area);
+
+        // 3. Road name (e.g. "Lakeside Road", "Prithvi Highway")
+        if (a.road && !parts.includes(a.road)) parts.push(a.road);
+
+        // 4. Suburb / village / town (e.g. "Baidam", "Mahendrapul")
+        const sub = a.suburb || a.village || a.town || a.city_district;
+        if (sub && !parts.includes(sub)) parts.push(sub);
+
+        // 5. City (only if different from what we already have)
+        if (a.city && !parts.includes(a.city)) parts.push(a.city);
+
+        // 6. Ward info if present
+        if (a.county) parts.push(a.county);
+
+        if (parts.length > 0) return parts.join(", ");
+
+        // If address object exists but fields are empty, use display_name
+        if (data.display_name) return data.display_name;
+      }
+
+      // Fallback to BigDataCloud
+      return await fallbackReverseGeocode(lat, lng);
+    } catch (error) {
+      console.error("Nominatim reverse geocoding failed:", error);
+      return await fallbackReverseGeocode(lat, lng);
+    }
+  };
+
+  // Fallback geocoding service (BigDataCloud)
+  const fallbackReverseGeocode = async (lat, lng) => {
     try {
       const response = await fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
       );
 
-      if (!response.ok) {
-        throw new Error("Geocoding service unavailable");
-      }
+      if (!response.ok) throw new Error("BigDataCloud unavailable");
 
       const data = await response.json();
+      console.log("📍 BigDataCloud response:", data);
 
-      // Construct address from available components
-      const addressComponents = [];
-      if (data.locality) addressComponents.push(data.locality);
-      if (data.city) addressComponents.push(data.city);
-      if (data.principalSubdivision)
-        addressComponents.push(data.principalSubdivision);
-      if (data.countryName) addressComponents.push(data.countryName);
-
-      return (
-        addressComponents.join(", ") || `${lat.toFixed(6)}, ${lng.toFixed(6)}`
-      );
-    } catch (error) {
-      console.error("Reverse geocoding failed:", error);
-      // Fallback to OpenStreetMap Nominatim
-      return await fallbackReverseGeocode(lat, lng);
-    }
-  };
-
-  // Fallback geocoding service
-  const fallbackReverseGeocode = async (lat, lng) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      );
-
-      if (!response.ok) {
-        throw new Error("Fallback geocoding service unavailable");
+      // Try to get the most specific info from localityInfo
+      const parts = [];
+      if (data.localityInfo?.informative) {
+        // informative array has place names from most-specific to least
+        const informative = data.localityInfo.informative;
+        for (const item of informative) {
+          if (item.name && parts.length < 3) {
+            parts.push(item.name);
+          }
+        }
       }
 
-      const data = await response.json();
+      if (parts.length > 0) return parts.join(", ");
 
-      if (data.address) {
-        const address = data.address;
-        const addressComponents = [];
+      // Fallback to basic fields
+      const basicParts = [];
+      if (data.locality) basicParts.push(data.locality);
+      if (data.city && data.city !== data.locality) basicParts.push(data.city);
 
-        if (address.road) addressComponents.push(address.road);
-        if (address.suburb) addressComponents.push(address.suburb);
-        if (address.city) addressComponents.push(address.city);
-        if (address.state) addressComponents.push(address.state);
-        if (address.country) addressComponents.push(address.country);
-
-        return (
-          addressComponents.join(", ") || `${lat.toFixed(6)}, ${lng.toFixed(6)}`
-        );
-      }
-
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      return basicParts.length > 0
+        ? basicParts.join(", ")
+        : `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     } catch (error) {
       console.error("Fallback geocoding failed:", error);
       return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
@@ -232,17 +294,12 @@ const ReportIssue = () => {
       return;
     }
 
-    // Validate that real GPS coordinates are captured
-    if (!pinnedLocation.latitude || !pinnedLocation.longitude) {
-      setLocationError("Please enable location access to get exact GPS coordinates");
-      return;
-    }
+    // GPS coordinates are required
+    const lat = pinnedLocation.latitude ? parseFloat(pinnedLocation.latitude) : null;
+    const lng = pinnedLocation.longitude ? parseFloat(pinnedLocation.longitude) : null;
 
-    const lat = parseFloat(pinnedLocation.latitude);
-    const lng = parseFloat(pinnedLocation.longitude);
-    
-    if (isNaN(lat) || isNaN(lng)) {
-      setLocationError("Invalid GPS coordinates. Please use the 'Use My Current Location' button");
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      setLocationError("GPS coordinates are required. Use the 'Use My Current Location' button or tap on the map to pin your location.");
       return;
     }
 
@@ -256,8 +313,8 @@ const ReportIssue = () => {
     formData.append("description", description)
     formData.append("ward", parseInt(selectedWard))
     formData.append("coordinates", JSON.stringify(userCoordinates))
-    formData.append("latitude", parseFloat(pinnedLocation.latitude))
-    formData.append("longitude", parseFloat(pinnedLocation.longitude))
+    formData.append("latitude", lat)
+    formData.append("longitude", lng)
 
     photos.forEach((file) => {
       formData.append("images", file);
@@ -289,6 +346,7 @@ const ReportIssue = () => {
       setSelectedWard("");
       setUserCoordinates(null);
       setPinnedLocation({ latitude: "", longitude: "" });
+      setShowMapPicker(false);
       // setShowSuccess(true);
     } catch (error) {
       console.error("❌ Error submitting report:", error);
@@ -304,19 +362,12 @@ const ReportIssue = () => {
     }
   };
 
-  // Check geolocation availability on component mount and request location
+  // Check geolocation availability on component mount
   useEffect(() => {
     if (!isGeolocationAvailable()) {
-      setLocationError("Geolocation is not supported by your browser");
-    } else if (!locationRequested) {
-      // Automatically request location when component loads
-      setLocationRequested(true);
-      // Small delay to ensure UI is ready
-      setTimeout(() => {
-        getCurrentLocation();
-      }, 500);
+      setLocationError("Geolocation is not supported by your browser. Please type your location manually.");
     }
-  }, [locationRequested]);
+  }, []);
 
   return (
     <>
@@ -520,7 +571,7 @@ const ReportIssue = () => {
                 </div>
               </div>
             )}
-              {/* Optional Exact Coordinates */}
+              {/* Exact Coordinates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm font-semibold text-gray-800 flex items-center gap-1">
@@ -562,8 +613,69 @@ const ReportIssue = () => {
                 </div>
               </div>
               <p className="text-xs text-gray-600">
-                <span className="text-red-500 font-semibold">* Required:</span> Exact GPS coordinates are required to locate the issue precisely. Please use "Use My Current Location" button.
+                <span className="text-red-500 font-semibold">* Required:</span> Use "Use My Current Location" or tap on the map below to set coordinates.
               </p>
+
+              {/* Interactive Map Picker — always shown, centered on Pokhara */}
+              {(showMapPicker || !userCoordinates) && (
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BsMapFill className="text-emerald-600" />
+                    <p className="text-sm font-semibold text-gray-700">
+                      {gpsDenied
+                        ? "📍 Tap on the map to pin the issue location"
+                        : "📍 Or tap on the map to set location manually"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border-2 border-emerald-200 shadow-lg" style={{ height: "300px" }}>
+                    <MapContainer
+                      center={[
+                        pinnedLocation.latitude ? parseFloat(pinnedLocation.latitude) : 28.2096,
+                        pinnedLocation.longitude ? parseFloat(pinnedLocation.longitude) : 83.9856,
+                      ]}
+                      zoom={14}
+                      style={{ height: "100%", width: "100%" }}
+                      scrollWheelZoom={true}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <MapClickHandler
+                        onLocationSelect={async (lat, lng) => {
+                          setPinnedLocation({
+                            latitude: lat.toFixed(6),
+                            longitude: lng.toFixed(6),
+                          });
+                          setUserCoordinates(null); // Allow editing since it's manual
+                          setLocationError("");
+                          // Try to reverse geocode the clicked location
+                          try {
+                            const address = await reverseGeocode(lat, lng);
+                            setLocation(address);
+                          } catch (err) {
+                            if (!location) {
+                              setLocation(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+                            }
+                          }
+                        }}
+                      />
+                      {pinnedLocation.latitude && pinnedLocation.longitude && (
+                        <Marker
+                          position={[
+                            parseFloat(pinnedLocation.latitude),
+                            parseFloat(pinnedLocation.longitude),
+                          ]}
+                          icon={pinIcon}
+                        />
+                      )}
+                    </MapContainer>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 italic">
+                    Click/tap anywhere on the map to set the exact issue location
+                  </p>
+                </div>
+              )}
 
               {/* Location Error Message */}
               {locationError && (

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Sequence Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .controls button {
+            padding: 8px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            overflow: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .description {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .description h2 {
+            font-size: 18px;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .description p {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Sequence Diagram &bull; System Interactions Timeline</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="zoomIn()">🔍+ Zoom In</button>
+        <button onclick="zoomOut()">🔍- Zoom Out</button>
+        <button onclick="resetZoom()">↻ Reset</button>
+        <button onclick="downloadSVG()">⬇ Download SVG</button>
+    </div>
+
+    <div class="description">
+        <h2>About Sequence Diagram</h2>
+        <p>This simplified diagram shows the three main workflows in SweepPokhara: (1) User submits waste reports, (2) Collector manages and completes tasks, (3) Admin verifies and approves reports. All interactions flow through the central system and database.</p>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#93c5fd; border-color:#2563eb;"></div> Actors (Users)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fbbf24; border-color:#d97706;"></div> System Components</div>
+        <div class="legend-item"><div class="legend-color" style="background:#86efac; border-color:#16a34a;"></div> Message Flows</div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant S as System
+    participant DB as Database
+    participant C as Collector
+    participant A as Admin
+
+    Note over U,A: 1. User Report Submission
+    U->>S: Login
+    S-->>U: Auth Token
+    U->>S: Submit Report (GPS, Images, Description)
+    S->>DB: Save Report & Auto-Assign Collector
+    DB-->>S: Report Saved (Status: in-progress)
+    S-->>U: Report ID & Confirmation Email
+
+    Note over C,A: 2. Collector Task Management
+    C->>S: Login
+    S-->>C: JWT Token
+    C->>S: View Today's Tasks
+    S->>DB: Get Tasks
+    DB-->>S: Task List
+    S-->>C: Display Tasks
+    C->>S: Complete Task
+    S->>DB: Update Task Status
+    S-->>C: Task Completed
+    S-->>U: Pickup Completion Email
+
+    Note over C,A: 3. Report Update & Verification
+    C->>S: Mark Report as Resolved
+    S->>DB: Update (Status: pending-verification)
+    S-->>C: Awaiting Admin Approval
+    
+    A->>S: Login & View Reports
+    S->>DB: Get Pending Reports
+    DB-->>S: Reports List
+    S-->>A: Display Reports
+    A->>S: Approve Report
+    S->>DB: Update (Status: resolved)
+    S-->>A: Report Approved
+    S-->>U: Resolution Email
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Sequence Diagram for System Interactions
+    </div>
+
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        let currentZoom = 1;
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                diagramMarginX: 20,
+                diagramMarginY: 20,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            },
+            themeVariables: {
+                fontSize: '14px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.15, 3);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.15, 0.3);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                svg.style.transform = `scale(${currentZoom})`;
+                svg.style.transformOrigin = 'top center';
+            }
+        }
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'SweepPokhara-Sequence-Diagram.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -27,7 +27,7 @@ export default function TermsOfServicePage() {
       id: "acceptance",
       title: "Acceptance of Terms",
       icon: <BsCheckCircle className="text-xl" />,
-      content: "By accessing and using SweepOkhara, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by these terms, please do not use this service.",
+      content: "By accessing and using SweepPokhara, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by these terms, please do not use this service.",
       points: [
         "You must be at least 13 years old to use this service",
         "You agree to comply with all applicable laws and regulations",
@@ -38,7 +38,7 @@ export default function TermsOfServicePage() {
       id: "user-responsibilities",
       title: "User Responsibilities",
       icon: <BsPeople className="text-xl" />,
-      content: "As a user of SweepOkhara, you agree to use the service responsibly and ethically for community betterment.",
+      content: "As a user of SweepPokhara, you agree to use the service responsibly and ethically for community betterment.",
       points: [
         "Provide accurate information when reporting waste issues",
         "Do not submit false or misleading reports",
@@ -51,7 +51,7 @@ export default function TermsOfServicePage() {
       id: "service-description",
       title: "Service Description",
       icon: <GiBroom className="text-xl" />,
-      content: "SweepOkhara is a community-driven waste management platform that connects citizens with municipal services to maintain cleaner urban environments.",
+      content: "SweepPokhara is a community-driven waste management platform that connects citizens with municipal services to maintain cleaner urban environments.",
       points: [
         "Real-time waste reporting and tracking",
         "Waste collection schedule management",
@@ -64,7 +64,7 @@ export default function TermsOfServicePage() {
       id: "account-terms",
       title: "Account Terms",
       icon: <BsLock className="text-xl" />,
-      content: "To access certain features of SweepOkhara, you may be required to create an account and maintain accurate information.",
+      content: "To access certain features of SweepPokhara, you may be required to create an account and maintain accurate information.",
       points: [
         "You are responsible for maintaining account security",
         "Notify us immediately of any unauthorized use",
@@ -77,7 +77,7 @@ export default function TermsOfServicePage() {
       id: "intellectual-property",
       title: "Intellectual Property",
       icon: <BsFileText className="text-xl" />,
-      content: "All content, features, and functionality of SweepOkhara are owned by us and are protected by intellectual property laws.",
+      content: "All content, features, and functionality of SweepPokhara are owned by us and are protected by intellectual property laws.",
       points: [
         "You may not reproduce, distribute, or create derivative works",
         "Content submitted remains your property",
@@ -90,7 +90,7 @@ export default function TermsOfServicePage() {
       id: "limitation-liability",
       title: "Limitation of Liability",
       icon: <BsExclamationTriangle className="text-xl" />,
-      content: "SweepOkhara is provided 'as is' without warranties of any kind, either express or implied.",
+      content: "SweepPokhara is provided 'as is' without warranties of any kind, either express or implied.",
       points: [
         "We are not liable for indirect, incidental, or consequential damages",
         "We do not guarantee uninterrupted or error-free service",
@@ -103,7 +103,7 @@ export default function TermsOfServicePage() {
       id: "termination",
       title: "Termination",
       icon: <BsClipboardCheck className="text-xl" />,
-      content: "We may terminate or suspend your access to SweepOkhara immediately, without prior notice, for conduct that we believe violates these terms.",
+      content: "We may terminate or suspend your access to SweepPokhara immediately, without prior notice, for conduct that we believe violates these terms.",
       points: [
         "We may terminate accounts for violation of terms",
         "You may terminate your account at any time",
@@ -162,7 +162,7 @@ export default function TermsOfServicePage() {
               Terms of Service
             </h1>
             <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
-              Please read these terms carefully before using SweepOkhara.
+              Please read these terms carefully before using SweepPokhara.
             </p>
             <div className="mt-6 text-sm text-gray-500">
               Effective Date: November 26, 2024 | Version: 1.2
@@ -179,7 +179,7 @@ export default function TermsOfServicePage() {
             <div>
               <h3 className="text-lg font-bold text-amber-800 mb-2">Important Notice</h3>
               <p className="text-amber-700">
-                By accessing or using SweepOkhara, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service. These terms affect your legal rights and responsibilities.
+                By accessing or using SweepPokhara, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service. These terms affect your legal rights and responsibilities.
               </p>
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function TermsOfServicePage() {
             <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
               <h4 className="text-lg font-bold text-gray-800 mb-3">Modifications to Terms</h4>
               <p className="text-gray-700">
-                We reserve the right to modify these terms at any time. We will notify users of any changes by updating the "Effective Date" at the top of this page. Your continued use of SweepOkhara after any changes constitutes acceptance of the new terms.
+                We reserve the right to modify these terms at any time. We will notify users of any changes by updating the "Effective Date" at the top of this page. Your continued use of SweepPokhara after any changes constitutes acceptance of the new terms.
               </p>
             </div>
 
@@ -273,8 +273,8 @@ export default function TermsOfServicePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h5 className="font-semibold text-gray-800 mb-1">Email</h5>
-                  <a href="mailto:legal@sweepokhara.gov.np" className="text-emerald-600 hover:text-emerald-700 transition-colors">
-                    legal@sweepokhara.gov.np
+                  <a href="mailto:legal@sweeppokhara.gov.np" className="text-emerald-600 hover:text-emerald-700 transition-colors">
+                    legal@sweeppokhara.gov.np
                   </a>
                 </div>
                 <div>
@@ -302,7 +302,7 @@ export default function TermsOfServicePage() {
             <div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Agreement Confirmation</h3>
               <p className="text-gray-700">
-                By continuing to use SweepOkhara, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+                By continuing to use SweepPokhara, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">

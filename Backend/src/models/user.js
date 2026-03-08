@@ -61,6 +61,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    lastReminderSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Use Case Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e3a5f, #2d6a4f); color: white; padding: 24px 40px; text-align: center; }
+        .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+        .header p { font-size: 14px; opacity: 0.85; }
+        .chart-container { display: flex; justify-content: center; padding: 30px 20px; overflow: auto; }
+        .mermaid { max-width: 100%; }
+        .footer { text-align: center; padding: 16px; font-size: 12px; color: #94a3b8; background: #fff; border-top: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Use Case Diagram</p>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+graph LR
+    %% Actors
+    U["👤 User<br/>Resident"]
+    C["👤 Collector"]
+    A["👤 Admin"]
+    S["📧 Email<br/>Service"]
+
+    %% Use Cases - Authentication
+    subgraph AUTH ["Authentication"]
+        UC1(["Register"])
+        UC2(["Login"])
+        UC3(["Verify Email"])
+    end
+
+    %% Use Cases - User
+    subgraph USER_UC ["User Use Cases"]
+        UC4(["View Pickup Schedule"])
+        UC5(["Submit Waste Report"])
+        UC6(["Upload Images"])
+        UC7(["Track My Reports"])
+        UC8(["Update Profile"])
+        UC9(["View Map"])
+    end
+
+    %% Use Cases - Collector
+    subgraph COLL_UC ["Collector Use Cases"]
+        UC10(["View Assigned Tasks"])
+        UC11(["Start Task"])
+        UC12(["Complete Task"])
+        UC13(["View Assigned Reports"])
+        UC14(["Update Report Status"])
+    end
+
+    %% Use Cases - Admin
+    subgraph ADMIN_UC ["Admin Use Cases"]
+        UC15(["Manage Users"])
+        UC16(["Manage Collectors"])
+        UC17(["Verify Reports"])
+        UC18(["Approve Report"])
+        UC19(["Reject Report"])
+        UC20(["View Analytics"])
+    end
+
+    %% Use Cases - System
+    subgraph SYS_UC ["System Use Cases"]
+        UC21(["Auto-Assign Collector"])
+        UC22(["Send Email Notification"])
+        UC23(["Schedule Reminder Cron Job"])
+    end
+
+    %% User Associations
+    U --- UC1
+    U --- UC2
+    U --- UC4
+    U --- UC5
+    U --- UC7
+    U --- UC8
+    U --- UC9
+
+    %% Include Relationships
+    UC1 -.->|include| UC3
+    UC5 -.->|include| UC6
+    UC5 -.->|include| UC21
+
+    %% Collector Associations
+    C --- UC2
+    C --- UC10
+    C --- UC11
+    C --- UC12
+    C --- UC13
+    C --- UC14
+
+    %% Include Relationships
+    UC12 -.->|include| UC22
+    UC11 -.->|extend| UC12
+
+    %% Admin Associations
+    A --- UC2
+    A --- UC15
+    A --- UC16
+    A --- UC17
+    A --- UC20
+
+    %% Include Relationships
+    UC17 -.->|extend| UC18
+    UC17 -.->|extend| UC19
+    UC18 -.->|include| UC22
+
+    %% System Associations
+    UC21 -.->|include| UC22
+    UC23 -.->|include| UC22
+    S --- UC22
+
+    %% Styling
+    style U fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style C fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style A fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style S fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+
+    style AUTH fill:#f0f9ff,stroke:#0ea5e9,stroke-width:2px,color:#000
+    style USER_UC fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#000
+    style COLL_UC fill:#fefce8,stroke:#eab308,stroke-width:2px,color:#000
+    style ADMIN_UC fill:#fdf2f8,stroke:#ec4899,stroke-width:2px,color:#000
+    style SYS_UC fill:#f0fdf4,stroke:#22c55e,stroke-width:2px,color:#000
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Use Case Diagram
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 30,
+                rankSpacing: 50
+            },
+            themeVariables: {
+                fontSize: '13px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+    </script>
+</body>
+</html>

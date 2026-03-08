@@ -5,6 +5,7 @@ import { BsBell, BsEye, BsFilter, BsSearch, BsClock, BsCheckCircle, BsExclamatio
 import { FiLogOut, FiChevronLeft, FiHome, FiCalendar, FiDownload, FiUser, FiSettings, FiMenu, FiX } from 'react-icons/fi';
 import useScrollToTop from '../../hooks/useScrollToTop';
 import CollectorNotificationCenter from './components/CollectorNotificationCenter';
+import sweepPokharaLogo from '../../assets/images/sweeppokhara-final-logo.png';
 
 const CollectorReports = () => {
   useScrollToTop();
@@ -33,6 +34,7 @@ const CollectorReports = () => {
     switch (backendStatus) {
       case 'received': return 'pending';
       case 'in-progress': return 'in-progress';
+      case 'pending-verification': return 'awaiting-verification';
       case 'resolved': return 'completed';
       default: return 'pending';
     }
@@ -56,6 +58,7 @@ const CollectorReports = () => {
   const statusConfig = {
     'pending': { label: 'Pending', color: 'text-blue-600', bgColor: 'bg-blue-100', dotColor: 'bg-blue-500' },
     'in-progress': { label: 'In Progress', color: 'text-amber-600', bgColor: 'bg-amber-100', dotColor: 'bg-amber-500' },
+    'awaiting-verification': { label: 'Awaiting Verification', color: 'text-orange-600', bgColor: 'bg-orange-100', dotColor: 'bg-orange-500' },
     'completed': { label: 'Completed', color: 'text-emerald-600', bgColor: 'bg-emerald-100', dotColor: 'bg-emerald-500' }
   };
 
@@ -211,6 +214,8 @@ const CollectorReports = () => {
         return <BsArrowClockwise className="text-amber-500" />;
       case 'pending':
         return <BsClock className="text-blue-500" />;
+      case 'awaiting-verification':
+        return <BsExclamationTriangle className="text-orange-500" />;
       default:
         return <BsExclamationTriangle className="text-gray-500" />;
     }
@@ -270,15 +275,12 @@ const CollectorReports = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
           {/* Left: Logo */}
           <Link to="/collector/dashboard" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
-              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
-                <GiBroom className="text-white text-xl" />
-              </div>
-              <div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                  SweePokhara
-                </span>
-              </div>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <img 
+                src={sweepPokharaLogo} 
+                alt="SweepPokhara Logo" 
+                className="h-11 sm:h-12 w-auto object-contain"
+              />
               <span className="hidden sm:inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
@@ -700,38 +702,56 @@ const CollectorReports = () => {
 
               <div>
                 <label className="text-sm font-semibold text-gray-600 block mb-3">Update Status</label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleStatusUpdate(selectedReport.id, 'pending')}
-                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                      selectedReport.status === 'pending'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    Pending
-                  </button>
-                  <button
-                    onClick={() => handleStatusUpdate(selectedReport.id, 'in-progress')}
-                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                      selectedReport.status === 'in-progress'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    In Progress
-                  </button>
-                  <button
-                    onClick={() => handleStatusUpdate(selectedReport.id, 'completed')}
-                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                      selectedReport.status === 'completed'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    Completed
-                  </button>
-                </div>
+                {selectedReport.status === 'awaiting-verification' ? (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+                      <BsExclamationTriangle />
+                      Awaiting Admin Verification
+                    </p>
+                    <p className="text-xs text-orange-600 mt-1">
+                      You have marked this report as completed. The admin will verify and approve it.
+                    </p>
+                  </div>
+                ) : selectedReport.status === 'completed' ? (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
+                      <BsCheckCircle />
+                      Verified & Resolved
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-1">
+                      This report has been verified by the admin and resolved.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleStatusUpdate(selectedReport.id, 'pending')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                        selectedReport.status === 'pending'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Pending
+                    </button>
+                    <button
+                      onClick={() => handleStatusUpdate(selectedReport.id, 'in-progress')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                        selectedReport.status === 'in-progress'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      In Progress
+                    </button>
+                    <button
+                      onClick={() => handleStatusUpdate(selectedReport.id, 'completed')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 hover:bg-gray-200`}
+                    >
+                      Mark Completed
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t">

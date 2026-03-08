@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Simplified DFD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .controls button {
+            padding: 8px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            overflow: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Simplified Data Flow Diagram &bull; Clear &amp; Easy to Understand</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="zoomIn()">🔍+ Zoom In</button>
+        <button onclick="zoomOut()">🔍- Zoom Out</button>
+        <button onclick="resetZoom()">↻ Reset</button>
+        <button onclick="downloadSVG()">⬇ Download SVG</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#fca5a5; border-color:#dc2626;"></div> External Entities</div>
+        <div class="legend-item"><div class="legend-color" style="background:#93c5fd; border-color:#2563eb;"></div> Processes</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fbbf24; border-color:#d97706;"></div> Data Stores</div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+graph TD
+    %% External Entities
+    USR["👤 User/Resident"]
+    COLL["👤 Collector"]
+    ADMIN["👤 Admin"]
+    
+    %% Processes
+    P1["1.0<br/>Authentication"]
+    P2["2.0<br/>Report<br/>Management"]
+    P3["3.0<br/>Task<br/>Assignment"]
+    P4["4.0<br/>Verification<br/>& Approval"]
+    P5["5.0<br/>Notification<br/>Service"]
+    
+    %% Data Stores
+    D1["D1: Users"]
+    D2["D2: Reports"]
+    D3["D3: Tasks"]
+    D4["D4: Collectors"]
+    
+    %% External Systems
+    DB_SYS["📊 MongoDB"]
+    EMAIL_SYS["📧 Email<br/>Service"]
+    
+    %% User Flows
+    USR -->|Login/Register| P1
+    P1 -->|Verify| D1
+    P1 -->|Auth Token| USR
+    
+    USR -->|Submit Report<br/>Description, GPS, Images| P2
+    P2 -->|Store Report| D2
+    P2 -->|Auto-Assign<br/>Collector| P3
+    P2 -->|Report ID| USR
+    
+    %% Collector Flows
+    COLL -->|Login| P1
+    P1 -->|Auth Token| COLL
+    
+    P3 -->|Assign Tasks| D3
+    P3 -->|Task List| COLL
+    COLL -->|Update Status| P3
+    P3 -->|Update| D3
+    
+    COLL -->|Update Report<br/>Status| P2
+    P2 -->|Update| D2
+    
+    %% Admin Flows
+    ADMIN -->|Login| P1
+    P1 -->|Auth Token| ADMIN
+    
+    ADMIN -->|Fetch Reports| P4
+    P4 -->|Get Data| D2
+    P4 -->|All Reports| ADMIN
+    
+    ADMIN -->|Approve/Reject| P4
+    P4 -->|Update Status| D2
+    
+    %% Notification Flows
+    P2 -->|Report Event| P5
+    P3 -->|Task Event| P5
+    P4 -->|Approval Event| P5
+    
+    P5 -->|Send Email| EMAIL_SYS
+    EMAIL_SYS -->|Notify| USR
+    EMAIL_SYS -->|Notify| COLL
+    EMAIL_SYS -->|Notify| ADMIN
+    
+    %% Database
+    D1 --> DB_SYS
+    D2 --> DB_SYS
+    D3 --> DB_SYS
+    D4 --> DB_SYS
+    
+    %% Styling
+    style USR fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style COLL fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style ADMIN fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    
+    style P1 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P2 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P3 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P4 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P5 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    
+    style D1 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D2 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D3 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D4 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    
+    style DB_SYS fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#000
+    style EMAIL_SYS fill:#fecaca,stroke:#991b1b,stroke-width:2px,color:#000
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Simplified Data Flow Diagram
+    </div>
+
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        let currentZoom = 1;
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 40,
+                rankSpacing: 60
+            },
+            themeVariables: {
+                fontSize: '13px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.15, 3);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.15, 0.3);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                svg.style.transform = `scale(${currentZoom})`;
+                svg.style.transformOrigin = 'top center';
+            }
+        }
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'SweepPokhara-DFD-Simplified.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+
+</body>
+</html>

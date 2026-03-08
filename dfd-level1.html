@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Level 1 DFD (Gane &amp; Sarson)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8; min-height: 100vh; color: #1e293b;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            color: white; padding: 24px 40px; text-align: center;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+        }
+        .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .header p { font-size: 13px; opacity: 0.88; }
+        .controls {
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            padding: 12px; background: #fff; border-bottom: 1px solid #e2e8f0;
+        }
+        .controls button {
+            padding: 6px 16px; border: 1px solid #cbd5e1; border-radius: 6px;
+            background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .controls button:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .controls span { font-size: 13px; color: #64748b; margin: 0 4px; }
+        .diagram-wrapper {
+            display: flex; justify-content: center;
+            padding: 20px; overflow: auto; background: #fff;
+            margin: 10px 14px 14px; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;
+            min-height: 650px;
+        }
+        .diagram-wrapper svg { transition: transform 0.2s ease; transform-origin: top center; }
+        .footer {
+            text-align: center; padding: 12px; font-size: 12px;
+            color: #94a3b8; background: #fff; border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Level 1 Data Flow Diagram &bull; Gane &amp; Sarson Notation</p>
+    </div>
+    <div class="controls">
+        <button onclick="zoomIn()">+ Zoom In</button>
+        <button onclick="zoomOut()">- Zoom Out</button>
+        <button onclick="resetZoom()">Reset</button>
+        <span>|</span>
+        <button onclick="downloadSVG()">Download SVG</button>
+        <button onclick="downloadPNG()">Download PNG</button>
+    </div>
+    <div class="diagram-wrapper" id="diagramWrapper">
+        <svg id="dfdSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 1080" width="1480" height="1080" font-family="Segoe UI, Tahoma, Geneva, Verdana, sans-serif">
+            <defs>
+                <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M 0 0.5 L 9.5 5 L 0 9.5 Z" fill="#222"/>
+                </marker>
+            </defs>
+
+            <!-- ============================= -->
+            <!--     EXTERNAL ENTITIES          -->
+            <!--     (Stacked rectangles with   -->
+            <!--      shadow tab, letter ID)    -->
+            <!-- ============================= -->
+
+            <!-- a: Resident / User  (top-left) -->
+            <g id="Ea">
+                <rect x="47" y="37" width="115" height="65" fill="#e8b830" stroke="#222" stroke-width="1.5"/>
+                <rect x="40" y="30" width="115" height="65" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <text x="97" y="54" text-anchor="middle" font-size="13.5" font-weight="bold" font-style="italic">a</text>
+                <text x="97" y="74" text-anchor="middle" font-size="12.5" font-weight="bold">Resident /</text>
+                <text x="97" y="89" text-anchor="middle" font-size="12.5" font-weight="bold">User</text>
+            </g>
+
+            <!-- b: Waste Collector  (top-center-right) -->
+            <g id="Eb">
+                <rect x="797" y="27" width="125" height="65" fill="#e8b830" stroke="#222" stroke-width="1.5"/>
+                <rect x="790" y="20" width="125" height="65" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <text x="852" y="44" text-anchor="middle" font-size="13.5" font-weight="bold" font-style="italic">b</text>
+                <text x="852" y="64" text-anchor="middle" font-size="12" font-weight="bold">Waste</text>
+                <text x="852" y="79" text-anchor="middle" font-size="12" font-weight="bold">Collector</text>
+            </g>
+
+            <!-- c: Admin  (right-middle) -->
+            <g id="Ec">
+                <rect x="1307" y="497" width="115" height="65" fill="#e8b830" stroke="#222" stroke-width="1.5"/>
+                <rect x="1300" y="490" width="115" height="65" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <text x="1357" y="514" text-anchor="middle" font-size="13.5" font-weight="bold" font-style="italic">c</text>
+                <text x="1357" y="538" text-anchor="middle" font-size="13" font-weight="bold">Admin</text>
+            </g>
+
+            <!-- d: Email Service  (bottom-left) -->
+            <g id="Ed">
+                <rect x="37" y="907" width="130" height="65" fill="#e8b830" stroke="#222" stroke-width="1.5"/>
+                <rect x="30" y="900" width="130" height="65" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <text x="95" y="924" text-anchor="middle" font-size="13.5" font-weight="bold" font-style="italic">d</text>
+                <text x="95" y="944" text-anchor="middle" font-size="11.5" font-weight="bold">Email Service</text>
+                <text x="95" y="958" text-anchor="middle" font-size="10.5">(Resend API)</text>
+            </g>
+
+            <!-- e: Cloudinary  (right-upper) -->
+            <g id="Ee">
+                <rect x="1307" y="347" width="130" height="65" fill="#e8b830" stroke="#222" stroke-width="1.5"/>
+                <rect x="1300" y="340" width="130" height="65" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <text x="1365" y="364" text-anchor="middle" font-size="13.5" font-weight="bold" font-style="italic">e</text>
+                <text x="1365" y="384" text-anchor="middle" font-size="12" font-weight="bold">Cloudinary</text>
+                <text x="1365" y="398" text-anchor="middle" font-size="10.5">(Image Storage)</text>
+            </g>
+
+            <!-- f: IoT Smart Bins  (right-lower) -->
+            <g id="Ef">
+                <rect x="1307" y="767" width="130" height="65" fill="#e8b830" stroke="#222" stroke-width="1.5"/>
+                <rect x="1300" y="760" width="130" height="65" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <text x="1365" y="784" text-anchor="middle" font-size="13.5" font-weight="bold" font-style="italic">f</text>
+                <text x="1365" y="804" text-anchor="middle" font-size="11.5" font-weight="bold">IoT Smart</text>
+                <text x="1365" y="818" text-anchor="middle" font-size="11.5" font-weight="bold">Bins</text>
+            </g>
+
+            <!-- ============================= -->
+            <!--     PROCESSES                  -->
+            <!--     (Gane & Sarson: rounded    -->
+            <!--      rect, 3 sections:         -->
+            <!--      number / name / module)   -->
+            <!-- ============================= -->
+
+            <!-- 1.0  Authentication & Registration   at (280,130) 170x95 -->
+            <g id="P1">
+                <rect x="280" y="130" width="170" height="95" rx="12" ry="12" fill="#fff" stroke="#222" stroke-width="1.8"/>
+                <line x1="280" y1="158" x2="450" y2="158" stroke="#222" stroke-width="1"/>
+                <line x1="280" y1="200" x2="450" y2="200" stroke="#222" stroke-width="1"/>
+                <text x="365" y="150" text-anchor="middle" font-size="13" font-weight="bold">1.0</text>
+                <text x="365" y="176" text-anchor="middle" font-size="11.5">Authentication</text>
+                <text x="365" y="192" text-anchor="middle" font-size="11">&amp; Registration</text>
+                <text x="365" y="217" text-anchor="middle" font-size="10.5" font-style="italic">Auth Module</text>
+            </g>
+
+            <!-- 2.0  Report Submission & Assignment   at (250,375) 175x100 -->
+            <g id="P2">
+                <rect x="250" y="375" width="175" height="100" rx="12" ry="12" fill="#fff" stroke="#222" stroke-width="1.8"/>
+                <line x1="250" y1="403" x2="425" y2="403" stroke="#222" stroke-width="1"/>
+                <line x1="250" y1="450" x2="425" y2="450" stroke="#222" stroke-width="1"/>
+                <text x="337" y="395" text-anchor="middle" font-size="13" font-weight="bold">2.0</text>
+                <text x="337" y="420" text-anchor="middle" font-size="11.5">Report Submission</text>
+                <text x="337" y="434" text-anchor="middle" font-size="11">&amp; Collector Assignment</text>
+                <text x="337" y="467" text-anchor="middle" font-size="10.5" font-style="italic">Report Module</text>
+            </g>
+
+            <!-- 3.0  Task Scheduling & Management   at (870,190) 170x95 -->
+            <g id="P3">
+                <rect x="870" y="190" width="170" height="95" rx="12" ry="12" fill="#fff" stroke="#222" stroke-width="1.8"/>
+                <line x1="870" y1="218" x2="1040" y2="218" stroke="#222" stroke-width="1"/>
+                <line x1="870" y1="260" x2="1040" y2="260" stroke="#222" stroke-width="1"/>
+                <text x="955" y="210" text-anchor="middle" font-size="13" font-weight="bold">3.0</text>
+                <text x="955" y="236" text-anchor="middle" font-size="11.5">Task Scheduling</text>
+                <text x="955" y="252" text-anchor="middle" font-size="11">&amp; Management</text>
+                <text x="955" y="277" text-anchor="middle" font-size="10.5" font-style="italic">Task Module</text>
+            </g>
+
+            <!-- 4.0  Admin Verification & Approval   at (870,510) 170x95 -->
+            <g id="P4">
+                <rect x="870" y="510" width="170" height="95" rx="12" ry="12" fill="#fff" stroke="#222" stroke-width="1.8"/>
+                <line x1="870" y1="538" x2="1040" y2="538" stroke="#222" stroke-width="1"/>
+                <line x1="870" y1="580" x2="1040" y2="580" stroke="#222" stroke-width="1"/>
+                <text x="955" y="530" text-anchor="middle" font-size="13" font-weight="bold">4.0</text>
+                <text x="955" y="556" text-anchor="middle" font-size="11.5">Verification</text>
+                <text x="955" y="572" text-anchor="middle" font-size="11">&amp; Approval</text>
+                <text x="955" y="597" text-anchor="middle" font-size="10.5" font-style="italic">Admin Module</text>
+            </g>
+
+            <!-- 5.0  Notification & Reminder Service   at (280,720) 175x100 -->
+            <g id="P5">
+                <rect x="280" y="720" width="175" height="100" rx="12" ry="12" fill="#fff" stroke="#222" stroke-width="1.8"/>
+                <line x1="280" y1="748" x2="455" y2="748" stroke="#222" stroke-width="1"/>
+                <line x1="280" y1="795" x2="455" y2="795" stroke="#222" stroke-width="1"/>
+                <text x="367" y="740" text-anchor="middle" font-size="13" font-weight="bold">5.0</text>
+                <text x="367" y="766" text-anchor="middle" font-size="11.5">Notification</text>
+                <text x="367" y="782" text-anchor="middle" font-size="11">&amp; Reminder Service</text>
+                <text x="367" y="813" text-anchor="middle" font-size="10.5" font-style="italic">Notification Module</text>
+            </g>
+
+            <!-- 6.0  Bin Monitoring & Alerting   at (870,750) 170x95 -->
+            <g id="P6">
+                <rect x="870" y="750" width="170" height="95" rx="12" ry="12" fill="#fff" stroke="#222" stroke-width="1.8"/>
+                <line x1="870" y1="778" x2="1040" y2="778" stroke="#222" stroke-width="1"/>
+                <line x1="870" y1="820" x2="1040" y2="820" stroke="#222" stroke-width="1"/>
+                <text x="955" y="770" text-anchor="middle" font-size="13" font-weight="bold">6.0</text>
+                <text x="955" y="796" text-anchor="middle" font-size="11.5">Bin Monitoring</text>
+                <text x="955" y="812" text-anchor="middle" font-size="11">&amp; Alerting</text>
+                <text x="955" y="837" text-anchor="middle" font-size="10.5" font-style="italic">IoT Module</text>
+            </g>
+
+            <!-- ============================= -->
+            <!--     DATA STORES                -->
+            <!--     (Open-ended rectangle:     -->
+            <!--      left closed, right open,  -->
+            <!--      ID | Name)                -->
+            <!-- ============================= -->
+
+            <!-- D1: Users   at (45,280) 220x38 -->
+            <g id="D1">
+                <rect x="45" y="280" width="220" height="38" fill="#fff" stroke="none"/>
+                <line x1="45" y1="280" x2="265" y2="280" stroke="#222" stroke-width="1.8"/>
+                <line x1="45" y1="318" x2="265" y2="318" stroke="#222" stroke-width="1.8"/>
+                <line x1="45" y1="280" x2="45" y2="318" stroke="#222" stroke-width="1.8"/>
+                <line x1="88" y1="280" x2="88" y2="318" stroke="#222" stroke-width="1"/>
+                <text x="66" y="304" text-anchor="middle" font-size="12.5" font-weight="bold">D1</text>
+                <text x="176" y="304" text-anchor="middle" font-size="13">Users</text>
+            </g>
+
+            <!-- D2: Reports   at (440,565) 220x38 -->
+            <g id="D2">
+                <rect x="440" y="565" width="220" height="38" fill="#fff" stroke="none"/>
+                <line x1="440" y1="565" x2="660" y2="565" stroke="#222" stroke-width="1.8"/>
+                <line x1="440" y1="603" x2="660" y2="603" stroke="#222" stroke-width="1.8"/>
+                <line x1="440" y1="565" x2="440" y2="603" stroke="#222" stroke-width="1.8"/>
+                <line x1="483" y1="565" x2="483" y2="603" stroke="#222" stroke-width="1"/>
+                <text x="461" y="589" text-anchor="middle" font-size="12.5" font-weight="bold">D2</text>
+                <text x="571" y="589" text-anchor="middle" font-size="13">Reports</text>
+            </g>
+
+            <!-- D3: Collectors   at (600,320) 220x38 -->
+            <g id="D3">
+                <rect x="600" y="320" width="220" height="38" fill="#fff" stroke="none"/>
+                <line x1="600" y1="320" x2="820" y2="320" stroke="#222" stroke-width="1.8"/>
+                <line x1="600" y1="358" x2="820" y2="358" stroke="#222" stroke-width="1.8"/>
+                <line x1="600" y1="320" x2="600" y2="358" stroke="#222" stroke-width="1.8"/>
+                <line x1="643" y1="320" x2="643" y2="358" stroke="#222" stroke-width="1"/>
+                <text x="621" y="344" text-anchor="middle" font-size="12.5" font-weight="bold">D3</text>
+                <text x="731" y="344" text-anchor="middle" font-size="13">Collectors</text>
+            </g>
+
+            <!-- D4: Ward Tasks   at (630,115) 220x38 -->
+            <g id="D4">
+                <rect x="630" y="115" width="220" height="38" fill="#fff" stroke="none"/>
+                <line x1="630" y1="115" x2="850" y2="115" stroke="#222" stroke-width="1.8"/>
+                <line x1="630" y1="153" x2="850" y2="153" stroke="#222" stroke-width="1.8"/>
+                <line x1="630" y1="115" x2="630" y2="153" stroke="#222" stroke-width="1.8"/>
+                <line x1="673" y1="115" x2="673" y2="153" stroke="#222" stroke-width="1"/>
+                <text x="651" y="139" text-anchor="middle" font-size="12.5" font-weight="bold">D4</text>
+                <text x="761" y="139" text-anchor="middle" font-size="13">Ward Tasks</text>
+            </g>
+
+            <!-- D5: Bin Alerts   at (620,920) 220x38 -->
+            <g id="D5">
+                <rect x="620" y="920" width="220" height="38" fill="#fff" stroke="none"/>
+                <line x1="620" y1="920" x2="840" y2="920" stroke="#222" stroke-width="1.8"/>
+                <line x1="620" y1="958" x2="840" y2="958" stroke="#222" stroke-width="1.8"/>
+                <line x1="620" y1="920" x2="620" y2="958" stroke="#222" stroke-width="1.8"/>
+                <line x1="663" y1="920" x2="663" y2="958" stroke="#222" stroke-width="1"/>
+                <text x="641" y="944" text-anchor="middle" font-size="12.5" font-weight="bold">D5</text>
+                <text x="751" y="944" text-anchor="middle" font-size="13">Bin Alerts</text>
+            </g>
+
+            <!-- ============================= -->
+            <!--     DATA FLOWS (ARROWS)        -->
+            <!-- ============================= -->
+
+            <!-- ======= 1.0 AUTHENTICATION FLOWS ======= -->
+
+            <!-- a (Resident) → 1.0 : Login credentials -->
+            <line x1="137" y1="95" x2="296" y2="155" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="175" y="111" font-size="10.5" fill="#222">Login credentials,</text>
+            <text x="175" y="123" font-size="10.5" fill="#222">email, password</text>
+
+            <!-- 1.0 → a (Resident) : Auth token -->
+            <line x1="290" y1="180" x2="150" y2="80" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="183" y="146" font-size="10.5" fill="#222">Auth token</text>
+
+            <!-- b (Collector) → 1.0 : Collector credentials -->
+            <line x1="790" y1="62" x2="450" y2="152" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="555" y="91" font-size="10.5" fill="#222">Collector credentials</text>
+
+            <!-- 1.0 → b (Collector) : JWT token -->
+            <line x1="445" y1="140" x2="792" y2="50" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="575" y="79" font-size="10.5" fill="#222">JWT token</text>
+
+            <!-- c (Admin) → 1.0 : Admin credentials  (routed along top) -->
+            <path d="M 1357,490 L 1357,15 L 380,15 L 380,130" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="860" y="10" font-size="10.5" fill="#222">Admin credentials</text>
+
+            <!-- 1.0 → c (Admin) : Admin auth token  (routed along top) -->
+            <path d="M 400,130 L 400,5 L 1370,5 L 1370,490" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="870" y="0" font-size="10.5" fill="#222" font-style="italic">Admin auth token</text>
+
+            <!-- 1.0 → D1 : Store / Verify user -->
+            <line x1="310" y1="225" x2="210" y2="280" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="220" y="260" font-size="10.5" fill="#222">Store / Verify user</text>
+
+            <!-- D1 → 1.0 : User data -->
+            <line x1="230" y1="280" x2="320" y2="225" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="286" y="268" font-size="10.5" fill="#222">User data</text>
+
+
+            <!-- ======= 2.0 REPORT SUBMISSION FLOWS ======= -->
+
+            <!-- a (Resident) → 2.0 : Report data (description, GPS, images) -->
+            <line x1="97" y1="95" x2="270" y2="385" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="116" y="210" font-size="10.5" fill="#222" transform="rotate(59, 116, 210)">Report (description, GPS, images)</text>
+
+            <!-- 2.0 → a (Resident) : Report status, confirmation -->
+            <line x1="260" y1="400" x2="80" y2="95" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="110" y="265" font-size="10.5" fill="#222" transform="rotate(59, 110, 265)">Report status, confirmation</text>
+
+            <!-- 2.0 → D2 : Store report data -->
+            <line x1="360" y1="475" x2="500" y2="565" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="395" y="525" font-size="10.5" fill="#222">Store report</text>
+            <text x="395" y="537" font-size="10.5" fill="#222">data</text>
+
+            <!-- D2 → 2.0 : Report info -->
+            <line x1="475" y1="565" x2="370" y2="475" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="445" y="510" font-size="10.5" fill="#222">Report info</text>
+
+            <!-- D3 → 2.0 : Available collector (by ward) -->
+            <line x1="600" y1="340" x2="425" y2="410" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="470" y="363" font-size="10.5" fill="#222">Available collector</text>
+            <text x="475" y="376" font-size="10.5" fill="#222">(by ward)</text>
+
+            <!-- 2.0 → e (Cloudinary) : Upload report images -->
+            <line x1="425" y1="410" x2="1300" y2="370" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="810" y="382" font-size="10.5" fill="#222">Upload report images</text>
+
+            <!-- e (Cloudinary) → 2.0 : Image URLs (CDN) -->
+            <line x1="1300" y1="390" x2="425" y2="430" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="810" y="416" font-size="10.5" fill="#222">Image URLs (CDN)</text>
+
+            <!-- 2.0 → 5.0 : New report event -->
+            <line x1="300" y1="475" x2="340" y2="720" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="280" y="600" font-size="10.5" fill="#222" transform="rotate(80, 280, 600)">New report event</text>
+
+            <!-- b (Collector) → 2.0 : Report completion update -->
+            <line x1="810" y1="85" x2="410" y2="380" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="640" y="200" font-size="10.5" fill="#222" transform="rotate(36, 640, 200)">Report completion update</text>
+
+
+            <!-- ======= 3.0 TASK SCHEDULING FLOWS ======= -->
+
+            <!-- b (Collector) → 3.0 : Request today's tasks / Update status -->
+            <line x1="870" y1="85" x2="930" y2="190" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="912" y="127" font-size="10.5" fill="#222">Request tasks /</text>
+            <text x="912" y="140" font-size="10.5" fill="#222">Update status</text>
+
+            <!-- 3.0 → b (Collector) : Today's task list -->
+            <line x1="960" y1="190" x2="880" y2="85" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="945" y="140" font-size="10.5" fill="#222">Today's</text>
+            <text x="945" y="153" font-size="10.5" fill="#222">task list</text>
+
+            <!-- 3.0 ↔ D4 : Read / Write tasks (bidirectional) -->
+            <line x1="870" y1="230" x2="850" y2="148" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="834" y="185" font-size="10.5" fill="#222">Task</text>
+            <text x="834" y="197" font-size="10.5" fill="#222">data</text>
+
+            <line x1="850" y1="140" x2="870" y2="220" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="860" y="172" font-size="10.5" fill="#222">Update</text>
+            <text x="860" y="184" font-size="10.5" fill="#222">tasks</text>
+
+            <!-- D3 → 3.0 : Collector ward assignments -->
+            <line x1="780" y1="358" x2="920" y2="285" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="810" y="315" font-size="10.5" fill="#222">Collector ward</text>
+            <text x="815" y="328" font-size="10.5" fill="#222">assignments</text>
+
+            <!-- 3.0 → 5.0 : Task completed event -->
+            <line x1="880" y1="285" x2="440" y2="730" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="680" y="495" font-size="10.5" fill="#222" transform="rotate(45, 680, 495)">Task completed event</text>
+
+
+            <!-- ======= 4.0 VERIFICATION FLOWS ======= -->
+
+            <!-- c (Admin) → 4.0 : Fetch pending / Approve-Reject / Manage collectors -->
+            <line x1="1300" y1="520" x2="1040" y2="540" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="1065" y="517" font-size="10.5" fill="#222">Fetch pending reports /</text>
+            <text x="1072" y="530" font-size="10.5" fill="#222">Approve / Reject /</text>
+            <text x="1072" y="543" font-size="10.5" fill="#222">Manage collectors</text>
+
+            <!-- 4.0 → c (Admin) : Report details for review -->
+            <line x1="1040" y1="555" x2="1300" y2="535" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="1085" y="562" font-size="10.5" fill="#222">Report details,</text>
+            <text x="1085" y="575" font-size="10.5" fill="#222">system status</text>
+
+            <!-- D2 → 4.0 : Pending reports -->
+            <line x1="660" y1="578" x2="870" y2="560" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="720" y="562" font-size="10.5" fill="#222">Pending reports</text>
+
+            <!-- 4.0 → D2 : Update report status -->
+            <line x1="870" y1="575" x2="660" y2="593" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="708" y="596" font-size="10.5" fill="#222">Update report status</text>
+
+            <!-- 4.0 → D3 : CRUD collectors -->
+            <line x1="910" y1="510" x2="780" y2="358" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="810" y="440" font-size="10.5" fill="#222" transform="rotate(-49, 810, 440)">CRUD collectors</text>
+
+            <!-- 4.0 → 5.0 : Resolution / Verification event -->
+            <line x1="870" y1="590" x2="455" y2="755" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="640" y="660" font-size="10.5" fill="#222" transform="rotate(21, 640, 660)">Resolution / Verification event</text>
+
+
+            <!-- ======= 5.0 NOTIFICATION FLOWS ======= -->
+
+            <!-- 5.0 → d (Email Service) : Send emails (Resend API) -->
+            <line x1="280" y1="790" x2="160" y2="900" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="172" y="848" font-size="10.5" fill="#222" transform="rotate(42, 172, 848)">Send emails</text>
+            <text x="188" y="862" font-size="10.5" fill="#222" transform="rotate(42, 188, 862)">(Resend API)</text>
+
+            <!-- D1 → 5.0 : User emails (by ward) -->
+            <line x1="195" y1="318" x2="310" y2="720" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="216" y="520" font-size="10.5" fill="#222" transform="rotate(74, 216, 520)">User emails (by ward)</text>
+
+            <!-- 5.0 → D1 : Update reminder timestamp -->
+            <line x1="290" y1="730" x2="175" y2="318" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="260" y="528" font-size="10.5" fill="#222" transform="rotate(74, 260, 528)">Update reminder timestamp</text>
+
+            <!-- D3 → 5.0 : Collector contact details -->
+            <line x1="680" y1="358" x2="430" y2="725" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="580" y="530" font-size="10.5" fill="#222" transform="rotate(56, 580, 530)">Collector contact details</text>
+
+            <!-- 5.0 → a (Resident) : Schedule reminders / Alerts  (dashed = email delivery) -->
+            <path d="M 305,720 L 85,95" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="6,3" marker-end="url(#ah)"/>
+            <text x="148" y="400" font-size="10" fill="#555" font-style="italic" transform="rotate(70, 148, 400)">Schedule reminders / alerts</text>
+
+            <!-- 5.0 → b (Collector) : Task assignment email  (dashed) -->
+            <path d="M 420,720 L 845,85" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="6,3" marker-end="url(#ah)"/>
+            <text x="650" y="388" font-size="10" fill="#555" font-style="italic" transform="rotate(-56, 650, 388)">Task assignment email</text>
+
+            <!-- 5.0 → c (Admin) : System alert emails  (dashed) -->
+            <path d="M 455,758 L 1300,520" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="6,3" marker-end="url(#ah)"/>
+            <text x="870" y="625" font-size="10" fill="#555" font-style="italic" transform="rotate(-16, 870, 625)">System alert emails</text>
+
+
+            <!-- ======= 6.0 BIN MONITORING FLOWS ======= -->
+
+            <!-- f (IoT Smart Bins) → 6.0 : Bin status (Full / Emptied) -->
+            <line x1="1300" y1="792" x2="1040" y2="795" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="1068" y="785" font-size="10.5" fill="#222">Bin status</text>
+            <text x="1065" y="798" font-size="10.5" fill="#222">(Full / Emptied)</text>
+
+            <!-- 6.0 → D5 : Store alert -->
+            <line x1="940" y1="845" x2="780" y2="920" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="830" y="885" font-size="10.5" fill="#222">Store alert</text>
+
+            <!-- D5 → 6.0 : Dedup check -->
+            <line x1="800" y1="920" x2="950" y2="845" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="895" y="897" font-size="10.5" fill="#222">Dedup check</text>
+
+            <!-- 6.0 → 5.0 : Bin alert event (Notify users & collectors) -->
+            <line x1="870" y1="800" x2="455" y2="775" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="575" y="780" font-size="11" fill="#222" font-weight="500">Bin alert event (notify users &amp; collectors)</text>
+
+
+            <!-- ============================= -->
+            <!--     NOTATION LEGEND            -->
+            <!-- ============================= -->
+            <rect x="25" y="988" width="580" height="80" rx="5" fill="#fafafa" stroke="#ccc" stroke-width="1"/>
+            <text x="40" y="1008" font-size="12" font-weight="bold" fill="#222">NOTATION LEGEND (Gane &amp; Sarson)</text>
+
+            <!-- Entity legend sample -->
+            <rect x="47" y="1022" width="28" height="18" fill="#e8b830" stroke="#222" stroke-width="1"/>
+            <rect x="43" y="1018" width="28" height="18" fill="#fff" stroke="#222" stroke-width="1"/>
+            <text x="82" y="1033" font-size="10.5" fill="#222">= External Entity (source / sink)</text>
+
+            <!-- Process legend sample -->
+            <rect x="43" y="1046" width="32" height="18" rx="4" fill="#fff" stroke="#222" stroke-width="1.2"/>
+            <line x1="43" y1="1053" x2="75" y2="1053" stroke="#222" stroke-width="0.6"/>
+            <line x1="43" y1="1058" x2="75" y2="1058" stroke="#222" stroke-width="0.6"/>
+            <text x="82" y="1060" font-size="10.5" fill="#222">= Process (# / name / module)</text>
+
+            <!-- Data store legend sample -->
+            <line x1="310" y1="1020" x2="360" y2="1020" stroke="#222" stroke-width="1.5"/>
+            <line x1="310" y1="1035" x2="360" y2="1035" stroke="#222" stroke-width="1.5"/>
+            <line x1="310" y1="1020" x2="310" y2="1035" stroke="#222" stroke-width="1.5"/>
+            <line x1="325" y1="1020" x2="325" y2="1035" stroke="#222" stroke-width="0.8"/>
+            <text x="370" y="1033" font-size="10.5" fill="#222">= Data Store (ID | Name, open right)</text>
+
+            <!-- Flow legend sample -->
+            <line x1="310" y1="1055" x2="360" y2="1055" stroke="#222" stroke-width="1.4" marker-end="url(#ah)"/>
+            <text x="370" y="1060" font-size="10.5" fill="#222">= Data Flow (labeled arrow)</text>
+        </svg>
+    </div>
+    <div class="footer">
+        SweepPokhara &mdash; Level 1 DFD (Gane &amp; Sarson Notation) &bull; Waste Management System
+    </div>
+    <script>
+        let currentZoom = 1;
+        const svg = document.getElementById('dfdSvg');
+        function zoomIn() { currentZoom = Math.min(currentZoom + 0.15, 3); applyZoom(); }
+        function zoomOut() { currentZoom = Math.max(currentZoom - 0.15, 0.3); applyZoom(); }
+        function resetZoom() { currentZoom = 1; applyZoom(); }
+        function applyZoom() { svg.style.transform = 'scale(' + currentZoom + ')'; svg.style.transformOrigin = 'top center'; }
+        function downloadSVG() {
+            const d = new XMLSerializer().serializeToString(svg);
+            const b = new Blob([d], { type: 'image/svg+xml' });
+            const u = URL.createObjectURL(b);
+            const a = document.createElement('a'); a.href = u; a.download = 'SweepPokhara-Level1-DFD.svg'; a.click(); URL.revokeObjectURL(u);
+        }
+        function downloadPNG() {
+            const d = new XMLSerializer().serializeToString(svg);
+            const c = document.createElement('canvas'), ctx = c.getContext('2d'), img = new Image();
+            const b = new Blob([d], { type: 'image/svg+xml;charset=utf-8' }), u = URL.createObjectURL(b);
+            img.onload = function () {
+                c.width = img.width * 2; c.height = img.height * 2; ctx.scale(2, 2);
+                ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+                ctx.drawImage(img, 0, 0); URL.revokeObjectURL(u);
+                const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'SweepPokhara-Level1-DFD.png'; a.click();
+            };
+            img.src = u;
+        }
+        const w = document.getElementById('diagramWrapper');
+        let drag = false, sx, sy, sl, st;
+        w.addEventListener('mousedown', e => { drag = true; sx = e.pageX - w.offsetLeft; sy = e.pageY - w.offsetTop; sl = w.scrollLeft; st = w.scrollTop; w.style.cursor = 'grabbing'; });
+        w.addEventListener('mouseleave', () => { drag = false; w.style.cursor = 'grab'; });
+        w.addEventListener('mouseup', () => { drag = false; w.style.cursor = 'grab'; });
+        w.addEventListener('mousemove', e => { if (!drag) return; e.preventDefault(); w.scrollLeft = sl - (e.pageX - w.offsetLeft - sx); w.scrollTop = st - (e.pageY - w.offsetTop - sy); });
+        w.style.cursor = 'grab';
+    </script>
+</body>
+</html>

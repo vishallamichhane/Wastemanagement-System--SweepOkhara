@@ -46,7 +46,7 @@ const reportSchema = new mongoose.Schema(
     }],
     status: {
       type: String,
-      enum: ['received', 'in-progress', 'resolved'],
+      enum: ['received', 'in-progress', 'pending-verification', 'resolved'],
       default: 'in-progress',
     },
     userId: {
@@ -66,6 +66,27 @@ const reportSchema = new mongoose.Schema(
       type: String,
     },
     assignedVehicleId: {
+      type: String,
+    },
+    // Collector completion info
+    completionNote: {
+      type: String,
+    },
+    collectorCompletedAt: {
+      type: Date,
+    },
+    // Admin verification info
+    adminVerified: {
+      type: Boolean,
+      default: false,
+    },
+    adminVerifiedAt: {
+      type: Date,
+    },
+    adminVerifiedBy: {
+      type: String,
+    },
+    adminNotes: {
       type: String,
     },
   },

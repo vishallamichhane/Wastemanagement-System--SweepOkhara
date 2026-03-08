@@ -129,8 +129,8 @@ export default function ContactPage() {
                 </div>
                 <div className="flex-1">
                   <span className="text-gray-600 text-sm">Email</span>
-                  <a href="mailto:contact@sweepokhara.gov.np" className="block text-gray-900 font-semibold hover:text-blue-700 transition-colors">
-                    contact@sweepokhara.gov.np
+                  <a href="mailto:sweeppokhara@gmail.com" className="block text-gray-900 font-semibold hover:text-blue-700 transition-colors">
+                    sweeppokhara@gmail.com
                   </a>
                 </div>
               </div>

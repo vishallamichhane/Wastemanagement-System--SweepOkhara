@@ -1,5 +1,6 @@
 import Collector from '../models/collector.js';
 import Report from '../models/reports.js';
+import { sendReportResolutionEmail } from '../utils/email.js';
 import jwt from 'jsonwebtoken';
 
 // Maximum number of collectors allowed
@@ -27,8 +28,16 @@ export const createCollector = async (req, res) => {
       vehicleId,
     } = req.body;
 
+    console.log('📋 Create Collector Request:', {
+      collectorId,
+      name,
+      email,
+      wardsCount: assignedWards?.length,
+    });
+
     // Validate assigned wards
     if (!assignedWards || !Array.isArray(assignedWards) || assignedWards.length < 5) {
+      console.log('❌ Validation failed: Need at least 5 wards');
       return res.status(400).json({
         success: false,
         message: 'Collector must be assigned to at least 5 wards',
@@ -38,6 +47,7 @@ export const createCollector = async (req, res) => {
     // Check if maximum collectors limit reached
     const collectorCount = await Collector.countDocuments();
     if (collectorCount >= MAX_COLLECTORS) {
+      console.log(`❌ Max limit reached: ${collectorCount}/${MAX_COLLECTORS}`);
       return res.status(400).json({
         success: false,
         message: `Maximum limit of ${MAX_COLLECTORS} collectors reached. Cannot add more collectors.`,
@@ -47,6 +57,7 @@ export const createCollector = async (req, res) => {
     // Check if collector ID already exists
     const collectorExists = await Collector.findOne({ collectorId });
     if (collectorExists) {
+      console.log(`❌ Collector ID already exists: ${collectorId}`);
       return res.status(400).json({
         success: false,
         message: 'Collector ID already exists',
@@ -56,27 +67,68 @@ export const createCollector = async (req, res) => {
     // Check if email already exists
     const emailExists = await Collector.findOne({ email });
     if (emailExists) {
+      console.log(`❌ Email already exists: ${email}`);
       return res.status(400).json({
         success: false,
         message: 'Email already exists',
       });
     }
 
-    // Create collector
-    // Note: In a real application, you would get the admin's ID from the authenticated request
-    const collector = await Collector.create({
-      collectorId,
-      password,
-      name,
-      email,
-      phoneNumber,
-      assignedWards,
-      vehicleId,
-      createdBy: req.user?._id || '000000000000000000000000', // Temporary placeholder
+    console.log('✅ All validations passed, preparing to create collector');
+
+    // Validate all required fields
+    if (!collectorId || !password || !name || !email || !phoneNumber || !vehicleId) {
+      const missingFields = [];
+      if (!collectorId) missingFields.push('collectorId');
+      if (!password) missingFields.push('password');
+      if (!name) missingFields.push('name');
+      if (!email) missingFields.push('email');
+      if (!phoneNumber) missingFields.push('phoneNumber');
+      if (!vehicleId) missingFields.push('vehicleId');
+      
+      console.log('❌ Missing required fields:', missingFields);
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+      });
+    }
+
+    // Ensure password is a string and has minimum length
+    if (typeof password !== 'string' || password.length < 6) {
+      console.log('❌ Password validation failed');
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long',
+      });
+    }
+
+    // Create collector data object
+    const collectorData = {
+      collectorId: String(collectorId).trim(),
+      password: String(password).trim(),
+      name: String(name).trim(),
+      email: String(email).toLowerCase().trim(),
+      phoneNumber: String(phoneNumber).trim(),
+      assignedWards: Array.isArray(assignedWards) ? assignedWards : [],
+      vehicleId: String(vehicleId).trim(),
+    };
+
+    console.log('📦 Collector data ready:', {
+      collectorId: collectorData.collectorId,
+      name: collectorData.name,
+      password: '***',
+      email: collectorData.email,
+      assignedWards: collectorData.assignedWards,
+      vehicleId: collectorData.vehicleId,
     });
 
+    // Create the collector document
+    console.log('🚀 Creating collector document in MongoDB...');
+    const collector = await Collector.create(collectorData);
+    console.log('✅ Collector created successfully:', collector._id);
+
     if (collector) {
-      res.status(201).json({
+      const responseData = {
         success: true,
         data: {
           id: collector._id,
@@ -89,18 +141,43 @@ export const createCollector = async (req, res) => {
           status: collector.status,
         },
         message: 'Collector created successfully',
-      });
+      };
+      
+      console.log('📤 Sending success response');
+      res.status(201).json(responseData);
     } else {
+      console.log('❌ Collector creation returned null');
       res.status(400).json({
         success: false,
         message: 'Invalid collector data',
       });
     }
   } catch (error) {
-    console.error('Create collector error:', error);
+    console.error('❌ Create collector error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error: ' + messages.join(', '),
+      });
+    }
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({
+        success: false,
+        message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
+      });
+    }
+
+    // Handle any other errors
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || 'Error creating collector',
+      error: process.env.NODE_ENV === 'development' ? error : undefined,
     });
   }
 };
@@ -461,7 +538,7 @@ export const getCollectorReports = async (req, res) => {
 export const updateReportStatus = async (req, res) => {
   try {
     const { reportId } = req.params;
-    const { status } = req.body;
+    const { status, completionNote } = req.body;
 
     const validStatuses = ['received', 'in-progress', 'resolved'];
     if (!validStatuses.includes(status)) {
@@ -488,6 +565,23 @@ export const updateReportStatus = async (req, res) => {
       });
     }
 
+    // When collector marks as resolved, set to pending-verification instead
+    if (status === 'resolved') {
+      report.status = 'pending-verification';
+      report.completionNote = completionNote || '';
+      report.collectorCompletedAt = new Date();
+      await report.save();
+
+      console.log(`⏳ Report ${reportId} marked as 'pending-verification' by collector ${collector.collectorId}. Awaiting admin verification.`);
+
+      return res.status(200).json({
+        success: true,
+        data: report,
+        message: 'Report marked as completed and sent for admin verification.',
+      });
+    }
+
+    // For other statuses (received, in-progress), update directly
     report.status = status;
     await report.save();
 

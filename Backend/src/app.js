@@ -2,6 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { auth } from "./libs/auth.js";
+import { admin } from "./middleware/auth.js";
+import { sendReminderToUser } from './services/scheduleReminderService.js';
+import { sendReportResolutionEmail, sendBinFullAlertEmail, sendBinEmptiedAlertEmail } from './utils/email.js';
+import BinAlert from './models/binAlert.js';
 
 const app = express()
 
@@ -34,16 +38,16 @@ import Collector from './models/collector.js';
 
 // Public routes (no authentication required)
 app.get("/", (req, res)=>{
-    return res.status(200).json({message:"Welcome to SweePokhara Backend"})
+    return res.status(200).json({message:"Welcome to SweepPokhara Backend"})
 })
 
 // Public user creation endpoint (for registration)
 app.post("/api/users/create", async (req, res) => {
   try {
-    const { clerkId, username, email, firstName, lastName, fullName, address, ward, houseNumber, phone } = req.body;
+    const { clerkId, username, email, firstName, lastName, fullName, address, ward, houseNumber, phone, role } = req.body;
 
     console.log('=== Creating User in MongoDB (Public Route) ===');
-    console.log('Data received:', { clerkId, username, email, firstName, lastName, fullName, address, ward, houseNumber, phone });
+    console.log('Data received:', { clerkId, username, email, firstName, lastName, fullName, address, ward, houseNumber, phone, role });
 
     // Validate required fields
     if (!clerkId || !email || !username) {
@@ -56,6 +60,12 @@ app.post("/api/users/create", async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ clerkId });
     if (existingUser) {
+      // If role is provided and different, update it (e.g., promoting to admin)
+      if (role && ['user', 'admin'].includes(role) && existingUser.role !== role) {
+        existingUser.role = role;
+        await existingUser.save();
+        console.log(`User role updated to '${role}' in MongoDB:`, existingUser._id);
+      }
       console.log('User already exists in MongoDB:', existingUser._id);
       return res.json({
         success: true,
@@ -77,12 +87,18 @@ app.post("/api/users/create", async (req, res) => {
       phone: phone || '',
       houseNumber: houseNumber || '',
       emailVerified: true,
-      role: 'user',
+      role: (role && ['user', 'admin'].includes(role)) ? role : 'user',
       isActive: true
     });
 
     console.log('✅ User created successfully in MongoDB:', newUser._id);
-
+    // If user registered with a ward, send instant pickup reminder if applicable
+    if (newUser.ward) {
+      console.log('\ud83d\udce7 New user has ward set — checking if instant reminder needed');
+      sendReminderToUser(newUser).catch(err =>
+        console.error('\u26a0\ufe0f Instant reminder error for new user:', err.message)
+      );
+    }
     res.status(201).json({
       success: true,
       message: 'User created successfully in MongoDB',
@@ -119,11 +135,164 @@ app.post("/api/users/create", async (req, res) => {
   }
 });
 
+// Public bin status alert endpoint (called from all map views)
+app.post("/api/bin-status/alert", async (req, res) => {
+  try {
+    const { binId, ward, status, location, fillLevel } = req.body;
+
+    // Validate inputs
+    if (!binId || !ward || !status || !location) {
+      return res.status(400).json({ success: false, error: "Missing required fields: binId, ward, status, location" });
+    }
+
+    if (!["full", "emptied"].includes(status)) {
+      return res.status(400).json({ success: false, error: "Status must be 'full' or 'emptied'" });
+    }
+
+    const wardNumber = parseInt(String(ward).replace(/\D/g, "")) || 0;
+    if (!wardNumber) {
+      return res.status(400).json({ success: false, error: "Invalid ward number" });
+    }
+
+    // Check deduplication - only alert if status actually changed
+    let binAlert = await BinAlert.findOne({ binId });
+    if (binAlert && binAlert.lastStatus === status) {
+      console.log(`⏭️ Bin ${binId} already in '${status}' state, skipping duplicate alert`);
+      return res.json({ success: true, alerted: false, reason: "duplicate", message: "Alert already sent for this status" });
+    }
+
+    // Update or create bin alert record
+    if (binAlert) {
+      binAlert.lastStatus = status;
+      binAlert.lastAlertAt = new Date();
+      binAlert.ward = wardNumber;
+      binAlert.location = location;
+      await binAlert.save();
+    } else {
+      binAlert = await BinAlert.create({
+        binId,
+        ward: wardNumber,
+        lastStatus: status,
+        lastAlertAt: new Date(),
+        location,
+      });
+    }
+
+    // Find all users in this ward
+    const wardVariations = [
+      `Ward ${wardNumber}`,
+      `ward ${wardNumber}`,
+      `Ward-${wardNumber}`,
+      `${wardNumber}`,
+    ];
+    const wardUsers = await User.find({
+      ward: { $in: wardVariations },
+      email: { $exists: true, $ne: "" },
+    });
+
+    // Find collectors assigned to this ward
+    const wardCollectors = await Collector.find({
+      assignedWards: wardNumber,
+      email: { $exists: true, $ne: "" },
+      status: "active",
+    });
+
+    // Find admin users (they should always be notified about bin alerts)
+    const adminUsers = await User.find({
+      role: "admin",
+      email: { $exists: true, $ne: "" },
+    });
+
+    console.log(`📧 Sending bin ${status} alert for ${binId} (Ward ${wardNumber}) to ${wardUsers.length} users, ${wardCollectors.length} collectors, ${adminUsers.length} admins`);
+
+    // Send emails to all ward users
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    const emailFunction = status === "full" ? sendBinFullAlertEmail : sendBinEmptiedAlertEmail;
+
+    for (const user of wardUsers) {
+      try {
+        await emailFunction({
+          to: user.email,
+          name: user.fullName || user.username || "Resident",
+          binId,
+          ward: wardNumber,
+          location,
+          fillLevel: fillLevel || (status === "full" ? 100 : 0),
+        });
+        emailsSent++;
+      } catch (emailErr) {
+        console.error(`❌ Failed to send email to ${user.email}:`, emailErr.message);
+        emailsFailed++;
+      }
+    }
+
+    // Send emails to collectors assigned to this ward
+    const notifiedEmails = new Set(wardUsers.map(u => u.email));
+    for (const collector of wardCollectors) {
+      if (notifiedEmails.has(collector.email)) continue; // skip if already emailed
+      notifiedEmails.add(collector.email);
+      try {
+        await emailFunction({
+          to: collector.email,
+          name: collector.name || "Collector",
+          binId,
+          ward: wardNumber,
+          location,
+          fillLevel: fillLevel || (status === "full" ? 100 : 0),
+        });
+        emailsSent++;
+      } catch (emailErr) {
+        console.error(`❌ Failed to send email to collector ${collector.email}:`, emailErr.message);
+        emailsFailed++;
+      }
+    }
+
+    // Send emails to admin users
+    for (const admin of adminUsers) {
+      if (notifiedEmails.has(admin.email)) continue; // skip if already emailed
+      notifiedEmails.add(admin.email);
+      try {
+        await emailFunction({
+          to: admin.email,
+          name: admin.fullName || admin.username || "Admin",
+          binId,
+          ward: wardNumber,
+          location,
+          fillLevel: fillLevel || (status === "full" ? 100 : 0),
+        });
+        emailsSent++;
+      } catch (emailErr) {
+        console.error(`❌ Failed to send email to admin ${admin.email}:`, emailErr.message);
+        emailsFailed++;
+      }
+    }
+
+    console.log(`✅ Bin alert complete: ${emailsSent} sent, ${emailsFailed} failed`);
+
+    res.json({
+      success: true,
+      alerted: true,
+      status,
+      binId,
+      ward: wardNumber,
+      emailsSent,
+      emailsFailed,
+      totalUsers: wardUsers.length,
+      totalCollectors: wardCollectors.length,
+      totalAdmins: adminUsers.length,
+    });
+  } catch (error) {
+    console.error("❌ Bin status alert error:", error);
+    res.status(500).json({ success: false, error: "Failed to process bin status alert", details: error.message });
+  }
+});
+
 // Apply Clerk middleware for authenticated routes
 app.use(auth);
 
-// Public admin API: list all users from MongoDB
-app.get("/api/admin/users", async (req, res) => {
+// Protected admin API: list all users from MongoDB
+app.get("/api/admin/users", admin, async (req, res) => {
   try {
     const users = await User.find({}).sort({ createdAt: -1 });
     // Count reports per user from reports collection
@@ -156,8 +325,8 @@ app.get("/api/admin/users", async (req, res) => {
   }
 });
 
-// Public admin API: system-wide stats
-app.get("/api/admin/stats", async (req, res) => {
+// Protected admin API: system-wide stats
+app.get("/api/admin/stats", admin, async (req, res) => {
   try {
     const [totalUsers, totalCollectors, activeCollectors, reports] = await Promise.all([
       User.countDocuments(),
@@ -190,13 +359,126 @@ app.get("/api/admin/stats", async (req, res) => {
   }
 });
 
-// Public admin API: all reports
-app.get("/api/admin/reports", async (req, res) => {
+// Protected admin API: all reports
+app.get("/api/admin/reports", admin, async (req, res) => {
   try {
     const reports = await Report.find({}).sort({ createdAt: -1 }).lean();
     res.json(reports);
   } catch (error) {
     console.error('Admin reports fetch error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Protected admin API: verify (approve) a report completion
+app.put("/api/admin/reports/:reportId/verify", admin, async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const { adminNotes } = req.body;
+
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+
+    if (report.status !== 'pending-verification') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot verify a report with status '${report.status}'. Only pending-verification reports can be verified.`,
+      });
+    }
+
+    // Mark as verified and resolved
+    report.status = 'resolved';
+    report.adminVerified = true;
+    report.adminVerifiedAt = new Date();
+    report.adminVerifiedBy = req.auth?.userId || 'admin';
+    report.adminNotes = adminNotes || '';
+    await report.save();
+
+    console.log(`✅ Report ${reportId} verified and resolved by admin.`);
+
+    // Now send the resolution email to the user
+    if (report.userEmail) {
+      try {
+        const resolvedDate = new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kathmandu',
+        });
+
+        const reportDate = new Date(report.createdAt).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Kathmandu',
+        });
+
+        await sendReportResolutionEmail({
+          to: report.userEmail,
+          userName: report.userName || 'Resident',
+          reportLabel: report.reportLabel,
+          description: report.description,
+          location: report.location,
+          ward: report.ward,
+          collectorName: report.assignedCollectorName || 'Collection Team',
+          vehicleId: report.assignedVehicleId || 'N/A',
+          reportDate,
+          resolvedDate,
+          priority: report.priority,
+        });
+
+        console.log(`📧 Report resolution email sent to ${report.userEmail} after admin verification.`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send resolution email for report ${reportId}:`, emailError.message);
+      }
+    }
+
+    res.json({ success: true, data: report, message: 'Report verified and resolved successfully.' });
+  } catch (error) {
+    console.error('Admin verify report error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Protected admin API: reject a report completion (send back to collector)
+app.put("/api/admin/reports/:reportId/reject", admin, async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const { adminNotes } = req.body;
+
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+
+    if (report.status !== 'pending-verification') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot reject a report with status '${report.status}'. Only pending-verification reports can be rejected.`,
+      });
+    }
+
+    // Send back to in-progress
+    report.status = 'in-progress';
+    report.adminVerified = false;
+    report.adminNotes = adminNotes || 'Verification rejected by admin. Please re-inspect.';
+    report.completionNote = '';
+    report.collectorCompletedAt = null;
+    await report.save();
+
+    console.log(`❌ Report ${reportId} rejected by admin. Sent back to in-progress.`);
+
+    res.json({ success: true, data: report, message: 'Report rejected and sent back to collector.' });
+  } catch (error) {
+    console.error('Admin reject report error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

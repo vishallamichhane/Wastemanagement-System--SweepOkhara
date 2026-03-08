@@ -15,7 +15,7 @@ const WastePickupSchedule = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [userWard, setUserWard] = useState('Ward 1');
+  const [userWard, setUserWard] = useState(null);
   const [collector, setCollector] = useState(null);
   const [collectorLoading, setCollectorLoading] = useState(true);
   const [todayTaskStatus, setTodayTaskStatus] = useState(null); // 'scheduled' | 'in-progress' | 'completed' | null
@@ -30,38 +30,48 @@ const WastePickupSchedule = () => {
 
   // Fetch collector assigned to user's ward
   useEffect(() => {
+    if (!userWard) {
+      setCollector(null);
+      setCollectorLoading(true);
+      return;
+    }
+
+    let cancelled = false;
     const fetchCollector = async () => {
       try {
         setCollectorLoading(true);
         // Extract ward number from "Ward X" or "X" format
         const wardNumber = parseInt(String(userWard).replace(/\D/g, ''));
         if (isNaN(wardNumber)) {
-          setCollector(null);
+          if (!cancelled) setCollector(null);
           return;
         }
 
         const response = await fetch(`http://localhost:3000/api/collectors/ward/${wardNumber}`);
         const data = await response.json();
         
+        if (cancelled) return; // Prevent stale response from overwriting
+
         if (data.success && data.data) {
           setCollector(data.data);
           console.log('✅ Collector found for ward', wardNumber, ':', data.data);
         } else {
-          // No collector assigned to this ward
           setCollector(null);
           console.log('⚠️ No collector assigned to ward', wardNumber);
         }
       } catch (error) {
-        console.error('Failed to fetch collector:', error);
-        setCollector(null);
+        if (!cancelled) {
+          console.error('Failed to fetch collector:', error);
+          setCollector(null);
+        }
       } finally {
-        setCollectorLoading(false);
+        if (!cancelled) setCollectorLoading(false);
       }
     };
     
-    if (userWard) {
-      fetchCollector();
-    }
+    fetchCollector();
+
+    return () => { cancelled = true; };
   }, [userWard]);
 
   // Fetch today's ward task status (completed/in-progress/scheduled)
@@ -94,8 +104,8 @@ const WastePickupSchedule = () => {
     }
   }, [userWard]);
 
-  // Get ward schedule
-  const wardSchedule = getWardSchedule(userWard);
+  // Get ward schedule (use a safe fallback while loading)
+  const wardSchedule = getWardSchedule(userWard || 'Ward 1');
 
   useEffect(() => {
     const handleScroll = () => {

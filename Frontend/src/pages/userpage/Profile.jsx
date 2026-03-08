@@ -32,7 +32,9 @@ export default function UserProfilePage() {
     houseNumber: clerkUser.publicMetadata?.houseNumber || clerkUser.unsafeMetadata?.houseNumber || '',
     createdAt: clerkUser.createdAt,
   } : null;
-  console.log('Current user:', user)
+  
+  console.log('Current user:', user);
+  console.log('Profile Image URL:', user?.image);
   
 
   // const [userData, setUserData] = useState({
@@ -95,6 +97,13 @@ export default function UserProfilePage() {
     setIsLoading(true);
     setSaveError('');
     setSaveSuccess(false);
+
+    // Validate phone number: must be exactly 10 digits
+    if (editData.phone && !/^\d{10}$/.test(editData.phone)) {
+      setSaveError('Phone number must be exactly 10 digits (e.g. 9806563442)');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       console.log('=== Saving Profile ===');
@@ -283,9 +292,16 @@ export default function UserProfilePage() {
               <div className="text-center">
                 <div className="relative inline-block mb-4">
                   <img
-                    src={user?.avatar || dummyAvatar}
+                    key={user?.image || 'default'}
+                    src={user?.image || dummyAvatar}
                     alt="Profile"
                     className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-xl"
+                    onError={(e) => {
+                      console.log('Image failed to load:', user?.image);
+                      if (e.target.src !== dummyAvatar) {
+                        e.target.src = dummyAvatar;
+                      }
+                    }}
                   />
                   {isEditing && (
                     <button className="absolute bottom-2 right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg hover:bg-emerald-600 transition-colors duration-300">
@@ -378,13 +394,32 @@ export default function UserProfilePage() {
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
                     {isEditing ? (
-                      <input
-                        type="tel"
-                        value={editData.phone || ''}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full bg-transparent border-b-2 border-emerald-500 focus:outline-none focus:border-emerald-600"
-                        placeholder="Phone number"
-                      />
+                      <>
+                        <input
+                          type="tel"
+                          value={editData.phone || ''}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            handleInputChange('phone', val);
+                          }}
+                          maxLength={10}
+                          className={`w-full bg-transparent border-b-2 focus:outline-none ${
+                            editData.phone && editData.phone.length > 0 && editData.phone.length !== 10
+                              ? 'border-red-400 focus:border-red-500'
+                              : 'border-emerald-500 focus:border-emerald-600'
+                          }`}
+                          placeholder="e.g. 9806563442"
+                        />
+                        <p className={`text-xs mt-1 ${
+                          editData.phone && editData.phone.length > 0 && editData.phone.length !== 10
+                            ? 'text-red-500'
+                            : 'text-gray-400'
+                        }`}>
+                          {editData.phone && editData.phone.length > 0
+                            ? `${editData.phone.length}/10 digits${editData.phone.length === 10 ? ' ✓' : ''}`
+                            : 'Must be 10 digits'}
+                        </p>
+                      </>
                     ) : (
                       <p className="text-gray-800 font-medium">{user?.phone}</p>
                     )}

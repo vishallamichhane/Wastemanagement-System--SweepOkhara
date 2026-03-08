@@ -1,163 +1,48 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { 
-  FiArrowLeft,
-  FiFilter,
-  FiChevronRight,
-  FiMapPin,
-  FiNavigation,
-  FiHome,
-  FiCalendar,
-  FiLogOut,
-  FiSearch,
-  FiUser,
-  FiSettings,
-  FiMenu,
-  FiX
-} from 'react-icons/fi';
-import { 
-  BsTruck,
-  BsFillTrashFill,
-  BsPinMapFill,
-  BsExclamationCircle,
-  BsClock,
-  BsCheckCircle,
-  BsArrowRightCircle,
-  BsListUl,
-  BsGeoAlt,
-  BsExclamationTriangle
-} from "react-icons/bs";
-import { GiBroom, GiPathDistance } from "react-icons/gi";
-import { MdOutlineDeleteSweep, MdMyLocation } from "react-icons/md";
-import { TbRoute } from "react-icons/tb";
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import useScrollToTop from "../../hooks/useScrollToTop";
-import CollectorNotificationCenter from "./components/CollectorNotificationCenter";
-
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Polyline,
-  ZoomControl
-} from 'react-leaflet';
-
+import { Link, useNavigate } from "react-router-dom";
+import { BsBell, BsTruck, BsFillTrashFill, BsSortDown, BsMap, BsListUl } from "react-icons/bs";
+import { FiLogOut, FiChevronLeft, FiSearch, FiPlus, FiFilter } from "react-icons/fi";
+import { GiBroom } from "react-icons/gi";
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 // -------------------------
-// DUMMY DATA - Can be replaced with backend API
+// ENHANCED VEHICLE SVG ICON
 // -------------------------
-const collectorData = {
-  id: "COL-007",
-  name: "Rajesh Kumar",
-  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=collector007",
-  vehicle: {
-    id: "TRK-05",
-    type: "Waste Collection Truck",
-    currentLocation: [28.2106, 83.9856],
-    status: "active",
-    fuel: 78,
-    speed: "25 km/h"
-  },
-  currentRoute: {
-    id: "ROUTE-A",
-    name: "Lakeside Collection Route",
-    totalDistance: "11.6 km",
-    estimatedTime: "2.5 hours",
-    bins: 6,
-    progress: 35
-  }
+const createVehicleIcon = (status) => {
+  const color = status === "active" ? "#10B981" : "#6B7280";
+  const animation = status === "active" ? 'animation: pulse 2s infinite;' : '';
+  
+  const vehicleSvg = `
+    <div style="
+      background: white;
+      border-radius: 50%;
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 3px solid ${color};
+      ${animation}
+    ">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2">
+        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.22-.624l-2.96-3.7A1 1 0 0 0 18.04 8H16V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>
+        <path d="M6 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+        <path d="M18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+      </svg>
+    </div>
+  `;
+
+  return L.divIcon({
+    html: vehicleSvg,
+    className: "custom-vehicle-icon",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+  });
 };
 
-const assignedBins = [
-  {
-    id: "TB1025",
-    binId: "TB1025",
-    location: "Lakeside, Pokhara",
-    coordinates: [28.2090, 83.9596],
-    fillLevel: 55,
-    fillStatus: "half",
-    status: "in-progress",
-    priority: "medium",
-    wasteType: "General Waste",
-    address: "Lakeside, Pokhara",
-    lastCollection: "1 day ago",
-    collectionTime: "09:30 AM",
-    notes: "Regular collection, accessible location"
-  },
-  {
-    id: "TB1026",
-    binId: "TB1026",
-    location: "Baseline, Pokhara",
-    coordinates: [28.2144, 83.9851],
-    fillLevel: 20,
-    fillStatus: "empty",
-    status: "pending",
-    priority: "low",
-    wasteType: "Recyclable Waste",
-    address: "Baseline, Pokhara",
-    lastCollection: "6 hours ago",
-    collectionTime: "11:00 AM",
-    notes: "Plastic and paper recycling"
-  },
-  {
-    id: "TB1027",
-    binId: "TB1027",
-    location: "City Center, Pokhara",
-    coordinates: [28.2096, 83.9896],
-    fillLevel: 65,
-    fillStatus: "half",
-    status: "pending",
-    priority: "high",
-    wasteType: "Organic Waste",
-    address: "City Center, Pokhara",
-    lastCollection: "12 hours ago",
-    collectionTime: "10:15 AM",
-    notes: "Organic waste - separate collection required"
-  },
-  {
-    id: "TB1028",
-    binId: "TB1028",
-    location: "Lakeside East, Pokhara",
-    coordinates: [28.2115, 83.9650],
-    fillLevel: 10,
-    fillStatus: "empty",
-    status: "pending",
-    priority: "low",
-    wasteType: "General Waste",
-    address: "Lakeside East, Pokhara",
-    lastCollection: "3 hours ago",
-    collectionTime: "11:45 AM",
-    notes: "Regular collection, easy access"
-  },
-  {
-    id: "TB1029",
-    binId: "TB1029",
-    location: "Pokhara Engineering College",
-    coordinates: [28.21118953908775, 83.9771218979668],
-    fillLevel: 0,
-    fillStatus: "empty",
-    status: "pending",
-    priority: "low",
-    wasteType: "Smart Bin (Demo)",
-    address: "Pokhara Engineering College",
-    lastCollection: "Just now",
-    collectionTime: "12:30 PM",
-    notes: "Demo smart bin with ultrasonic sensor"
-  }
-];
-
-const routePath = [
-  [28.2090, 83.9596],  // Lakeside
-  [28.2144, 83.9851],  // Baseline
-  [28.2096, 83.9896],  // City Center
-  [28.2115, 83.9650],  // Lakeside East
-  [28.21118953908775, 83.9771218979668]  // Demo Site (End)
-];
-
 // -------------------------
-// CUSTOM MAP ICONS
+// ENHANCED TRASH BIN ICON
 // -------------------------
 const createTrashBinIcon = (fillStatus) => {
   let color, fillLevel, animation;
@@ -215,875 +100,549 @@ const createTrashBinIcon = (fillStatus) => {
   });
 };
 
-const createVehicleIcon = () => {
-  const svg = `
-    <div style="
-      background: linear-gradient(135deg, #10B981, #059669);
-      border-radius: 50%;
-      padding: 12px;
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-      border: 3px solid white;
-      animation: pulse 2s infinite;
-    ">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5">
-        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.22-.624l-2.96-3.7A1 1 0 0 0 18.04 8H16V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>
-        <path d="M6 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
-        <path d="M18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
-      </svg>
-    </div>
-  `;
+// -------------------------
+// STATIC DATA
+// -------------------------
+const trashBins = [
+  { 
+    id: "TB1025", 
+    position: [28.2090, 83.9596], 
+    fillStatus: "half", 
+    binType: "General Waste", 
+    lastCollection: "1 day ago", 
+    location: "Lakeside, Pokhara", 
+    fillLevel: 55,
+    ward: 5
+  },
+  { 
+    id: "TB1026", 
+    position: [28.2144, 83.9851], 
+    fillStatus: "empty", 
+    binType: "Recyclable Waste", 
+    lastCollection: "6 hours ago", 
+    location: "Baseline, Pokhara", 
+    fillLevel: 20,
+    ward: 10
+  },
+  { 
+    id: "TB1027", 
+    position: [28.2096, 83.9896], 
+    fillStatus: "half", 
+    binType: "Organic Waste", 
+    lastCollection: "12 hours ago", 
+    location: "City Center, Pokhara", 
+    fillLevel: 65,
+    ward: 8
+  },
+  { 
+    id: "TB1028", 
+    position: [28.2115, 83.9650], 
+    fillStatus: "empty", 
+    binType: "General Waste", 
+    lastCollection: "3 hours ago", 
+    location: "Lakeside East, Pokhara", 
+    fillLevel: 10,
+    ward: 5
+  },
+  { 
+    id: "TB1029", 
+    position: [28.21118953908775, 83.9771218979668], 
+    fillStatus: "empty", 
+    binType: "IoT Smart Bin", 
+    lastCollection: "Just now", 
+    location: "Pokhara Engineering College", 
+    fillLevel: 0,
+    ward: 14
+  },
+];
 
-  return L.divIcon({
-    html: svg,
-    className: "custom-vehicle-icon",
-    iconSize: [56, 56],
-    iconAnchor: [28, 56],
-    popupAnchor: [0, -56],
-  });
-};
+const vehicles = [
+  { 
+    id: "V001", 
+    position: [28.212, 83.984], 
+    status: "active", 
+    driver: "John Doe", 
+    location: "Route 1 - Mahendra Pul", 
+    lastUpdated: "1m ago" 
+  },
+  { 
+    id: "V002", 
+    position: [28.208, 83.987], 
+    status: "inactive", 
+    driver: "Jane Smith", 
+    location: "Route 2 - Lakeside Area", 
+    lastUpdated: "3m ago" 
+  },
+];
+
+// -------------------------
+// ESP32 CONFIG — change this to your ESP32's IP shown in Serial Monitor
+// -------------------------
+const ESP32_IP = "172.20.10.3"; // ← Replace with your actual ESP32 IP
+const ESP32_BIN_ID = "TB1029";  // The bin ID that maps to your physical ESP32 dustbin
 
 // -------------------------
 // MAIN COMPONENT
 // -------------------------
-const CollectorMapView = () => {
-  useScrollToTop();
+export default function MapStatusPage() {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState("map");
+  const [dynamicTrashBins, setDynamicTrashBins] = useState([]);
+  const [dynamicVehicles, setDynamicVehicles] = useState([]);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isNavVisible, setIsNavVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBin, setSelectedBin] = useState(null);
-  const [viewMode, setViewMode] = useState("map"); // "map" or "list"
-  const [userLocation, setUserLocation] = useState([28.2096, 83.9856]);
-  const [mapCenter, setMapCenter] = useState([28.2096, 83.9856]);
-  const [zoomLevel, setZoomLevel] = useState(14);
-  const [activeNav, setActiveNav] = useState("map");
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const mobileMenuRef = useRef(null);
+
+  // ── Get collector data from localStorage ────────────────────────────────
+  const [collectorData, setCollectorData] = useState(null);
+  useEffect(() => {
+    const storedData = localStorage.getItem('collectorData');
+    if (storedData) {
+      try { setCollectorData(JSON.parse(storedData)); }
+      catch { navigate('/login'); }
+    } else { navigate('/login'); }
+  }, [navigate]);
+
+  // ── Get collector's assigned ward numbers ────────────────────────────────
+  const collectorWardNumbers = (collectorData?.assignedWards || []).map(Number);
+
+  // ── Filter bins by collector's assigned wards (always include ESP32 ward)
+  const esp32BinWard = trashBins.find(b => b.id === ESP32_BIN_ID)?.ward;
+  const wardSet = new Set([...collectorWardNumbers, esp32BinWard]);
+  const wardFilteredBins = trashBins.filter(bin => wardSet.has(Number(bin.ward)));
+
+  // ── ESP32 Live Sensor State ──────────────────────────────────────────────
+  const [esp32Data, setEsp32Data] = useState({
+    distance: null,
+    percentage: 0,
+    status: "EMPTY",    fillStatus: "empty",    lastUpdated: "Connecting…",
+    isLive: false,
+    error: false,
+  });
+
+  // ── Track previous bin status for transition detection ─────────────────
+  const prevBinStatusRef = useRef(null);
+  const alertInProgressRef = useRef(false);
+
+  useEffect(() => {
+    const fetchEsp32 = async () => {
+      try {
+        const res = await fetch(`http://${ESP32_IP}/data`, {
+          signal: AbortSignal.timeout(4000),
+        });
+        const data = await res.json();
+        const pct = Math.max(0, Math.min(100, data.percentage));
+        const statusUp = (data.status || "EMPTY").toUpperCase();
+
+        // Map ESP32 status → Leaflet fill status for icon colour
+        let fillStatus = "empty";
+        if (pct >= 90 || statusUp === "FULL") fillStatus = "full";
+        else if (pct >= 40) fillStatus = "half";
+
+        setEsp32Data({
+          distance: parseFloat(data.distance).toFixed(1),
+          percentage: pct,
+          status: data.status,
+          lastUpdated: "Just now",
+          isLive: true,
+          error: false,
+          fillStatus,
+        });
+
+        // ── Transition Detection: Send alerts on bin full/emptied ────────
+        const isFull = fillStatus === "full";
+        const prevStatus = prevBinStatusRef.current;
+
+        if (prevStatus !== null && !alertInProgressRef.current) {
+          const espBin = wardFilteredBins.find(b => b.id === ESP32_BIN_ID);
+          const binLocation = espBin?.location || "Unknown Location";
+          const binWard = espBin?.ward || 14;
+
+          // Transition to FULL
+          if (!prevStatus && isFull) {
+            alertInProgressRef.current = true;
+            try {
+              await fetch("http://localhost:3000/api/bin-status/alert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  binId: ESP32_BIN_ID,
+                  ward: binWard,
+                  status: "full",
+                  location: binLocation,
+                  fillLevel: pct,
+                }),
+              });
+              // Store notification in localStorage for NotificationCenter
+              const binNotifs = JSON.parse(localStorage.getItem("binAlertNotifications") || "[]");
+              binNotifs.unshift({
+                id: `bin-full-${ESP32_BIN_ID}-${Date.now()}`,
+                type: "bin-full",
+                title: `🚨 Dustbin Full — ${ESP32_BIN_ID}`,
+                message: `Dustbin at ${binLocation} (Ward ${binWard}) is ${pct}% full and needs immediate collection.`,
+                icon: "bin-full",
+                timestamp: new Date().toISOString(),
+                read: false,
+              });
+              // Keep only last 50 bin notifications
+              localStorage.setItem("binAlertNotifications", JSON.stringify(binNotifs.slice(0, 50)));
+            } catch (err) {
+              console.error("Failed to send bin full alert:", err);
+            } finally {
+              alertInProgressRef.current = false;
+            }
+          }
+
+          // Transition from FULL to EMPTIED
+          if (prevStatus && !isFull) {
+            alertInProgressRef.current = true;
+            try {
+              await fetch("http://localhost:3000/api/bin-status/alert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  binId: ESP32_BIN_ID,
+                  ward: binWard,
+                  status: "emptied",
+                  location: binLocation,
+                  fillLevel: pct,
+                }),
+              });
+              const binNotifs = JSON.parse(localStorage.getItem("binAlertNotifications") || "[]");
+              binNotifs.unshift({
+                id: `bin-emptied-${ESP32_BIN_ID}-${Date.now()}`,
+                type: "bin-emptied",
+                title: `✅ Dustbin Emptied — ${ESP32_BIN_ID}`,
+                message: `Dustbin at ${binLocation} (Ward ${binWard}) has been emptied and is now at ${pct}%. You can resume disposal.`,
+                icon: "bin-emptied",
+                timestamp: new Date().toISOString(),
+                read: false,
+              });
+              localStorage.setItem("binAlertNotifications", JSON.stringify(binNotifs.slice(0, 50)));
+            } catch (err) {
+              console.error("Failed to send bin emptied alert:", err);
+            } finally {
+              alertInProgressRef.current = false;
+            }
+          }
+        }
+
+        prevBinStatusRef.current = isFull;
+      } catch {
+        setEsp32Data((prev) => ({
+          ...prev,
+          lastUpdated: "Offline",
+          isLive: false,
+          error: true,
+        }));
+      }
+    };
+
+    fetchEsp32();
+    const interval = setInterval(fetchEsp32, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      setIsScrolled(currentScroll > 50);
-
-      if (currentScroll < lastScrollY - 10) {
-        setIsNavVisible(true);
-      } else if (currentScroll > lastScrollY + 10 && currentScroll > 80) {
-        setIsNavVisible(false);
-      }
-
-      setLastScrollY(currentScroll);
+      setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowProfileDropdown(false);
-      }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
-        setMobileMenuOpen(false);
-      }
+  // Merge ESP32 live data into the TB1029 entry at render time
+  const liveBins = wardFilteredBins.map((bin) => {
+    if (bin.id !== ESP32_BIN_ID) return bin;
+    return {
+      ...bin,
+      fillLevel: esp32Data.percentage,
+      fillStatus: esp32Data.fillStatus ?? bin.fillStatus,
+      lastCollection: esp32Data.lastUpdated,
+      binType: esp32Data.isLive ? "IoT Smart Bin (Live)" : bin.binType,
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  });
 
-  const handleLogout = () => {
-    setShowProfileDropdown(false);
-    
-    console.log('🚪 Collector logging out...');
-    
-    // Clear collector data from localStorage
-    localStorage.removeItem('collectorToken');
-    localStorage.removeItem('collectorData');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('username');
-    
-    console.log('✅ Collector logged out successfully');
-    
-    navigate('/login');
-  };
-
-  const handleProfileClick = () => {
-    setShowProfileDropdown(false);
-    navigate('/collector/profile');
-  };
-
-  const handleDashboardClick = () => {
-    setShowProfileDropdown(false);
-    navigate('/collector/dashboard');
-  };
-
-  // Get user's current location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-          setMapCenter([latitude, longitude]);
-        },
-        () => {
-          console.log("Using default location");
-        }
-      );
-    }
-  }, []);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'bg-emerald-100 text-emerald-800';
-      case 'in-progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'low': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getFillLevelColor = (level) => {
-    if (level >= 80) return 'bg-red-500 text-white';
-    if (level >= 50) return 'bg-amber-500 text-white';
-    return 'bg-emerald-500 text-white';
-  };
-
-  const handleBinSelect = (bin) => {
-    setSelectedBin(bin);
-    setMapCenter(bin.coordinates);
-    setZoomLevel(16);
-  };
-
-  const handleStartNavigation = (bin) => {
-    const { coordinates } = bin;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${coordinates[0]},${coordinates[1]}`;
-    window.open(url, '_blank');
-  };
-
-  const handleMarkComplete = (binId) => {
-    // In real app, this would be an API call
-    console.log(`Marked bin ${binId} as complete`);
-    setSelectedBin(null);
-  };
-
-  const handleStartCollection = (binId) => {
-    // In real app, this would be an API call
-    console.log(`Started collection for bin ${binId}`);
-    setSelectedBin(null);
-  };
-
-  const filteredBins = assignedBins.filter(bin => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "pending") return bin.status === "pending";
-    if (activeFilter === "in-progress") return bin.status === "in-progress";
-    if (activeFilter === "high") return bin.priority === "high";
-    if (activeFilter === "completed") return bin.status === "completed";
-    return true;
-  }).filter(bin => 
-    bin.binId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    bin.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    bin.wasteType.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter data based on search
+  const filteredListData = [
+    ...liveBins.map(bin => ({
+      id: `Trash Bin #${bin.id}`,
+      type: "Trash Bin",
+      location: bin.location,
+      status: bin.fillLevel,
+      lastUpdated: bin.lastCollection,
+      fillStatus: bin.fillStatus,
+    })),
+  ].filter(item => 
+    item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter for route calculation
-  const pendingBins = assignedBins.filter(b => b.status === "pending");
-  const completedBins = assignedBins.filter(b => b.status === "completed");
-  const progressPercentage = assignedBins.length > 0 
-    ? Math.round((completedBins.length / assignedBins.length) * 100) 
-    : 0;
+  const getStatusColor = (status) => {
+    if (typeof status === "number") {
+      if (status <= 30) return "text-green-600 bg-green-100";
+      if (status <= 70) return "text-yellow-600 bg-yellow-100";
+      return "text-red-600 bg-red-100";
+    }
+    return status === "Active" ? "text-green-600 bg-green-100" : "text-gray-600 bg-gray-100";
+  };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50 text-gray-900 flex flex-col">
-      {/* Background Elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-200/40 rounded-full mix-blend-multiply filter blur-3xl animate-float-slow"></div>
-        <div className="absolute top-60 right-20 w-96 h-96 bg-teal-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-float-medium"></div>
-      </div>
-
-      {/* SAME NAVBAR AS ASSIGNED TASKS PAGE */}
-      <nav ref={mobileMenuRef} className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 transform ${
-        isNavVisible ? 'translate-y-0' : '-translate-y-full'
-      } ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-xl shadow-2xl border-b border-emerald-100' 
-          : 'bg-gradient-to-r from-white/95 to-emerald-50/95 backdrop-blur-xl shadow-lg'
-      }`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
-          {/* Logo - Match Collector Dashboard */}
-          <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
-              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
-                <GiBroom className="text-white text-xl" />
-              </div>
-              <div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                  SweePokhara
-                </span>
-              </div>
-              <span className="hidden sm:inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
-                Collector
-              </span>
-            </div>
-          </Link>
-
-          {/* Navigation - Desktop */}
-          <div className="hidden md:flex items-center space-x-6">
-            <button
-              onClick={() => {
-                setActiveNav('home');
-                navigate('/collector/dashboard');
-              }}
-              className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
-                activeNav === 'home' 
-                  ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
-                  : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <FiHome />
-                <span className="font-semibold">Dashboard</span>
-              </div>
-              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
-                activeNav === 'home' ? "w-4/5 left-1/10" : ""
-              }`}></span>
-            </button>
-            
-            <button
-              onClick={() => {
-                setActiveNav('tasks');
-                navigate('/collector/tasks');
-              }}
-              className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
-                activeNav === 'tasks' 
-                  ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
-                  : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <FiCalendar />
-                <span className="font-semibold">Schedule</span>
-              </div>
-              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
-                activeNav === 'tasks' ? "w-4/5 left-1/10" : ""
-              }`}></span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveNav('reports');
-                navigate('/collector/reports');
-              }}
-              className={`relative px-5 py-2.5 rounded-xl transition-all duration-300 group ${
-                activeNav === 'reports' 
-                  ? "text-emerald-700 bg-emerald-50/80 shadow-sm" 
-                  : "text-gray-600 hover:text-emerald-700 hover:bg-white/80"
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <BsExclamationTriangle />
-                <span className="font-semibold">Reports</span>
-              </div>
-              <span className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-4/5 group-hover:left-1/10 ${
-                activeNav === 'reports' ? "w-4/5 left-1/10" : ""
-              }`}></span>
-            </button>
-            
-            {/* Notification Center */}
-            <CollectorNotificationCenter />
-            
-            {/* Profile Dropdown */}
-            <div className="relative ml-2" ref={dropdownRef}>
-              <button
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="w-11 h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
-              >
-                <FiUser className="text-xl" />
-              </button>
-
-              {/* Dropdown Menu */}
-              {showProfileDropdown && (
-                <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-emerald-100 overflow-hidden z-50 animate-fadeIn">
-                  <div className="py-2">
-                    <button
-                      onClick={handleDashboardClick}
-                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
-                    >
-                      <FiHome className="text-lg" />
-                      <span className="font-semibold">Dashboard</span>
-                    </button>
-                    
-                    <div className="border-t border-gray-100 my-1"></div>
-                    
-                    <button
-                      onClick={handleProfileClick}
-                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-emerald-50 transition-all duration-200 text-gray-700 hover:text-emerald-700"
-                    >
-                      <FiSettings className="text-lg" />
-                      <span className="font-semibold">Profile Settings</span>
-                    </button>
-                    
-                    <div className="border-t border-gray-100 my-1"></div>
-                    
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 transition-all duration-200 text-gray-700 hover:text-red-600"
-                    >
-                      <FiLogOut className="text-lg" />
-                      <span className="font-semibold">Logout</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile: notification + hamburger */}
-          <div className="flex md:hidden items-center gap-2">
-            <CollectorNotificationCenter />
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-gray-700 hover:bg-emerald-50 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <FiX className="text-2xl" /> : <FiMenu className="text-2xl" />}
-            </button>
+  const renderStatus = (item) => {
+    if (item.type === "Trash Bin") {
+      return (
+        <div className="flex items-center gap-2">
+          <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(item.status)}`}>
+            {item.status}% Full
           </div>
         </div>
-
-        {/* Mobile slide-down menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-emerald-100 bg-white/95 backdrop-blur-xl px-4 py-3 space-y-1">
-            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/dashboard'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
-              <FiHome /> Dashboard
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/tasks'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
-              <FiCalendar /> Schedule
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/reports'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
-              <BsExclamationTriangle /> Reports
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); navigate('/collector/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-emerald-50 font-semibold">
-              <FiUser /> Profile
-            </button>
-            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold">
-              <FiLogOut /> Logout
-            </button>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-2">
+          <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+            item.status === "Active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+          }`}>
+            {item.status}
           </div>
-        )}
-      </nav>
+        </div>
+      );
+    }
+  };
 
-      {/* Spacer for fixed nav */}
-      <div className="h-16 sm:h-20 md:h-24"></div>
+  return (
+    <>
 
-      {/* Main Content */}
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      {/* Content */}
+      <main className="flex-grow mx-auto p-6 w-full max-w-7xl flex flex-col">
         {/* Header Section */}
         <div className="mb-8">
-          <button 
-            onClick={() => navigate('/collector/tasks')}
-            className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group"
-          >
-            <FiArrowLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
-            <span className="font-semibold">Back to Tasks</span>
-          </button>
-          
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <Link to="/collector" className="inline-flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition-colors duration-300 mb-4 group">
+            <FiChevronLeft className="text-lg group-hover:-translate-x-1 transition-transform duration-300" />
+            <span className="font-semibold">Back to Home</span>
+          </Link>
+
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                Collection Route Map
+              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent mb-2">
+                {viewMode === "map" ? "Live Asset Map" : "Asset Overview"}
               </h1>
-              <p className="text-gray-600 text-base sm:text-lg">
-                Visualize your route and manage collection points in real-time
+              <p className="text-gray-600 text-lg">
+                {viewMode === "map" 
+                  ? `Real-time tracking of waste bins in Ward ${collectorWardNumbers.join(', ') || '—'}` 
+                  : `Overview of waste management assets in Ward ${collectorWardNumbers.join(', ') || '—'}`}
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl px-4 py-2">
-                <p className="text-sm text-emerald-700 font-medium flex items-center gap-2">
-                  <TbRoute />
-                  {collectorData.currentRoute.name}
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setViewMode("map")}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    viewMode === "map"
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
-                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                  }`}
-                >
-                  Map View
-                </button>
-                <button 
-                  onClick={() => setViewMode("list")}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    viewMode === "list"
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
-                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                  }`}
-                >
-                  List View
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Total Bins</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{assignedBins.length}</p>
-                <p className="text-xs text-gray-500 mt-1">In current route</p>
-              </div>
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-emerald-100 rounded-full flex items-center justify-center">
-                <BsFillTrashFill className="text-emerald-600 text-xl sm:text-2xl" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Pending</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pendingBins.length}</p>
-                <p className="text-xs text-gray-500 mt-1">Awaiting collection</p>
-              </div>
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-amber-100 rounded-full flex items-center justify-center">
-                <BsClock className="text-amber-600 text-xl sm:text-2xl" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Route Distance</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{collectorData.currentRoute.totalDistance}</p>
-                <p className="text-xs text-gray-500 mt-1">Total coverage</p>
-              </div>
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-blue-100 rounded-full flex items-center justify-center">
-                <GiPathDistance className="text-blue-600 text-xl sm:text-2xl" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Progress</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{progressPercentage}%</p>
-                <p className="text-xs text-gray-500 mt-1">Collection completed</p>
-              </div>
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-purple-100 rounded-full flex items-center justify-center">
-                <BsCheckCircle className="text-purple-600 text-xl sm:text-2xl" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-            <div className="relative flex-1 w-full">
-              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search bins by ID, location, or waste type..."
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {["all", "pending", "in-progress", "high"].map(filter => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                    activeFilter === filter
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
-                      : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-                  }`}
-                >
-                  {filter === "all" ? "All" : filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </button>
-              ))}
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-300">
-                <FiFilter />
-                <span>More</span>
+            {/* View Toggle Buttons */}
+            <div className="flex space-x-3 bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-emerald-100">
+              <button
+                onClick={() => setViewMode("map")}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                  viewMode === "map"
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
+                    : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
+                }`}
+              >
+                <BsMap className="text-lg" />
+                Map View
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                  viewMode === "list"
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
+                    : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
+                }`}
+              >
+                <BsListUl className="text-lg" />
+                List View
               </button>
             </div>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        {viewMode === "map" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Map Container - 2/3 width */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[350px] sm:h-[450px] lg:h-[600px] border border-emerald-100" style={{ zIndex: 0, position: "relative" }}>
-                {typeof window !== 'undefined' && MapContainer ? (
-                  <MapContainer
-                    center={mapCenter}
-                    zoom={zoomLevel}
-                    scrollWheelZoom={false}
-                    className="h-full w-full"
-                    style={{ zIndex: 0, position: "relative" }}
-                    zoomControl={false}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    
-                    {/* Bin Markers */}
-                    {assignedBins.map((bin) => (
-                      <Marker 
-                        key={bin.id} 
-                        position={bin.coordinates}
-                        icon={createTrashBinIcon(bin.fillStatus)}
-                        eventHandlers={{
-                          click: () => handleBinSelect(bin),
-                        }}
-                      >
-                        <Popup className="custom-popup">
-                          <div className="p-3 min-w-[250px]">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className={`w-3 h-3 rounded-full ${
-                                bin.fillLevel >= 80 ? 'bg-red-500' : 
-                                bin.fillLevel >= 50 ? 'bg-amber-500' : 'bg-green-500'
-                              }`}></div>
-                              <h3 className="font-bold text-gray-900">Bin #{bin.binId}</h3>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                              <p><span className="font-semibold">Location:</span> {bin.location}</p>
-                              <p><span className="font-semibold">Fill Level:</span> {bin.fillLevel}%</p>
-                              <p><span className="font-semibold">Status:</span> 
-                                <span className={`ml-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                                  bin.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
-                                  bin.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {bin.status.toUpperCase()}
-                                </span>
-                              </p>
-                              <p><span className="font-semibold">Collection Time:</span> {bin.collectionTime}</p>
-                            </div>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))}
-                    
-                    {/* Vehicle Marker */}
-                    <Marker 
-                      position={collectorData.vehicle.currentLocation}
-                      icon={createVehicleIcon()}
-                    >
-                      <Popup>
-                        <div className="p-3 min-w-[200px]">
-                          <h3 className="font-bold text-gray-900 mb-2">Vehicle #{collectorData.vehicle.id}</h3>
-                          <div className="space-y-1 text-sm">
-                            <p><span className="font-semibold">Status:</span> {collectorData.vehicle.status}</p>
-                            <p><span className="font-semibold">Fuel:</span> {collectorData.vehicle.fuel}%</p>
-                            <p><span className="font-semibold">Speed:</span> {collectorData.vehicle.speed}</p>
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
-
-                    <ZoomControl position="bottomright" />
-                  </MapContainer>
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-gray-100">
-                    <p className="text-gray-500">Loading map...</p>
-                  </div>
-                )}
-              </div>
+        {/* MAP OR LIST */}
+        {wardFilteredBins.length === 0 ? (
+          <div className="flex-grow flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-emerald-200 p-12" style={{ minHeight: "40vh" }}>
+            <div className="text-center">
+              <BsFillTrashFill className="text-6xl text-gray-300 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-700 mb-2">No Bins in Your Ward</h3>
+              <p className="text-gray-500 text-lg">There are currently no smart bins assigned to your wards.</p>
             </div>
+          </div>
+        ) : viewMode === "map" ? (
+          <div className="rounded-3xl overflow-hidden shadow-2xl border border-emerald-200 flex-grow bg-white/80 backdrop-blur-sm relative" style={{ height: "70vh", zIndex: 0, position: "relative" }}>
+            <MapContainer
+              center={[28.2096, 83.9856]}
+              zoom={14}
+              scrollWheelZoom={false}
+              className="h-full w-full rounded-3xl"
+              zoomControl={false}
+              style={{ zIndex: 0, position: "relative" }}
+            >
+              <TileLayer 
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
 
-            {/* Side Panel - 1/3 width */}
-            <div className="space-y-6">
-              {/* Selected Bin Details */}
-              {selectedBin ? (
-                <div className="bg-white rounded-2xl shadow-lg p-6 border border-emerald-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Selected Bin</h3>
-                    <button 
-                      onClick={() => setSelectedBin(null)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-gray-900">Bin #{selectedBin.binId}</h4>
-                        <p className="text-sm text-gray-600">{selectedBin.location}</p>
+              {/* Trash Bin Markers */}
+              {liveBins.map((bin) => (
+                <Marker
+                  key={bin.id === ESP32_BIN_ID ? `${bin.id}-${bin.fillLevel}-${bin.fillStatus}` : bin.id}
+                  position={bin.position}
+                  icon={createTrashBinIcon(bin.fillStatus)}
+                >
+                  <Popup className="custom-popup">
+                    <div className="p-3 min-w-[200px]">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          bin.fillStatus === "full" ? "bg-red-500" : 
+                          bin.fillStatus === "half" ? "bg-yellow-500" : "bg-green-500"
+                        }`}></div>
+                        <h3 className="font-bold text-gray-900">Trash Bin #{bin.id}</h3>
+                        {/* Live badge only for the ESP32-connected bin */}
+                        {bin.id === ESP32_BIN_ID && (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              fontSize: 10,
+                              fontWeight: 700,
+                              padding: "2px 7px",
+                              borderRadius: 999,
+                              background: esp32Data.isLive ? "#d1fae5" : "#f3f4f6",
+                              color: esp32Data.isLive ? "#065f46" : "#6b7280",
+                              border: `1px solid ${esp32Data.isLive ? "#6ee7b7" : "#d1d5db"}`,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 6, height: 6, borderRadius: "50%",
+                                background: esp32Data.isLive ? "#10b981" : "#9ca3af",
+                                display: "inline-block",
+                              }}
+                            />
+                            {esp32Data.isLive ? "LIVE" : "OFFLINE"}
+                          </span>
+                        )}
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getFillLevelColor(selectedBin.fillLevel)}`}>
-                        {selectedBin.fillLevel}%
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-gray-500">Waste Type</p>
-                        <p className="font-medium">{selectedBin.wasteType}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Priority</p>
-                        <p className={`font-medium ${selectedBin.priority === 'high' ? 'text-red-600' : 'text-amber-600'}`}>
-                          {selectedBin.priority.toUpperCase()}
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-semibold">Type:</span> {bin.binType}</p>
+                        <p><span className="font-semibold">Status:</span> 
+                          <span className={`ml-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                            bin.fillStatus === "full" ? "bg-red-100 text-red-800" : 
+                            bin.fillStatus === "half" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"
+                          }`}>
+                            {bin.id === ESP32_BIN_ID
+                              ? (esp32Data.status || bin.fillStatus).toUpperCase()
+                              : bin.fillStatus.toUpperCase()}
+                          </span>
                         </p>
+                        {/* Distance row — only for ESP32 bin */}
+                        {bin.id === ESP32_BIN_ID && esp32Data.distance !== null && (
+                          <p><span className="font-semibold">Distance:</span> {esp32Data.distance} cm</p>
+                        )}
+                        <p><span className="font-semibold">Fill Level:</span> {bin.fillLevel}%</p>
+                        <p><span className="font-semibold">Last Collection:</span> {bin.lastCollection}</p>
+                        <p><span className="font-semibold">Location:</span> {bin.location}</p>
+                        {/* Error hint */}
+                        {bin.id === ESP32_BIN_ID && esp32Data.error && (
+                          <p style={{ color: "#ef4444", fontSize: 11, marginTop: 4 }}>
+                            ⚠ Cannot reach ESP32 at {ESP32_IP}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Address</p>
-                      <p className="text-sm">{selectedBin.address}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Notes</p>
-                      <p className="text-sm">{selectedBin.notes}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 pt-4">
-                      <button 
-                        onClick={() => handleStartNavigation(selectedBin)}
-                        className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition-colors duration-300"
-                      >
-                        <FiNavigation />
-                        <span>Navigate</span>
-                      </button>
-                      {selectedBin.status === "pending" ? (
-                        <button 
-                          onClick={() => handleStartCollection(selectedBin.id)}
-                          className="flex items-center justify-center space-x-2 bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-700 transition-colors duration-300"
-                        >
-                          <BsArrowRightCircle />
-                          <span>Start</span>
-                        </button>
-                      ) : selectedBin.status === "in-progress" ? (
-                        <button 
-                          onClick={() => handleMarkComplete(selectedBin.id)}
-                          className="flex items-center justify-center space-x-2 bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-700 transition-colors duration-300"
-                        >
-                          <BsCheckCircle />
-                          <span>Complete</span>
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl shadow-lg p-6 border border-emerald-100">
-                  <div className="text-center py-8">
-                    <BsPinMapFill className="text-4xl text-emerald-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Select a Bin</h3>
-                    <p className="text-gray-600 text-sm">
-                      Click on any bin marker on the map to view details and actions
-                    </p>
-                  </div>
-                </div>
-              )}
+                  </Popup>
+                </Marker>
+              ))}
 
-              {/* Vehicle Status */}
-              <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold">Vehicle Status</h3>
-                  <BsTruck className="text-2xl text-emerald-200" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-100">Vehicle ID</span>
-                    <span className="font-bold">{collectorData.vehicle.id}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-100">Status</span>
-                    <span className="font-bold flex items-center gap-2">
-                      <div className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></div>
-                      {collectorData.vehicle.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-100">Fuel Level</span>
-                    <span className="font-bold">{collectorData.vehicle.fuel}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-white rounded-2xl shadow-lg p-6 border border-emerald-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="space-y-3">
-                  <button 
-                    onClick={() => navigate('/collector/tasks')}
-                    className="w-full flex items-center justify-between p-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors duration-300"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <BsListUl className="text-xl" />
-                      <span>View All Tasks</span>
-                    </div>
-                    <FiChevronRight />
-                  </button>
-                  <button 
-                    onClick={() => window.print()}
-                    className="w-full flex items-center justify-between p-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-300"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FiArrowLeft className="text-xl transform rotate-180" />
-                      <span>Print Route</span>
-                    </div>
-                    <FiChevronRight />
-                  </button>
-                </div>
-              </div>
-            </div>
+              <ZoomControl position="bottomright" />
+            </MapContainer>
           </div>
         ) : (
-          /* List View */
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-emerald-100">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-emerald-50 to-teal-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Bin ID</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Fill Level</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Priority</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200/50">
-                  {filteredBins.map((bin) => (
-                    <tr key={bin.id} className="hover:bg-emerald-50/50 transition-colors duration-200">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900">#{bin.binId}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <BsGeoAlt className="text-emerald-600" />
-                          <div>
-                            <div className="font-medium">{bin.location}</div>
-                            <div className="text-sm text-gray-500">{bin.collectionTime}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-20 h-2 bg-gray-200 rounded-full overflow-hidden`}>
-                            <div 
-                              className={`h-full ${
-                                bin.fillLevel >= 80 ? 'bg-red-500' : 
-                                bin.fillLevel >= 50 ? 'bg-amber-500' : 'bg-emerald-500'
-                              }`}
-                              style={{ width: `${bin.fillLevel}%` }}
-                            ></div>
-                          </div>
-                          <span className="font-semibold">{bin.fillLevel}%</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(bin.status)}`}>
-                          {bin.status.replace('-', ' ').toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getPriorityColor(bin.priority)}`}>
-                          {bin.priority.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => handleBinSelect(bin)}
-                            className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors duration-300 text-sm"
-                          >
-                            View
-                          </button>
-                          <button 
-                            onClick={() => handleStartNavigation(bin)}
-                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-300 text-sm"
-                          >
-                            Navigate
-                          </button>
-                        </div>
-                      </td>
+          <>
+            {/* Search and Filters */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center">
+              <div className="relative flex-1 min-w-0 w-full sm:max-w-md">
+                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                <input 
+                  type="text" 
+                  placeholder="Search assets by ID, location, or type..." 
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors duration-300 bg-white/80 backdrop-blur-sm">
+                <FiFilter className="text-lg" />
+                <span>Filters</span>
+              </button>
+            </div>
+
+            {/* List Table */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg overflow-hidden border border-emerald-100">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-emerald-50 to-teal-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Asset</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Location</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-emerald-900 uppercase tracking-wider">Last Updated</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-200/50">
+                    {filteredListData.map((item, index) => (
+                      <tr key={index} className="hover:bg-emerald-50/50 transition-colors duration-200 group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${
+                              item.type === "Trash Bin" 
+                                ? "bg-emerald-100 text-emerald-600" 
+                                : "bg-blue-100 text-blue-600"
+                            }`}>
+                              {item.type === "Trash Bin" ? <BsFillTrashFill /> : <BsTruck />}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900">{item.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            item.type === "Trash Bin" 
+                              ? "bg-purple-100 text-purple-800" 
+                              : "bg-blue-100 text-blue-800"
+                          }`}>
+                            {item.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-700 max-w-xs truncate">{item.location}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {renderStatus(item)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.lastUpdated}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          </>
         )}
-
-        {/* Legend */}
-        <div className="mt-6 sm:mt-8 bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-emerald-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Map Legend</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full border-3 border-red-500 flex items-center justify-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              </div>
-              <span className="text-sm">High Fill Level (&gt;80%)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full border-3 border-amber-500 flex items-center justify-center">
-                <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-              </div>
-              <span className="text-sm">Medium Fill Level (50-80%)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full border-3 border-emerald-500 flex items-center justify-center">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-              </div>
-              <span className="text-sm">Low Fill Level (&lt;50%)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 border-3 border-white"></div>
-              <span className="text-sm">Your Vehicle</span>
-            </div>
-          </div>
-        </div>
       </main>
-
-      {/* SAME FOOTER AS ASSIGNED TASKS PAGE */}
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-emerald-200 py-8 text-center text-emerald-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10 mt-12">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
-        <div className="flex gap-6">
-          <a href="#" className="underline hover:text-emerald-900 transition-colors duration-300 font-medium">
-            Privacy Policy
-          </a>
-          <a href="#" className="underline hover:text-emerald-900 transition-colors duration-300 font-medium">
-            Terms of Service
-          </a>
-        </div>
-      </footer>
 
       {/* Enhanced animations */}
       <style jsx>{`
+        /* Floating background elements */
         @keyframes float-slow {
           0%, 100% {
             transform: translateY(0px) rotate(0deg);
@@ -1104,12 +663,12 @@ const CollectorMapView = () => {
 
         @keyframes pulse {
           0%, 100% {
-            opacity: 1;
             transform: scale(1);
+            opacity: 1;
           }
           50% {
-            opacity: 0.8;
             transform: scale(1.05);
+            opacity: 0.8;
           }
         }
 
@@ -1128,6 +687,10 @@ const CollectorMapView = () => {
         
         .animate-float-medium {
           animation: float-medium 6s ease-in-out infinite;
+        }
+        
+        .animation-delay-2000 {
+          animation-delay: 2s;
         }
 
         /* Custom scrollbar */
@@ -1151,14 +714,14 @@ const CollectorMapView = () => {
           background: rgba(16, 185, 129, 0.8);
         }
 
-        /* Leaflet popup customization */
-        :global(.leaflet-popup-content-wrapper) {
+        /* Custom popup styles */
+        :global(.custom-popup .leaflet-popup-content-wrapper) {
           border-radius: 12px;
           box-shadow: 0 10px 25px rgba(0,0,0,0.15);
           border: 1px solid #e5e7eb;
         }
 
-        :global(.leaflet-popup-tip) {
+        :global(.custom-popup .leaflet-popup-tip) {
           background: white;
           border: 1px solid #e5e7eb;
         }
@@ -1189,8 +752,6 @@ const CollectorMapView = () => {
           z-index: 400 !important;
         }
       `}</style>
-    </div>
+    </>
   );
-};
-
-export default CollectorMapView;
+}

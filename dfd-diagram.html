@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Data Flow Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .controls button {
+            padding: 8px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            overflow: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Data Flow Diagram &bull; System Data Processes &amp; Storage</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="zoomIn()">🔍+ Zoom In</button>
+        <button onclick="zoomOut()">🔍- Zoom Out</button>
+        <button onclick="resetZoom()">↻ Reset</button>
+        <button onclick="downloadSVG()">⬇ Download SVG</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#fca5a5; border-color:#dc2626;"></div> External Entities</div>
+        <div class="legend-item"><div class="legend-color" style="background:#93c5fd; border-color:#2563eb;"></div> Processes</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fbbf24; border-color:#d97706;"></div> Data Stores</div>
+        <div class="legend-item"><div class="legend-color" style="background:#86efac; border-color:#16a34a;"></div> Data Flows</div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+graph TD
+    %% External Entities
+    USR["👤<br/>User<br/>Resident"]
+    COLL["👤<br/>Collector<br/>Waste Collector"]
+    ADMIN["👤<br/>Admin<br/>Municipal Officer"]
+    BIN["📦<br/>Smart Bin<br/>IoT Device"]
+    EMAIL["📧<br/>Email Service<br/>Resend/SMTP"]
+    
+    %% Processes
+    P1["1.0<br/>User<br/>Authentication"]
+    P2["2.0<br/>Report<br/>Management"]
+    P3["3.0<br/>Task<br/>Management"]
+    P4["4.0<br/>Admin<br/>Verification"]
+    P5["5.0<br/>Email<br/>Notification"]
+    P6["6.0<br/>Bin Alert<br/>Processing"]
+    P7["7.0<br/>Schedule<br/>Cron Job"]
+    
+    %% Data Stores
+    D1["D1<br/>Users<br/>Database"]
+    D2["D2<br/>Reports<br/>Database"]
+    D3["D3<br/>Ward Tasks<br/>Database"]
+    D4["D4<br/>Collectors<br/>Database"]
+    D5["D5<br/>Bin Alerts<br/>Database"]
+    D6["D6<br/>Email Queue"]
+    
+    %% Data Flows - User Path
+    USR -->|User Credentials, Email| P1
+    P1 -->|Auth Token| USR
+    P1 --> D1
+    D1 -->|User Data| P1
+    
+    USR -->|Report: Description, GPS, Location, Images| P2
+    P2 -->|Report ID, Status| USR
+    P2 --> D2
+    D2 -->|Report Data| P4
+    
+    P2 -->|Ward Number| D4
+    D4 -->|Collector Info| P2
+    P2 -->|Collector ID for Auto-Assign| D2
+    
+    %% Data Flows - Collector Path
+    COLL -->|Collector ID, Password, Phone| P1
+    P1 -->|JWT Token| COLL
+    
+    P3 -->|Today's Tasks| COLL
+    COLL -->|Task Status Update| P3
+    P3 --> D3
+    D3 -->|Task Data| P3
+    D3 -->|Tasks for Today| P7
+    
+    COLL -->|Report Status Update| P2
+    P2 -->|Updated Report Status| D2
+    
+    %% Data Flows - Admin Path
+    ADMIN -->|Admin Credentials| P1
+    P1 -->|Auth Token| ADMIN
+    
+    ADMIN -->|Report ID| P4
+    P4 -->|All Pending Reports| ADMIN
+    D2 -->|Report Data| P4
+    
+    ADMIN -->|Approve/Reject Decision| P4
+    P4 -->|Report Status: Resolved/Rejected| D2
+    
+    ADMIN -->|Collector Details| D4
+    ADMIN -->|Create/Update/Delete Collector| P3
+    P3 -->|Collector Updated| D4
+    
+    %% Data Flows - Bin Alert Path
+    BIN -->|Bin Status: Full/Emptied, Location, Ward| P6
+    P6 -->|Check Previous Status| D5
+    D5 -->|Bin Status History| P6
+    P6 -->|New Bin Alert| D5
+    
+    %% Data Flows - Email Notification Path
+    P5 -->|Email Request| EMAIL
+    EMAIL -->|Confirmation| P5
+    
+    P2 -->|Report Created Event| P5
+    D2 -->|Report Resolution Data| P5
+    
+    P3 -->|Task Completion Event| P5
+    P4 -->|Report Approved/Rejected| P5
+    P7 -->|Tomorrow's Schedule| P5
+    P6 -->|Bin Alert Event| P5
+    P5 -->|Email Queue Entry| D6
+    D6 -->|Pending Emails| P5
+    
+    USR -->|Email Notification| P5
+    COLL -->|Email Notification| P5
+    ADMIN -->|Email Notification| P5
+    
+    %% Schedule Cron Job
+    P7 -->|Query Tomorrow's Schedule| D3
+    D3 -->|Ward Schedule Data| P7
+    P7 -->|Find Users in Ward| D1
+    D1 -->|User List| P7
+    P7 -->|Dedup Check| D1
+    P7 -->|Generate Reminder Event| P5
+    
+    %% Styling
+    style USR fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style COLL fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style ADMIN fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style BIN fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    style EMAIL fill:#fca5a5,stroke:#dc2626,stroke-width:2px,color:#000
+    
+    style P1 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P2 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P3 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P4 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P5 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P6 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    style P7 fill:#93c5fd,stroke:#2563eb,stroke-width:2px,color:#000
+    
+    style D1 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D2 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D3 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D4 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D5 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+    style D6 fill:#fbbf24,stroke:#d97706,stroke-width:2px,color:#000
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Waste Management System &bull; Data Flow Diagram (DFD)
+    </div>
+
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        let currentZoom = 1;
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 30,
+                rankSpacing: 50
+            },
+            themeVariables: {
+                fontSize: '13px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.15, 3);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.15, 0.3);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                svg.style.transform = `scale(${currentZoom})`;
+                svg.style.transformOrigin = 'top center';
+            }
+        }
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'SweepPokhara-DFD.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -2,9 +2,10 @@ import {useState, useEffect, useRef} from 'react'
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { GiBroom } from "react-icons/gi";
 import { FiLogOut, FiUser, FiSettings, FiHome, FiMoon, FiSun, FiMenu, FiX } from "react-icons/fi";
-import { useClerk } from '@clerk/clerk-react';
+import { useClerk, useUser } from '@clerk/clerk-react';
 import NotificationCenter from './NotificationCenter';
 import { useDarkMode } from '../../../context/DarkModeContext';
+import sweepPokharaLogo from '../../../assets/images/sweeppokhara-final-logo.png';
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -20,6 +21,7 @@ function Header() {
     const isProfileActive = location.pathname.startsWith('/user/profile');
     const { isDarkMode, toggleDarkMode } = useDarkMode();
     const { signOut } = useClerk();
+    const { user, isLoaded } = useUser();
 
     useEffect(() => {
     const handleScroll = () => {
@@ -138,16 +140,13 @@ function Header() {
           }`}>
             <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
               <Link to="/user" className="transform hover:scale-105 transition-transform duration-300">
-              <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
-                <div className={`p-1.5 sm:p-2 ${isDarkMode ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-emerald-600 to-teal-500'} rounded-xl`}>
-                  <GiBroom className="text-white text-lg sm:text-xl" />
+                <div className="flex items-center justify-center">
+                  <img 
+                    src={sweepPokharaLogo} 
+                    alt="SweepPokhara Logo" 
+                    className="h-11 sm:h-12 w-auto object-contain"
+                  />
                 </div>
-                <div>
-                  <span className={`text-lg sm:text-xl font-bold ${isDarkMode ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-emerald-700 to-teal-600'} bg-clip-text text-transparent`}>
-                    SweePokhara
-                  </span>
-                </div>
-              </div>
               </Link>
 
           {/* Desktop Nav Links */}
@@ -197,63 +196,123 @@ function Header() {
                 
                 {/* Profile Dropdown */}
                 <div className="relative ml-4 lg:ml-16" ref={dropdownRef}>
-                  <button
-                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                    className={`w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 ${
-                      isProfileActive ? 'ring-4 ring-emerald-300' : ''
-                    }`}
-                  >
-                    <FiUser className="text-lg sm:text-xl" />
-                  </button>
+                  {isLoaded && user ? (
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                        className={`group relative flex flex-col items-center cursor-pointer transition-all duration-300 ${
+                          isProfileActive ? 'scale-110' : 'hover:scale-110'
+                        }`}
+                      >
+                        <div className={`w-10 h-10 lg:w-11 lg:h-11 rounded-full overflow-hidden flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 border-2 ${
+                          isProfileActive 
+                            ? 'border-emerald-400 ring-2 ring-emerald-300' 
+                            : 'border-emerald-300 group-hover:border-emerald-400'
+                        }`}>
+                          {user.imageUrl ? (
+                            <img 
+                              src={user.imageUrl} 
+                              alt={user.fullName || 'Profile'} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
+                              {user.firstName ? user.firstName.charAt(0).toUpperCase() : user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs font-semibold text-center max-w-16">
+                          <p className={`truncate ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {user.firstName || user.username || 'User'}
+                          </p>
+                        </div>
+                      </button>
 
-                  {/* Dropdown Menu */}
-                  {showProfileDropdown && (
-                    <div className={`absolute right-0 mt-3 w-56 ${
-                      isDarkMode 
-                        ? 'bg-gray-800 border-gray-700' 
-                        : 'bg-white border-emerald-100'
-                    } rounded-xl shadow-2xl border overflow-hidden z-50 animate-fadeIn`}>
-                      <div className="py-2">
-                        <button
-                          onClick={handleHomeClick}
-                          className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-all duration-200 ${
+                      {/* Dropdown Menu */}
+                      {showProfileDropdown && (
+                        <div className={`absolute right-0 mt-12 w-64 ${
+                          isDarkMode 
+                            ? 'bg-gray-800 border-gray-700' 
+                            : 'bg-white border-emerald-100'
+                        } rounded-xl shadow-2xl border overflow-hidden z-50 animate-fadeIn`}>
+                          {/* User Info Header */}
+                          <div className={`px-4 py-4 border-b ${
                             isDarkMode 
-                              ? 'hover:bg-gray-700 text-gray-200 hover:text-emerald-400' 
-                              : 'hover:bg-emerald-50 text-gray-700 hover:text-emerald-700'
-                          }`}
-                        >
-                          <FiHome className="text-lg" />
-                          <span className="font-semibold">Home</span>
-                        </button>
-                        
-                        <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} my-1`}></div>
-                        
-                        <button
-                          onClick={handleProfileClick}
-                          className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-all duration-200 ${
-                            isDarkMode 
-                              ? 'hover:bg-gray-700 text-gray-200 hover:text-emerald-400' 
-                              : 'hover:bg-emerald-50 text-gray-700 hover:text-emerald-700'
-                          }`}
-                        >
-                          <FiSettings className="text-lg" />
-                          <span className="font-semibold">Profile Settings</span>
-                        </button>
-                        
-                        <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} my-1`}></div>
-                        
-                        <button
-                          onClick={handleLogout}
-                          className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-all duration-200 ${
-                            isDarkMode 
-                              ? 'hover:bg-red-900/50 text-gray-200 hover:text-red-400' 
-                              : 'hover:bg-red-50 text-gray-700 hover:text-red-600'
-                          }`}
-                        >
-                          <FiLogOut className="text-lg" />
-                          <span className="font-semibold">Logout</span>
-                        </button>
-                      </div>
+                              ? 'border-gray-700 bg-gray-900/50' 
+                              : 'border-emerald-50 bg-emerald-50/50'
+                          }`}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-emerald-300">
+                                {user.imageUrl ? (
+                                  <img 
+                                    src={user.imageUrl} 
+                                    alt={user.fullName || 'Profile'} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold">
+                                    {user.firstName ? user.firstName.charAt(0).toUpperCase() : user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'} truncate`}>
+                                  {user.fullName || user.firstName || 'User'}
+                                </p>
+                                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} truncate`}>
+                                  {user.primaryEmailAddress?.emailAddress || 'No email'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="py-2">
+                            <button
+                              onClick={handleHomeClick}
+                              className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-all duration-200 ${
+                                isDarkMode 
+                                  ? 'hover:bg-gray-700 text-gray-200 hover:text-emerald-400' 
+                                  : 'hover:bg-emerald-50 text-gray-700 hover:text-emerald-700'
+                              }`}
+                            >
+                              <FiHome className="text-lg" />
+                              <span className="font-semibold">Home</span>
+                            </button>
+                            
+                            <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} my-1`}></div>
+                            
+                            <button
+                              onClick={handleProfileClick}
+                              className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-all duration-200 ${
+                                isDarkMode 
+                                  ? 'hover:bg-gray-700 text-gray-200 hover:text-emerald-400' 
+                                  : 'hover:bg-emerald-50 text-gray-700 hover:text-emerald-700'
+                              }`}
+                            >
+                              <FiSettings className="text-lg" />
+                              <span className="font-semibold">Profile Settings</span>
+                            </button>
+                            
+                            <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} my-1`}></div>
+                            
+                            <button
+                              onClick={handleLogout}
+                              className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-all duration-200 ${
+                                isDarkMode 
+                                  ? 'hover:bg-red-900/50 text-gray-200 hover:text-red-400' 
+                                  : 'hover:bg-red-50 text-gray-700 hover:text-red-600'
+                              }`}
+                            >
+                              <FiLogOut className="text-lg" />
+                              <span className="font-semibold">Logout</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={`w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300`}>
+                      <FiUser className="text-lg sm:text-xl" />
                     </div>
                   )}
                 </div>
@@ -296,6 +355,42 @@ function Header() {
               <div className={`px-4 pb-4 pt-2 space-y-1 border-t ${
                 isDarkMode ? 'border-gray-700 bg-gray-900/95' : 'border-gray-200 bg-white/95'
               }`}>
+                {/* Mobile User Info Header */}
+                {isLoaded && user && (
+                  <>
+                    <div className={`px-3 py-3 rounded-xl mb-2 ${
+                      isDarkMode 
+                        ? 'bg-gray-800 border border-gray-700' 
+                        : 'bg-emerald-50 border border-emerald-100'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-emerald-300">
+                          {user.imageUrl ? (
+                            <img 
+                              src={user.imageUrl} 
+                              alt={user.fullName || 'Profile'} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+                              {user.firstName ? user.firstName.charAt(0).toUpperCase() : user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'} truncate`}>
+                            {user.fullName || user.firstName || 'User'}
+                          </p>
+                          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} truncate`}>
+                            {user.primaryEmailAddress?.emailAddress || 'No email'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} my-2`}></div>
+                  </>
+                )}
+                
                 {[{label:"Home", path:"/user", icon: <FiHome className="text-lg" />}, {label:"Schedule", path:"/user/schedule", icon: <FiSettings className="text-lg" />}, {label:"My Reports", path:"/user/myreport", icon: <FiUser className="text-lg" />}].map((item) => (
                   <NavLink
                     key={item.label}

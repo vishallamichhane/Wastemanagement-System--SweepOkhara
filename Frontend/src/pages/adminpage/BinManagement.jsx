@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   FiSearch,
   FiFilter,
@@ -12,7 +12,9 @@ import {
   FiRefreshCw,
   FiEye,
   FiX,
-  FiSave
+  FiSave,
+  FiWifi,
+  FiWifiOff
 } from "react-icons/fi";
 import { BsFillTrashFill, BsExclamationTriangle } from "react-icons/bs";
 
@@ -24,139 +26,123 @@ const binStatusConfig = {
   maintenance: { label: "Maintenance", color: "text-gray-700", bg: "bg-gray-100", progress: 0 }
 };
 
-const sampleBins = [
+// ── Real bin data (same as MapOverview) ────────────────────────────────
+const realBins = [
   {
-    id: "BIN-001",
-    location: "Lakeside Road, Ward 6",
-    coordinates: { lat: 28.2096, lng: 83.9856 },
-    status: "full",
-    capacity: 95,
-    lastEmptied: "2024-07-14",
-    nextScheduled: "2024-07-15",
+    id: "TB1025",
+    location: "Lakeside, Pokhara",
+    ward: 5,
+    coordinates: { lat: 28.2090, lng: 83.9596 },
+    capacity: 55,
+    binType: "General Waste",
+    lastCollection: "1 day ago",
     type: "Public",
     size: "120L",
     material: "Metal",
     sensorInstalled: false,
-    lastUpdated: "2 hours ago"
+    lastUpdated: "Static data"
   },
   {
-    id: "BIN-002",
-    location: "City Center, Ward 5",
-    coordinates: { lat: 28.2050, lng: 83.9800 },
-    status: "high",
-    capacity: 78,
-    lastEmptied: "2024-07-13",
-    nextScheduled: "2024-07-16",
+    id: "TB1026",
+    location: "Baseline, Pokhara",
+    ward: 10,
+    coordinates: { lat: 28.2144, lng: 83.9851 },
+    capacity: 20,
+    binType: "Recyclable Waste",
+    lastCollection: "6 hours ago",
     type: "Public",
     size: "120L",
     material: "Plastic",
-    sensorInstalled: true,
-    lastUpdated: "5 minutes ago"
+    sensorInstalled: false,
+    lastUpdated: "Static data"
   },
   {
-    id: "BIN-003",
-    location: "Old Bazaar, Ward 1",
-    coordinates: { lat: 28.2150, lng: 83.9700 },
-    status: "moderate",
-    capacity: 62,
-    lastEmptied: "2024-07-12",
-    nextScheduled: "2024-07-18",
-    type: "Market",
+    id: "TB1027",
+    location: "City Center, Pokhara",
+    ward: 8,
+    coordinates: { lat: 28.2096, lng: 83.9896 },
+    capacity: 65,
+    binType: "Organic Waste",
+    lastCollection: "12 hours ago",
+    type: "Public",
     size: "240L",
     material: "Metal",
     sensorInstalled: false,
-    lastUpdated: "30 minutes ago"
+    lastUpdated: "Static data"
   },
   {
-    id: "BIN-004",
-    location: "New Road, Ward 2",
-    coordinates: { lat: 28.2000, lng: 83.9850 },
-    status: "empty",
-    capacity: 15,
-    lastEmptied: "2024-07-14",
-    nextScheduled: "2024-07-20",
-    type: "Public",
-    size: "120L",
-    material: "Metal",
-    sensorInstalled: true,
-    lastUpdated: "10 minutes ago"
-  },
-  {
-    id: "BIN-005",
-    location: "Chipledhunga, Ward 3",
-    coordinates: { lat: 28.2120, lng: 83.9750 },
-    status: "full",
-    capacity: 92,
-    lastEmptied: "2024-07-10",
-    nextScheduled: "2024-07-15",
-    type: "Residential",
-    size: "120L",
-    material: "Plastic",
-    sensorInstalled: false,
-    lastUpdated: "1 hour ago"
-  },
-  {
-    id: "BIN-006",
-    location: "Birauta, Ward 8",
-    coordinates: { lat: 28.1950, lng: 83.9900 },
-    status: "moderate",
-    capacity: 55,
-    lastEmptied: "2024-07-13",
-    nextScheduled: "2024-07-17",
+    id: "TB1028",
+    location: "Lakeside East, Pokhara",
+    ward: 5,
+    coordinates: { lat: 28.2115, lng: 83.9650 },
+    capacity: 10,
+    binType: "General Waste",
+    lastCollection: "3 hours ago",
     type: "Public",
     size: "120L",
     material: "Metal",
     sensorInstalled: false,
-    lastUpdated: "45 minutes ago"
+    lastUpdated: "Static data"
   },
   {
-    id: "BIN-007",
-    location: "Seti River Bank, Ward 9",
-    coordinates: { lat: 28.1900, lng: 83.9950 },
-    status: "maintenance",
+    id: "TB1029",
+    location: "Pokhara Engineering College",
+    ward: 14,
+    coordinates: { lat: 28.21118953908775, lng: 83.9771218979668 },
     capacity: 0,
-    lastEmptied: "2024-07-08",
-    nextScheduled: "2024-07-20",
-    type: "Public",
-    size: "120L",
-    material: "Metal",
-    sensorInstalled: false,
-    lastUpdated: "3 days ago"
-  },
-  {
-    id: "BIN-008",
-    location: "Tourist Info Center, Ward 4",
-    coordinates: { lat: 28.2080, lng: 83.9780 },
-    status: "high",
-    capacity: 72,
-    lastEmptied: "2024-07-11",
-    nextScheduled: "2024-07-16",
+    binType: "IoT Smart Bin",
+    lastCollection: "Just now",
     type: "Public",
     size: "120L",
     material: "Metal",
     sensorInstalled: true,
-    lastUpdated: "8 minutes ago"
-  }
+    lastUpdated: "Connecting…"
+  },
 ];
+
+// ── ESP32 CONFIG ───────────────────────────────────────────────────────
+const ESP32_IP = "172.20.10.3";
+const ESP32_BIN_ID = "TB1029";
+
+// Helper: derive status string from capacity %
+const getStatusFromCapacity = (capacity) => {
+  if (capacity >= 90) return "full";
+  if (capacity >= 60) return "high";
+  if (capacity >= 30) return "moderate";
+  return "empty";
+};
 
 const BinCard = ({ bin, onView, onEdit, onDelete }) => {
   const statusConfig = binStatusConfig[bin.status];
+  const isEsp32 = bin.id === ESP32_BIN_ID;
   
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all p-4 space-y-3">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h3 className="font-bold text-gray-900">{bin.id}</h3>
             {bin.sensorInstalled && (
               <span className="px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-700 rounded-lg">
-                📡 Sensor
+                📡 IoT Sensor
+              </span>
+            )}
+            {isEsp32 && bin.isLive && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold bg-green-100 text-green-700 rounded-full border border-green-200">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                LIVE
+              </span>
+            )}
+            {isEsp32 && bin.isLive === false && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                OFFLINE
               </span>
             )}
           </div>
           <div className="flex items-center gap-1 text-sm text-gray-600">
             <FiMapPin size={14} />
-            {bin.location}
+            {bin.location}, Ward {bin.ward}
           </div>
         </div>
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${statusConfig.bg} ${statusConfig.color}`}>
@@ -185,12 +171,12 @@ const BinCard = ({ bin, onView, onEdit, onDelete }) => {
 
       <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
         <div>
-          <div className="text-gray-500 font-semibold uppercase mb-1">Last Emptied</div>
-          <div className="font-medium">{bin.lastEmptied}</div>
+          <div className="text-gray-500 font-semibold uppercase mb-1">Last Collection</div>
+          <div className="font-medium">{bin.lastCollection}</div>
         </div>
         <div>
-          <div className="text-gray-500 font-semibold uppercase mb-1">Type</div>
-          <div className="font-medium">{bin.type}</div>
+          <div className="text-gray-500 font-semibold uppercase mb-1">Bin Type</div>
+          <div className="font-medium">{bin.binType}</div>
         </div>
       </div>
 
@@ -204,6 +190,13 @@ const BinCard = ({ bin, onView, onEdit, onDelete }) => {
           <div className="font-medium">{bin.material}</div>
         </div>
       </div>
+
+      {/* ESP32 distance row */}
+      {isEsp32 && bin.distance != null && (
+        <div className="text-xs bg-blue-50 text-blue-800 rounded-lg px-3 py-1.5 font-medium">
+          📏 Sensor Distance: {bin.distance} cm
+        </div>
+      )}
 
       <div className="pt-2 border-t border-gray-100 flex gap-2">
         <button
@@ -302,37 +295,159 @@ const BinModal = ({ bin, onClose, onSave }) => {
 };
 
 const BinManagement = () => {
-  const [view, setView] = useState("grid"); // grid or table
+  const [view, setView] = useState("grid");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBin, setSelectedBin] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [bins, setBins] = useState(sampleBins);
+  const [bins, setBins] = useState(() =>
+    realBins.map((b) => ({ ...b, status: getStatusFromCapacity(b.capacity) }))
+  );
+
+  // ── ESP32 Live Sensor State ──────────────────────────────────────────────
+  const [esp32Data, setEsp32Data] = useState({
+    distance: null,
+    percentage: 0,
+    status: "EMPTY",
+    fillStatus: "empty",
+    lastUpdated: "Connecting…",
+    isLive: false,
+    error: false,
+  });
+
+  const prevBinStatusRef = useRef(null);
+  const alertInProgressRef = useRef(false);
+
+  // Poll ESP32 every 2.5s
+  useEffect(() => {
+    const fetchEsp32 = async () => {
+      try {
+        const res = await fetch(`http://${ESP32_IP}/data`, {
+          signal: AbortSignal.timeout(4000),
+        });
+        const data = await res.json();
+        const pct = Math.max(0, Math.min(100, data.percentage));
+        const statusUp = (data.status || "EMPTY").toUpperCase();
+
+        let fillStatus = "empty";
+        if (pct >= 90 || statusUp === "FULL") fillStatus = "full";
+        else if (pct >= 40) fillStatus = "half";
+
+        setEsp32Data({
+          distance: parseFloat(data.distance).toFixed(1),
+          percentage: pct,
+          status: data.status,
+          lastUpdated: "Just now",
+          isLive: true,
+          error: false,
+          fillStatus,
+        });
+
+        // ── Transition Detection: alerts ────────
+        const isFull = fillStatus === "full";
+        const prevStatus = prevBinStatusRef.current;
+
+        if (prevStatus !== null && !alertInProgressRef.current) {
+          const espBin = realBins.find((b) => b.id === ESP32_BIN_ID);
+          const binLocation = espBin?.location || "Unknown";
+          const binWard = espBin?.ward || 14;
+
+          if (!prevStatus && isFull) {
+            alertInProgressRef.current = true;
+            try {
+              await fetch("http://localhost:3000/api/bin-status/alert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ binId: ESP32_BIN_ID, ward: binWard, status: "full", location: binLocation, fillLevel: pct }),
+              });
+              const binNotifs = JSON.parse(localStorage.getItem("binAlertNotifications") || "[]");
+              binNotifs.unshift({
+                id: `bin-full-${ESP32_BIN_ID}-${Date.now()}`, type: "bin-full",
+                title: `🚨 Dustbin Full — ${ESP32_BIN_ID}`,
+                message: `Dustbin at ${binLocation} (Ward ${binWard}) is ${pct}% full and needs immediate collection.`,
+                icon: "bin-full", timestamp: new Date().toISOString(), read: false,
+              });
+              localStorage.setItem("binAlertNotifications", JSON.stringify(binNotifs.slice(0, 50)));
+            } catch (err) { console.error("Bin full alert error:", err); }
+            finally { alertInProgressRef.current = false; }
+          }
+
+          if (prevStatus && !isFull) {
+            alertInProgressRef.current = true;
+            try {
+              await fetch("http://localhost:3000/api/bin-status/alert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ binId: ESP32_BIN_ID, ward: binWard, status: "emptied", location: binLocation, fillLevel: pct }),
+              });
+              const binNotifs = JSON.parse(localStorage.getItem("binAlertNotifications") || "[]");
+              binNotifs.unshift({
+                id: `bin-emptied-${ESP32_BIN_ID}-${Date.now()}`, type: "bin-emptied",
+                title: `✅ Dustbin Emptied — ${ESP32_BIN_ID}`,
+                message: `Dustbin at ${binLocation} (Ward ${binWard}) has been emptied and is now at ${pct}%.`,
+                icon: "bin-emptied", timestamp: new Date().toISOString(), read: false,
+              });
+              localStorage.setItem("binAlertNotifications", JSON.stringify(binNotifs.slice(0, 50)));
+            } catch (err) { console.error("Bin emptied alert error:", err); }
+            finally { alertInProgressRef.current = false; }
+          }
+        }
+
+        prevBinStatusRef.current = isFull;
+      } catch {
+        setEsp32Data((prev) => ({ ...prev, lastUpdated: "Offline", isLive: false, error: true }));
+      }
+    };
+
+    fetchEsp32();
+    const interval = setInterval(fetchEsp32, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Merge ESP32 live data into bins list
+  const liveBins = useMemo(() => {
+    return bins.map((bin) => {
+      if (bin.id !== ESP32_BIN_ID) return bin;
+      const pct = esp32Data.percentage;
+      return {
+        ...bin,
+        capacity: pct,
+        status: getStatusFromCapacity(pct),
+        lastCollection: esp32Data.lastUpdated,
+        binType: esp32Data.isLive ? "IoT Smart Bin (Live)" : bin.binType,
+        lastUpdated: esp32Data.lastUpdated,
+        isLive: esp32Data.isLive,
+        distance: esp32Data.distance,
+        esp32Status: esp32Data.status,
+      };
+    });
+  }, [bins, esp32Data]);
 
   const filteredBins = useMemo(() => {
-    return bins.filter((bin) => {
+    return liveBins.filter((bin) => {
       const matchesSearch = bin.id.toLowerCase().includes(search.toLowerCase()) ||
         bin.location.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || bin.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [search, statusFilter, bins]);
+  }, [search, statusFilter, liveBins]);
 
   const stats = {
-    total: bins.length,
-    full: bins.filter((b) => b.status === "full").length,
-    empty: bins.filter((b) => b.status === "empty").length,
-    withSensor: bins.filter((b) => b.sensorInstalled).length
+    total: liveBins.length,
+    full: liveBins.filter((b) => b.status === "full").length,
+    empty: liveBins.filter((b) => b.status === "empty").length,
+    withSensor: liveBins.filter((b) => b.sensorInstalled).length
   };
 
   const handleEdit = (binId) => {
-    const bin = bins.find((b) => b.id === binId);
+    const bin = liveBins.find((b) => b.id === binId);
     setSelectedBin(bin);
     setShowModal(true);
   };
 
   const handleSave = (updatedBin) => {
-    setBins(bins.map((b) => (b.id === updatedBin.id ? updatedBin : b)));
+    const withStatus = { ...updatedBin, status: getStatusFromCapacity(updatedBin.capacity) };
+    setBins(bins.map((b) => (b.id === withStatus.id ? withStatus : b)));
   };
 
   const handleDelete = (binId) => {
@@ -342,7 +457,7 @@ const BinManagement = () => {
   };
 
   const handleView = (binId) => {
-    const bin = bins.find((b) => b.id === binId);
+    const bin = liveBins.find((b) => b.id === binId);
     setSelectedBin(bin);
     setShowModal(true);
   };
@@ -413,7 +528,7 @@ const BinManagement = () => {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Showing {filteredBins.length} of {bins.length} bins</span>
+          <span className="text-sm text-gray-600">Showing {filteredBins.length} of {liveBins.length} bins</span>
           <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setView("grid")}
@@ -475,11 +590,21 @@ const BinManagement = () => {
                     const statusConfig = binStatusConfig[bin.status];
                     return (
                       <tr key={bin.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 font-bold text-gray-900">{bin.id}</td>
+                        <td className="px-6 py-4 font-bold text-gray-900">
+                          <div className="flex items-center gap-2">
+                            {bin.id}
+                            {bin.id === ESP32_BIN_ID && bin.isLive && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold bg-green-100 text-green-700 rounded-full">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                                LIVE
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 text-gray-700">
                           <div className="flex items-center gap-2">
                             <FiMapPin size={16} className="text-gray-500" />
-                            <span className="truncate max-w-xs block">{bin.location}</span>
+                            <span className="truncate max-w-xs block">{bin.location}, Ward {bin.ward}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -504,11 +629,13 @@ const BinManagement = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-700">{bin.type}</td>
+                        <td className="px-6 py-4 text-gray-700">{bin.binType}</td>
                         <td className="px-6 py-4">
                           {bin.sensorInstalled ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">
-                              📡 Yes
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
+                              bin.isLive ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              📡 {bin.isLive ? 'Live' : 'Yes'}
                             </span>
                           ) : (
                             <span className="text-xs text-gray-500">No</span>
@@ -553,12 +680,19 @@ const BinManagement = () => {
       {showModal && <BinModal bin={selectedBin} onClose={() => { setShowModal(false); setSelectedBin(null); }} onSave={handleSave} />}
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-900">
         <div className="flex gap-3">
-          <span className="text-lg">💡</span>
+          <span className="text-lg">📡</span>
           <div>
-            <div className="font-semibold mb-1">Sensor Integration Coming Soon</div>
-            <p>Once you install IoT sensors in the bins, capacity levels will automatically update. Currently, you can manually adjust bin status for monitoring.</p>
+            <div className="font-semibold mb-1">Live IoT Sensor Active</div>
+            <p>
+              Bin <strong>{ESP32_BIN_ID}</strong> at Pokhara Engineering College (Ward 14) is connected to an ESP32 sensor.
+              Its capacity updates automatically every 2.5 seconds.
+              {esp32Data.isLive
+                ? <span className="text-green-700 font-semibold"> Status: Online ✓</span>
+                : <span className="text-red-600 font-semibold"> Status: Offline — cannot reach sensor at {ESP32_IP}</span>
+              }
+            </p>
           </div>
         </div>
       </div>

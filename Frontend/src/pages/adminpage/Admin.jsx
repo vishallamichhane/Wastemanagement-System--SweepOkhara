@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser, useClerk } from "@clerk/clerk-react";
 import { 
   FiHome, 
   FiUsers, 
   FiTruck, 
-  FiBarChart2,
   FiBell,
   FiSearch,
   FiChevronDown,
@@ -29,9 +29,9 @@ import { WARD_SCHEDULES } from "../../data/wardSchedules";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import UserManagement from "./UserManagement";
 import CollectorManagement from "./CollectorManagement";
+import sweepPokharaLogo from '../../assets/images/sweeppokhara-final-logo.png';
 import ReportsAnalytics from "./ReportsAnalytics";
 import BinManagement from "./BinManagement";
-import SystemAnalytics from "./SystemAnalytics";
 import MapOverview from "./MapOverview";
 
 // Admin stats will be fetched from the backend
@@ -69,14 +69,28 @@ const StatCard = ({ title, value, change, icon: Icon, color, trend = "up" }) => 
 
 const AdminDashboard = () => {
   useScrollToTop();
+  const { user } = useUser();
+  const { signOut, session } = useClerk();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(3);
   const [dateRange, setDateRange] = useState("today");
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Helper to get auth headers for admin API calls
+  const getAuthHeaders = useCallback(async () => {
+    try {
+      const token = await session?.getToken();
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
+  }, [session]);
 
   // Real system stats from backend
   const [systemStats, setSystemStats] = useState({
@@ -94,16 +108,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get('/api/admin/stats');
-        if (res.data) {
-          setSystemStats(res.data);
+        const headers = await getAuthHeaders();
+        const res = await axios.get('/api/admin/stats', { headers });
+        if (res.data && res.data.data) {
+          setSystemStats(res.data.data);
         }
       } catch (err) {
         console.error('Failed to fetch admin stats:', err);
       }
     };
     fetchStats();
-  }, []);
+  }, [getAuthHeaders]);
 
   // Handle scroll for navbar hide/show animation
   React.useEffect(() => {
@@ -146,10 +161,11 @@ const AdminDashboard = () => {
     const buildNotifications = async () => {
       const notifs = [];
       let idCounter = 1;
+      const headers = await getAuthHeaders();
 
       try {
         // Fetch reports
-        const reportsRes = await axios.get("/api/admin/reports");
+        const reportsRes = await axios.get("/api/admin/reports", { headers });
         const reports = reportsRes.data || [];
 
         // Sort reports by newest first
@@ -300,6 +316,36 @@ const AdminDashboard = () => {
         console.error("Schedule notification error:", err);
       }
 
+      // 9) Bin alert notifications from localStorage (ESP32 bin full/emptied)
+      try {
+        const readIds = JSON.parse(localStorage.getItem('adminReadNotifications') || '[]');
+        const rawBinAlerts = JSON.parse(localStorage.getItem('binAlertNotifications') || '[]');
+        rawBinAlerts.forEach((alert) => {
+          const isFull = alert.type === 'bin-full';
+          notifs.push({
+            id: alert.id || `bin-alert-${idCounter++}`,
+            type: isFull ? 'alert' : 'success',
+            title: alert.title || (isFull ? `🚨 Dustbin Full` : `✅ Dustbin Emptied`),
+            message: alert.message || '',
+            timestamp: alert.timestamp ? timeAgo(alert.timestamp) : 'Just now',
+            icon: isFull ? BsExclamationTriangle : BsCheckCircle,
+            color: isFull ? 'red' : 'emerald',
+            read: readIds.includes(alert.id),
+            _binAlert: true,
+          });
+        });
+      } catch (err) {
+        console.error("Bin alert notification error:", err);
+      }
+
+      // Sort: bin-full alerts first, then other alerts, then info
+      notifs.sort((a, b) => {
+        const priority = { alert: 3, warning: 2, info: 1, success: 0 };
+        const aPri = a._binAlert && a.type === 'alert' ? 4 : (priority[a.type] || 0);
+        const bPri = b._binAlert && b.type === 'alert' ? 4 : (priority[b.type] || 0);
+        return bPri - aPri;
+      });
+
       // Set notifications and unread count
       setNotifications(notifs);
       const unreadCount = notifs.filter((n) => !n.read).length;
@@ -307,7 +353,11 @@ const AdminDashboard = () => {
     };
 
     buildNotifications();
-  }, [timeAgo]);
+
+    // Poll every 15 seconds to pick up new bin alerts
+    const interval = setInterval(buildNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [timeAgo, getAuthHeaders]);
 
   const handleExportData = () => {
     alert("Exporting data... This would download system analytics.");
@@ -316,6 +366,9 @@ const AdminDashboard = () => {
   const handleMarkAllRead = () => {
     setUnreadNotifications(0);
     setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+    // Persist read state for bin alerts
+    const allIds = notifications.map(n => n.id).filter(id => typeof id === 'string');
+    localStorage.setItem('adminReadNotifications', JSON.stringify(allIds));
   };
 
   const handleNotificationClick = (id) => {
@@ -324,6 +377,14 @@ const AdminDashboard = () => {
         notif.id === id ? { ...notif, read: true } : notif
       )
     );
+    // Persist read state for bin alerts
+    if (typeof id === 'string') {
+      const readIds = JSON.parse(localStorage.getItem('adminReadNotifications') || '[]');
+      if (!readIds.includes(id)) {
+        readIds.push(id);
+        localStorage.setItem('adminReadNotifications', JSON.stringify(readIds));
+      }
+    }
   };
 
   const handleRemoveNotification = (id) => {
@@ -351,13 +412,12 @@ const AdminDashboard = () => {
               </button>
               
               <Link to="/" className="flex items-center space-x-3">
-                <div className="p-2 bg-linear-to-r from-emerald-600 to-teal-500 rounded-xl">
-                  <GiBroom className="text-white text-xl" />
-                </div>
+                <img 
+                  src={sweepPokharaLogo} 
+                  alt="SweepPokhara Logo" 
+                  className="h-12 w-auto object-contain"
+                />
                 <div>
-                  <span className="text-xl font-bold bg-linear-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                    SweePokhara
-                  </span>
                   <span className="block text-xs text-gray-500 font-medium">Administration Portal</span>
                 </div>
               </Link>
@@ -493,20 +553,76 @@ const AdminDashboard = () => {
 
 
               {/* Admin Profile */}
-              <div className="flex items-center space-x-3">
+              <div className="relative flex items-center space-x-3">
                 <div className="text-right hidden md:block">
-                  <p className="text-sm font-semibold">Admin Pokhara</p>
+                  <p className="text-sm font-semibold">{user?.fullName || 'Admin'}</p>
                   <p className="text-xs text-gray-500">System Administrator</p>
                 </div>
-                <div className="relative group">
-                  <div 
-                    className="w-10 h-10 rounded-full border-2 border-emerald-500 group-hover:scale-105 transition-transform duration-300 bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center"
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="relative focus:outline-none"
                   >
-                    <BsShieldCheck className="text-white text-lg" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
-                    <BsShieldCheck className="text-white text-xs" />
-                  </div>
+                    <div className="w-10 h-10 rounded-full border-2 border-emerald-500 hover:scale-105 transition-transform duration-300 overflow-hidden bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center cursor-pointer">
+                      {user?.imageUrl ? (
+                        <img src={user.imageUrl} alt="Admin" className="w-full h-full object-cover" />
+                      ) : (
+                        <BsShieldCheck className="text-white text-lg" />
+                      )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                      <BsShieldCheck className="text-white text-xs" />
+                    </div>
+                  </button>
+
+                  {/* Profile Dropdown */}
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-fadeInDown">
+                      {/* User Info */}
+                      <div className="px-4 py-4 border-b border-gray-100 bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center shrink-0">
+                            {user?.imageUrl ? (
+                              <img src={user.imageUrl} alt="Admin" className="w-full h-full object-cover" />
+                            ) : (
+                              <BsShieldCheck className="text-white text-lg" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{user?.fullName || 'Admin'}</p>
+                            <p className="text-xs text-gray-500 truncate">{user?.primaryEmailAddress?.emailAddress || ''}</p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                            <BsShieldCheck className="text-xs" /> Administrator
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            signOut(() => navigate('/admin/login'));
+                          }}
+                          className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                        >
+                          <FiLogOut size={16} />
+                          <span className="font-medium">Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Backdrop */}
+                  {profileDropdownOpen && (
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setProfileDropdownOpen(false)}
+                    ></div>
+                  )}
                 </div>
               </div>
             </div>
@@ -529,16 +645,20 @@ const AdminDashboard = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full border-3 border-emerald-500 bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center">
-                    <BsShieldCheck className="text-white text-xl" />
+                  <div className="w-12 h-12 rounded-full border-3 border-emerald-500 overflow-hidden bg-linear-to-r from-emerald-600 to-teal-500 flex items-center justify-center">
+                    {user?.imageUrl ? (
+                      <img src={user.imageUrl} alt="Admin" className="w-full h-full object-cover" />
+                    ) : (
+                      <BsShieldCheck className="text-white text-xl" />
+                    )}
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
                     <BsShieldCheck className="text-white text-xs" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Admin Pokhara</h3>
-                  <p className="text-xs text-gray-500">admin@sweepokhara.com</p>
+                  <h3 className="font-bold text-gray-900">{user?.fullName || 'Admin'}</h3>
+                  <p className="text-xs text-gray-500">{user?.primaryEmailAddress?.emailAddress || 'admin@sweeppokhara.com'}</p>
                 </div>
               </div>
             </div>
@@ -598,7 +718,7 @@ const AdminDashboard = () => {
                 <TbReportAnalytics size={20} />
                 <span className="font-medium">Reports & Analytics</span>
                 <span className="ml-auto text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                  {systemStats.pendingReports + systemStats.receivedReports}
+                  {typeof systemStats.totalReports === 'number' && !isNaN(systemStats.totalReports) ? systemStats.totalReports : 0}
                 </span>
               </button>
 
@@ -626,20 +746,11 @@ const AdminDashboard = () => {
                 <span className="font-medium">Map Overview</span>
               </button>
 
-              <button
-                onClick={() => setActiveTab("analytics")}
-                className={`sidebar-item w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                  activeTab === "analytics"
-                    ? "active bg-linear-to-r from-emerald-600 to-teal-600 text-white shadow-lg scale-105"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-emerald-700"
-                }`}
-              >
-                <FiBarChart2 size={20} />
-                <span className="font-medium">System Analytics</span>
-              </button>
-
               <div className="pt-6">
-                <button className="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-300 transform hover:scale-105">
+                <button 
+                  onClick={() => signOut(() => navigate('/admin/login'))}
+                  className="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-300 transform hover:scale-105"
+                >
                   <FiLogOut size={20} />
                   <span className="font-medium">Logout</span>
                 </button>
@@ -679,8 +790,6 @@ const AdminDashboard = () => {
               <BinManagement />
             ) : activeTab === "map" ? (
               <MapOverview />
-            ) : activeTab === "analytics" ? (
-              <SystemAnalytics />
             ) : (
               <>
                 {/* Welcome Header */}
@@ -691,7 +800,7 @@ const AdminDashboard = () => {
                       Admin Dashboard
                     </h1>
                     <p className="text-gray-600">
-                      Comprehensive overview of SweePokhara waste management system
+                      Comprehensive overview of SweepPokhara waste management system
                     </p>
                   </div>
               
@@ -753,28 +862,6 @@ const AdminDashboard = () => {
 
           {/* Main Content Grid */}
           {/* Remove extra dashboard content, only show StatCards above */}
-
-          {/* Footer Stats */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.totalUsers}</p>
-                <p className="text-sm text-gray-600">Total Users</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.totalCollectors}</p>
-                <p className="text-sm text-gray-600">Total Collectors</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.resolvedReports}</p>
-                <p className="text-sm text-gray-600">Resolved Reports</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.inProgressReports}</p>
-                <p className="text-sm text-gray-600">In Progress Reports</p>
-              </div>
-            </div>
-          </div>
               </>
             )}
           </div>
@@ -814,14 +901,6 @@ const AdminDashboard = () => {
           >
             <FiMap size={20} />
             <span className="text-xs mt-1">Map</span>
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab("analytics")}
-            className={`flex flex-col items-center p-2 ${activeTab === "analytics" ? "text-emerald-600" : "text-gray-500"}`}
-          >
-            <FiBarChart2 size={20} />
-            <span className="text-xs mt-1">Analytics</span>
           </button>
         </div>
       </div>

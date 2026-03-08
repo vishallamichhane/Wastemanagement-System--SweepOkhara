@@ -1,5 +1,7 @@
-import { Link } from 'react-router-dom';
-import { GiBroom } from "react-icons/gi";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useClerk, useUser } from '@clerk/clerk-react';
+import sweepPokharaLogo from '../assets/images/sweeppokhara-final-logo.png';
 import { 
   FaFacebookF, 
   FaTwitter, 
@@ -12,8 +14,37 @@ import {
 import { BsArrowUpCircle } from 'react-icons/bs';
 
 function Footer(){
+  const navigate = useNavigate();
+  const { signOut } = useClerk();
+  const { isSignedIn } = useUser();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [pendingLink, setPendingLink] = useState('');
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle quick link clicks — prompt logout if signed in
+  const handleQuickLink = (e, path) => {
+    if (isSignedIn) {
+      e.preventDefault();
+      setPendingLink(path);
+      setShowLogoutModal(true);
+    }
+    // If not signed in, the Link navigates normally
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      await signOut();
+      localStorage.clear();
+      setShowLogoutModal(false);
+      navigate(pendingLink);
+    } catch (err) {
+      console.error('Logout error:', err);
+      setShowLogoutModal(false);
+      navigate(pendingLink);
+    }
   };
 
   return (
@@ -34,15 +65,12 @@ function Footer(){
             
             {/* Company Info */}
             <div className="space-y-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
-                  <GiBroom className="text-white text-2xl" />
-                </div>
-                <div>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                    SweePokhara
-                  </span>
-                </div>
+              <div className="flex items-center">
+                <img 
+                  src={sweepPokharaLogo} 
+                  alt="SweepPokhara Logo" 
+                  className="h-10 w-auto"
+                />
               </div>
               <p className="text-gray-400 leading-relaxed text-sm">
                 Making Pokhara cleaner, greener, and smarter through innovative waste management solutions. Join us in creating a sustainable future.
@@ -92,31 +120,31 @@ function Footer(){
               </h3>
               <ul className="space-y-3">
                 <li>
-                  <Link to="/" className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
+                  <Link to="/" onClick={(e) => handleQuickLink(e, '/')} className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
                     <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link to="/feature" className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
+                  <Link to="/feature" onClick={(e) => handleQuickLink(e, '/feature')} className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
                     <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                     Features
                   </Link>
                 </li>
                 <li>
-                  <Link to="/aboutus" className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
+                  <Link to="/aboutus" onClick={(e) => handleQuickLink(e, '/aboutus')} className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
                     <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
+                  <Link to="/contact" onClick={(e) => handleQuickLink(e, '/contact')} className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
                     <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                     Contact
                   </Link>
                 </li>
                 <li>
-                  <Link to="/login" className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
+                  <Link to="/login" onClick={(e) => handleQuickLink(e, '/login')} className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center group">
                     <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                     Login
                   </Link>
@@ -162,14 +190,14 @@ function Footer(){
                 </li>
                 <li className="flex items-center space-x-3 group">
                   <FaPhoneAlt className="text-emerald-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                  <a href="tel:+977061234567" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                    +977 061-234567
+                  <a href="tel:+9779806563442" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                    +977 9806563442
                   </a>
                 </li>
                 <li className="flex items-center space-x-3 group">
                   <FaEnvelope className="text-emerald-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                  <a href="mailto:info@sweepokhara.gov.np" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                    info@sweepokhara.gov.np
+                  <a href="mailto:sweeppokhara@gmail.com" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                    sweeppokhara@gmail.com
                   </a>
                 </li>
               </ul>
@@ -191,7 +219,7 @@ function Footer(){
           {/* Bottom Footer */}
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} <span className="text-emerald-400 font-semibold">SweePokhara</span>. All rights reserved.
+              © {new Date().getFullYear()} <span className="text-emerald-400 font-semibold">SweepPokhara</span>. All rights reserved.
             </p>
             <div className="flex items-center space-x-6 text-sm">
               
@@ -203,6 +231,39 @@ function Footer(){
           </div>
         </div>
       </footer>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl transform animate-[scale-in_0.2s_ease-out]">
+            <div className="text-center">
+              <div className="w-14 h-14 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Logout Required</h3>
+              <p className="text-gray-600 text-sm mb-6">
+                This link will take you to the public page. You will be logged out of your account. Do you want to continue?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 px-4 py-2.5 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-colors shadow-lg"
+                >
+                  Logout & Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

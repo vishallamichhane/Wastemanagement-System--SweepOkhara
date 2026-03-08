@@ -1,7 +1,9 @@
 import express from 'express';
 import { getAuth, clerkClient } from '@clerk/express';
 import User from '../models/user.js';
+import Collector from '../models/collector.js';
 import { sendScheduleReminderEmail } from '../utils/email.js';
+import { sendReminderToUser } from '../services/scheduleReminderService.js';
 
 const router = express.Router();
 
@@ -114,7 +116,14 @@ router.put('/profile', verifySession, async (req, res) => {
 
       if (mongoUser) {
         console.log('✅ MongoDB updated successfully:', mongoUser._id);
-      } else {
+        // If user set/changed their ward, send them an instant reminder
+        // if their ward has pickup tomorrow (and they haven't been emailed today)
+        if (ward) {
+          console.log('\ud83d\udce7 Checking if instant reminder needed for ward:', ward);
+          sendReminderToUser(mongoUser).catch(err =>
+            console.error('\u26a0\ufe0f Instant reminder error:', err.message)
+          );
+        }      } else {
         console.log('⚠️ User not found in MongoDB, skipping update');
       }
     } catch (mongoError) {
@@ -167,41 +176,42 @@ router.get('/profile', verifySession, async (req, res) => {
   }
 });
 
-// Ward schedule data (mirrors frontend wardSchedules.js)
+// Ward schedule data — only pickup days and time slots
+// Driver/vehicle info is fetched from real Collector database
 const WARD_SCHEDULES = {
-  1: { timeSlot: '6:00 AM - 8:00 AM', vehicle: 'SW-01', driver: 'Ram Bahadur', pickupDays: [0, 2, 4] },
-  2: { timeSlot: '6:00 AM - 8:00 AM', vehicle: 'SW-02', driver: 'Hari Prasad', pickupDays: [1, 3, 5] },
-  3: { timeSlot: '8:00 AM - 10:00 AM', vehicle: 'SW-03', driver: 'Shyam Kumar', pickupDays: [0, 2, 4] },
-  4: { timeSlot: '8:00 AM - 10:00 AM', vehicle: 'SW-04', driver: 'Gopal Thapa', pickupDays: [1, 3, 5] },
-  5: { timeSlot: '10:00 AM - 12:00 PM', vehicle: 'SW-05', driver: 'Bikram Gurung', pickupDays: [0, 2, 4] },
-  6: { timeSlot: '9:00 AM - 11:00 AM', vehicle: 'SW-06', driver: 'Prakash Rai', pickupDays: [1, 3, 5] },
-  7: { timeSlot: '12:00 PM - 2:00 PM', vehicle: 'SW-07', driver: 'Dipak Shrestha', pickupDays: [0, 2, 4] },
-  8: { timeSlot: '10:00 AM - 12:00 PM', vehicle: 'SW-08', driver: 'Sujit Tamang', pickupDays: [1, 3, 5] },
-  9: { timeSlot: '2:00 PM - 4:00 PM', vehicle: 'SW-09', driver: 'Rajan Magar', pickupDays: [0, 2, 4] },
-  10: { timeSlot: '12:00 PM - 2:00 PM', vehicle: 'SW-10', driver: 'Binod KC', pickupDays: [1, 3, 5] },
-  11: { timeSlot: '4:00 PM - 6:00 PM', vehicle: 'SW-11', driver: 'Kiran Poudel', pickupDays: [0, 2, 4] },
-  12: { timeSlot: '2:00 PM - 4:00 PM', vehicle: 'SW-12', driver: 'Anil Bhattarai', pickupDays: [1, 3, 5] },
-  13: { timeSlot: '6:00 AM - 8:00 AM', vehicle: 'SW-13', driver: 'Rajesh Adhikari', pickupDays: [0, 3, 5] },
-  14: { timeSlot: '7:00 AM - 9:00 AM', vehicle: 'SW-14', driver: 'Sunil Karki', pickupDays: [1, 4, 6] },
-  15: { timeSlot: '8:00 AM - 10:00 AM', vehicle: 'SW-15', driver: 'Manoj Dahal', pickupDays: [0, 2, 5] },
-  16: { timeSlot: '9:00 AM - 11:00 AM', vehicle: 'SW-16', driver: 'Arjun Bhandari', pickupDays: [1, 3, 6] },
-  17: { timeSlot: '10:00 AM - 12:00 PM', vehicle: 'SW-17', driver: 'Puspa Pandey', pickupDays: [0, 4, 6] },
-  18: { timeSlot: '6:00 AM - 8:00 AM', vehicle: 'SW-18', driver: 'Deepak Chhetri', pickupDays: [2, 4, 6] },
-  19: { timeSlot: '7:00 AM - 9:00 AM', vehicle: 'SW-19', driver: 'Nabin Lama', pickupDays: [0, 1, 3] },
-  20: { timeSlot: '8:00 AM - 10:00 AM', vehicle: 'SW-20', driver: 'Rajendra Thapa', pickupDays: [1, 3, 5] },
-  21: { timeSlot: '9:00 AM - 11:00 AM', vehicle: 'SW-21', driver: 'Santosh Rana', pickupDays: [0, 2, 4] },
-  22: { timeSlot: '10:00 AM - 12:00 PM', vehicle: 'SW-22', driver: 'Prem Bahadur', pickupDays: [1, 4, 6] },
-  23: { timeSlot: '11:00 AM - 1:00 PM', vehicle: 'SW-23', driver: 'Bhim Nepali', pickupDays: [0, 3, 5] },
-  24: { timeSlot: '12:00 PM - 2:00 PM', vehicle: 'SW-24', driver: 'Kamal Thakuri', pickupDays: [2, 4, 6] },
-  25: { timeSlot: '6:00 AM - 8:00 AM', vehicle: 'SW-25', driver: 'Tej Bahadur', pickupDays: [0, 2, 5] },
-  26: { timeSlot: '7:00 AM - 9:00 AM', vehicle: 'SW-26', driver: 'Dhan Bahadur', pickupDays: [1, 3, 6] },
-  27: { timeSlot: '8:00 AM - 10:00 AM', vehicle: 'SW-27', driver: 'Min Bahadur', pickupDays: [0, 4, 6] },
-  28: { timeSlot: '9:00 AM - 11:00 AM', vehicle: 'SW-28', driver: 'Lal Bahadur', pickupDays: [2, 4, 6] },
-  29: { timeSlot: '10:00 AM - 12:00 PM', vehicle: 'SW-29', driver: 'Purna Lama', pickupDays: [0, 1, 3] },
-  30: { timeSlot: '11:00 AM - 1:00 PM', vehicle: 'SW-30', driver: 'Ganga Thapa', pickupDays: [1, 3, 5] },
-  31: { timeSlot: '6:00 AM - 8:00 AM', vehicle: 'SW-31', driver: 'Bishnu Shrestha', pickupDays: [0, 2, 4] },
-  32: { timeSlot: '7:00 AM - 9:00 AM', vehicle: 'SW-32', driver: 'Hari Bahadur', pickupDays: [1, 4, 6] },
-  33: { timeSlot: '8:00 AM - 10:00 AM', vehicle: 'SW-33', driver: 'Krishna Tamang', pickupDays: [0, 3, 5] },
+  1: { timeSlot: '6:00 AM - 8:00 AM', pickupDays: [0, 2, 4] },
+  2: { timeSlot: '6:00 AM - 8:00 AM', pickupDays: [1, 3, 5] },
+  3: { timeSlot: '8:00 AM - 10:00 AM', pickupDays: [0, 2, 4] },
+  4: { timeSlot: '8:00 AM - 10:00 AM', pickupDays: [1, 3, 5] },
+  5: { timeSlot: '10:00 AM - 12:00 PM', pickupDays: [0, 2, 4] },
+  6: { timeSlot: '9:00 AM - 11:00 AM', pickupDays: [1, 3, 5] },
+  7: { timeSlot: '12:00 PM - 2:00 PM', pickupDays: [0, 2, 4] },
+  8: { timeSlot: '10:00 AM - 12:00 PM', pickupDays: [1, 3, 5] },
+  9: { timeSlot: '2:00 PM - 4:00 PM', pickupDays: [0, 2, 4] },
+  10: { timeSlot: '12:00 PM - 2:00 PM', pickupDays: [1, 3, 5] },
+  11: { timeSlot: '4:00 PM - 6:00 PM', pickupDays: [0, 2, 4] },
+  12: { timeSlot: '2:00 PM - 4:00 PM', pickupDays: [1, 3, 5] },
+  13: { timeSlot: '6:00 AM - 8:00 AM', pickupDays: [0, 3, 5] },
+  14: { timeSlot: '7:00 AM - 9:00 AM', pickupDays: [1, 4, 6] },
+  15: { timeSlot: '8:00 AM - 10:00 AM', pickupDays: [0, 2, 5] },
+  16: { timeSlot: '9:00 AM - 11:00 AM', pickupDays: [1, 3, 6] },
+  17: { timeSlot: '10:00 AM - 12:00 PM', pickupDays: [0, 4, 6] },
+  18: { timeSlot: '6:00 AM - 8:00 AM', pickupDays: [2, 4, 6] },
+  19: { timeSlot: '7:00 AM - 9:00 AM', pickupDays: [0, 1, 3] },
+  20: { timeSlot: '8:00 AM - 10:00 AM', pickupDays: [1, 3, 5] },
+  21: { timeSlot: '9:00 AM - 11:00 AM', pickupDays: [0, 2, 4] },
+  22: { timeSlot: '10:00 AM - 12:00 PM', pickupDays: [1, 4, 6] },
+  23: { timeSlot: '11:00 AM - 1:00 PM', pickupDays: [0, 3, 5] },
+  24: { timeSlot: '12:00 PM - 2:00 PM', pickupDays: [2, 4, 6] },
+  25: { timeSlot: '6:00 AM - 8:00 AM', pickupDays: [0, 2, 5] },
+  26: { timeSlot: '7:00 AM - 9:00 AM', pickupDays: [1, 3, 6] },
+  27: { timeSlot: '8:00 AM - 10:00 AM', pickupDays: [0, 4, 6] },
+  28: { timeSlot: '9:00 AM - 11:00 AM', pickupDays: [2, 4, 6] },
+  29: { timeSlot: '10:00 AM - 12:00 PM', pickupDays: [0, 1, 3] },
+  30: { timeSlot: '11:00 AM - 1:00 PM', pickupDays: [1, 3, 5] },
+  31: { timeSlot: '6:00 AM - 8:00 AM', pickupDays: [0, 2, 4] },
+  32: { timeSlot: '7:00 AM - 9:00 AM', pickupDays: [1, 4, 6] },
+  33: { timeSlot: '8:00 AM - 10:00 AM', pickupDays: [0, 3, 5] },
 };
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -246,14 +256,19 @@ router.post('/schedule-reminder', verifySession, async (req, res) => {
       return res.status(400).json({ error: 'User email not found' });
     }
 
+    // Get real collector data from database
+    const collector = await Collector.findOne({ assignedWards: wardNum, status: 'active' });
+    const driverName = collector?.name || 'Not Assigned';
+    const vehicleId = collector?.vehicleId || 'Not Assigned';
+
     const result = await sendScheduleReminderEmail({
       to: userEmail,
       name: userName,
       ward: wardNum,
       timeSlot: schedule.timeSlot,
       dayName: dayName,
-      vehicle: schedule.vehicle,
-      driver: schedule.driver,
+      vehicle: vehicleId,
+      driver: driverName,
     });
 
     console.log(`📧 Schedule reminder sent to ${userEmail} for Ward ${wardNum} (${dayName})`);

@@ -34,7 +34,7 @@ export default function FeaturePage() {
               Our Core Features
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Discover how SweepOkhara leverages technology to create a cleaner, smarter, and more engaged community.
+              Discover how SweepPokhara leverages technology to create a cleaner, smarter, and more engaged community.
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function FeaturePage() {
           <div className="rounded-2xl overflow-hidden shadow-2xl group hover:shadow-3xl transition-all duration-500">
             <img
               src="https://i.pinimg.com/736x/f3/67/c5/f367c50cc5483f4408da414577849815.jpg"
-              alt="Hand holding mobile phone with SweepOkhara app"
+              alt="Hand holding mobile phone with SweepPokhara app"
               className="object-cover w-full h-96 group-hover:scale-105 transition-transform duration-700"
               loading="lazy"
               decoding="async"
@@ -119,7 +119,7 @@ export default function FeaturePage() {
             Your Eyes on the Streets
           </h2>
           <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-            Empowering citizens is at the heart of SweepOkhara. Our user-friendly mobile app allows you to instantly report waste-related issues like illegal dumping or overflowing public bins. Simply snap a photo, add a location, and submit. We'll handle the rest, keeping you updated every step of the way.
+            Empowering citizens is at the heart of SweepPokhara. Our user-friendly mobile app allows you to instantly report waste-related issues like illegal dumping or overflowing public bins. Simply snap a photo, add a location, and submit. We'll handle the rest, keeping you updated every step of the way.
           </p>
           <ul className="space-y-4 text-gray-600 text-base leading-relaxed">
             <li className="flex gap-4 items-start group">
@@ -156,7 +156,7 @@ export default function FeaturePage() {
             Knowledge for a Greener Future
           </h2>
           <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-            A cleaner city starts with an informed community. SweepOkhara provides a dedicated resource hub with articles, guides, and news about recycling, waste reduction, and sustainable living. Learn about local initiatives and discover how your actions can contribute to a healthier environment for all.
+            A cleaner city starts with an informed community. SweepPokhara provides a dedicated resource hub with articles, guides, and news about recycling, waste reduction, and sustainable living. Learn about local initiatives and discover how your actions can contribute to a healthier environment for all.
           </p>
           <ul className="space-y-4 text-gray-600 text-base leading-relaxed">
             <li className="flex gap-4 items-start group">

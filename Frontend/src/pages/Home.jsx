@@ -7,7 +7,7 @@ import useScrollToTop from "../hooks/useScrollToTop";
 
 const testimonials = [
   {
-    quote: "SweePokhara has transformed our neighborhood. It's so easy to report issues, and the community has never been cleaner.",
+    quote: "SweepPokhara has transformed our neighborhood. It's so easy to report issues, and the community has never been cleaner.",
     name: "Ashwin Rajbomsi",
     role: "Community Leader",
     image: "https://i.pinimg.com/1200x/30/e5/18/30e5185980e8eca9a44f8647f7780d0c.jpg",
@@ -19,7 +19,7 @@ const testimonials = [
     image: "https://i.pinimg.com/1200x/30/e5/18/30e5185980e8eca9a44f8647f7780d0c.jpg",
   },
   {
-    quote: "Thanks to SweePokhara, our parks and streets have become cleaner and healthier spaces for everyone.",
+    quote: "Thanks to SweepPokhara, our parks and streets have become cleaner and healthier spaces for everyone.",
     name: "Bibek Lamichhane",
     role: "Environmental Activist",
     image: "https://i.pinimg.com/1200x/30/e5/18/30e5185980e8eca9a44f8647f7780d0c.jpg",
@@ -87,7 +87,7 @@ export default function Home() {
               <span className="bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent animate-gradient animation-delay-500">Together</span>.
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed animate-fade-in animation-delay-300">
-              SweePokhara is your smart solution for efficient waste management and community involvement. Join us to make a difference.
+              SweepPokhara is your smart solution for efficient waste management and community involvement. Join us to make a difference.
             </p>
           </div>
           <button 

@@ -40,6 +40,12 @@ const MyReports = () => {
       bgColor: "bg-amber-100",
       dotColor: "bg-amber-500",
     },
+    "pending-verification": {
+      label: "Under Review",
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+      dotColor: "bg-orange-500",
+    },
     resolved: {
       label: "Resolved",
       color: "text-emerald-600",
@@ -132,6 +138,8 @@ const MyReports = () => {
         return <BsArrowClockwise className="text-amber-500" />;
       case "received":
         return <BsClock className="text-blue-500" />;
+      case "pending-verification":
+        return <BsExclamationTriangle className="text-orange-500" />;
       default:
         return <BsExclamationTriangle className="text-gray-500" />;
     }
@@ -234,6 +242,7 @@ const MyReports = () => {
                 <option value="all">All Status</option>
                 <option value="received">Received</option>
                 <option value="in-progress">In Progress</option>
+                <option value="pending-verification">Under Review</option>
                 <option value="resolved">Resolved</option>
               </select>
             </div>

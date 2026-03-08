@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Project Flowchart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .controls button {
+            padding: 8px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            overflow: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Complete Project Flowchart &bull; System Architecture &amp; Data Flow</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="zoomIn()">&#x1F50D;+ Zoom In</button>
+        <button onclick="zoomOut()">&#x1F50D;- Zoom Out</button>
+        <button onclick="resetZoom()">&#x21BA; Reset</button>
+        <button onclick="downloadSVG()">&#x2B07; Download SVG</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div> Start / Entry Point</div>
+        <div class="legend-item"><div class="legend-color" style="background:#eff6ff; border-color:#3b82f6;"></div> User Module</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fefce8; border-color:#eab308;"></div> Collector Module</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fdf2f8; border-color:#ec4899;"></div> Admin Module</div>
+        <div class="legend-item"><div class="legend-color" style="background:#f0fdf4; border-color:#22c55e;"></div> Automated Services</div>
+        <div class="legend-item"><div class="legend-color" style="background:#faf5ff; border-color:#a855f7;"></div> Email Notification System</div>
+        <div class="legend-item"><div class="legend-color" style="background:#f1f5f9; border-color:#64748b;"></div> MongoDB Database</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fef08a; border-color:#ca8a04;"></div> External Services</div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+flowchart TD
+    START((Start: User Visits System)) --> REGISTER{New User?}
+    
+    REGISTER -->|Yes| REG[Register/Email Verification]
+    REGISTER -->|No| LOGIN[Login]
+    REG --> SYNC[Sync User to MongoDB]
+    SYNC --> LOGIN
+    
+    LOGIN --> AUTH{User Type}
+    AUTH -->|User/Admin| CLERK[Clerk Authentication]
+    AUTH -->|Collector| JWT[JWT Authentication]
+    
+    CLERK --> ROLE{Check Role}
+    ROLE -->|User| USER_DASH[User Dashboard]
+    ROLE -->|Admin| ADMIN_DASH[Admin Dashboard]
+    JWT --> COL_DASH[Collector Dashboard]
+    
+    subgraph USER ["User Path"]
+        USER_DASH --> USER_CHOICE{Action}
+        USER_CHOICE -->|View| SCHEDULE[View Schedule - 33 Wards]
+        USER_CHOICE -->|Submit| SUBMIT_REPORT[Submit Waste Report]
+        USER_CHOICE -->|Track| MY_REPORTS[View My Reports]
+        USER_CHOICE -->|Manage| PROFILE[Update Profile/Ward]
+        
+        SUBMIT_REPORT --> UPLOAD[Upload Images - Max 5]
+        UPLOAD --> CLOUD[Upload to Cloudinary]
+        CLOUD --> DESC[Add Description & GPS Location]
+        DESC --> ASSIGN[Auto-Assign Collector by Ward]
+        ASSIGN --> SAVE_REPORT[Save Report - Status: in-progress]
+        SAVE_REPORT --> DB[(MongoDB: Reports)]
+        
+        PROFILE --> WARD_UPDATE[Update Ward Info]
+        WARD_UPDATE --> INSTANT_EMAIL[Send Instant Schedule Reminder]
+    end
+    
+    subgraph COLLECTOR ["Collector Path"]
+        COL_DASH --> COL_CHOICE{Action}
+        COL_CHOICE -->|Tasks| VIEW_TASKS[View Today Ward Tasks]
+        COL_CHOICE -->|Reports| VIEW_REPORTS[View Assigned Reports]
+        
+        VIEW_TASKS --> AUTO_CREATE[Auto-Create Tasks if Not Exist]
+        AUTO_CREATE --> START_TASK[Start Task - Status: in-progress]
+        START_TASK --> END_TASK[Complete Task - Status: completed]
+        END_TASK --> INCREMENT[Increment Total Collections]
+        INCREMENT --> TASK_NOTIFY[Send Email - Ward Users Notified of Pickup Completion]
+        
+        VIEW_REPORTS --> UPDATE_REP_STATUS[Update Report Status]
+        UPDATE_REP_STATUS --> RESOLVE[Mark as Resolved - Status: pending-verification]
+        RESOLVE --> WAIT_ADMIN[Awaits Admin Verification]
+    end
+    
+    subgraph ADMIN ["Admin Path"]
+        ADMIN_DASH --> ADMIN_CHOICE{Management}
+        ADMIN_CHOICE -->|Users| MANAGE_USERS[View All Users & Reports Stats]
+        ADMIN_CHOICE -->|Collectors| MANAGE_COL[Manage Collectors - Max 6]
+        ADMIN_CHOICE -->|Reports| MANAGE_REPORTS[Review All Reports]
+        ADMIN_CHOICE -->|Analytics| VIEW_ANALYTICS[View System Analytics]
+        ADMIN_CHOICE -->|Bins| MANAGE_BINS[Manage Smart Bin Status]
+        
+        MANAGE_COL --> COL_ACTION{Action}
+        COL_ACTION -->|Create| NEW_COL[Create Collector - Min 5 Wards]
+        COL_ACTION -->|Update| EDIT_COL[Edit Collector Details]
+        COL_ACTION -->|Delete| DEL_COL[Delete Collector]
+        
+        MANAGE_REPORTS --> ALL_REPORTS[View All Reports]
+        ALL_REPORTS --> VERIFY{Assess Report}
+        VERIFY -->|Approve| APPROVE_REP[Report Status: resolved]
+        VERIFY -->|Reject| REJECT_REP[Report Sent Back to in-progress]
+        APPROVE_REP --> SEND_RES_EMAIL[Send Report Resolution Email to User]
+        REJECT_REP --> BACK_COLLECTOR[Back to Collector for Re-work]
+    end
+    
+    subgraph AUTOMATED ["Automated Services"]
+        CRON[Cron Job - Daily 6 PM & 9 PM NPT] --> CHECK_SCHEDULE[Check Tomorrow's Pickup Schedule]
+        CHECK_SCHEDULE --> FIND_USERS[Find All Users in Scheduled Wards]
+        FIND_USERS --> DUP_CHECK{Already Reminded Today?}
+        DUP_CHECK -->|No| REMIND[Send Schedule Reminder Email]
+        DUP_CHECK -->|Yes| SKIP[Skip - Prevent Duplicate]
+        REMIND --> DUP_CHECK
+        
+        BIN_ALERT[Smart Bin Status Change] --> CHECK_BIN{Status Changed?}
+        CHECK_BIN -->|Full| FULL_ALERT[Send Bin Full Alert to Users/Collectors/Admins]
+        CHECK_BIN -->|Emptied| EMPTY_ALERT[Send Bin Emptied Alert to Users/Collectors/Admins]
+        CHECK_BIN -->|No Change| SKIP_ALERT[Skip - No Status Change]
+    end
+    
+    subgraph EMAIL ["Email Notification System"]
+        EMAIL1[Email Verification - Clerk]
+        EMAIL2[Schedule Reminder Email]
+        EMAIL3[Pickup Completion Email]
+        EMAIL4[Report Resolution Email]
+        EMAIL5[Bin Status Alerts]
+        EMAIL_CONFIG[Provider: Resend / SMTP / Console]
+    end
+    
+    subgraph DATABASE_GROUP ["MongoDB Database & Storage"]
+        USERS[(Users Collection)]
+        COLLECTORS[(Collectors Collection)]
+        REPORTS[(Reports Collection)]
+        TASKS[(Ward Tasks)]
+        BINS[(Bin Alerts)]
+        CLOUDINARY[Cloudinary - Image Storage]
+    end
+    
+    INSTANT_EMAIL --> EMAIL2
+    TASK_NOTIFY --> EMAIL3
+    SEND_RES_EMAIL --> EMAIL4
+    REMIND --> EMAIL2
+    FULL_ALERT --> EMAIL5
+    EMPTY_ALERT --> EMAIL5
+    
+    SAVE_REPORT --> REPORTS
+    DB --> REPORTS
+    ASSIGN --> REPORTS
+    NEW_COL --> COLLECTORS
+    EDIT_COL --> COLLECTORS
+    AUTO_CREATE --> TASKS
+    START_TASK --> TASKS
+    END_TASK --> TASKS
+    WAIT_ADMIN --> REPORTS
+    VIEW_TASKS --> TASKS
+    CHECK_SCHEDULE --> TASKS
+    MANAGE_BINS --> BINS
+    BIN_ALERT --> BINS
+    CHECK_BIN --> BINS
+    UPLOAD --> CLOUDINARY
+    CLOUD --> CLOUDINARY
+    SYNC --> USERS
+    MANAGE_USERS --> USERS
+    PROFILE --> USERS
+    
+    EMAIL3 --> EMAIL_CONFIG
+    EMAIL2 --> EMAIL_CONFIG
+    EMAIL4 --> EMAIL_CONFIG
+    EMAIL5 --> EMAIL_CONFIG
+    
+    EMAIL_CONFIG --> SUCCESS{All Operations Complete?}
+    SUCCESS -->|Yes| END((End: System Operations Complete))
+    SUCCESS -->|No| START
+    
+    style START fill:#22c55e,stroke:#16a34a,color:#fff
+    style END fill:#ef4444,stroke:#dc2626,color:#fff
+    style USER fill:#eff6ff,stroke:#3b82f6,color:#000
+    style COLLECTOR fill:#fefce8,stroke:#eab308,color:#000
+    style ADMIN fill:#fdf2f8,stroke:#ec4899,color:#000
+    style AUTOMATED fill:#f0fdf4,stroke:#22c55e,color:#000
+    style EMAIL fill:#faf5ff,stroke:#a855f7,color:#000
+    style DATABASE_GROUP fill:#f1f5f9,stroke:#64748b,color:#000
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Waste Management System &bull; Project Documentation Flowchart
+    </div>
+
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        let currentZoom = 1;
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 30,
+                rankSpacing: 50
+            },
+            themeVariables: {
+                fontSize: '14px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.15, 3);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.15, 0.3);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                svg.style.transform = `scale(${currentZoom})`;
+                svg.style.transformOrigin = 'top center';
+            }
+        }
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'SweepPokhara-Flowchart.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+
+</body>
+</html>

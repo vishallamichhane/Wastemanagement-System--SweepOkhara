@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -13,6 +13,7 @@ import {
   FiActivity
 } from "react-icons/fi";
 import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 // Metric Card Component
 const MetricCard = ({ title, value, unit, change, trend, icon: Icon, color }) => {
@@ -156,6 +157,7 @@ const StatusBadge = ({ status, value, icon: Icon }) => {
 
 // Main System Analytics Component
 const SystemAnalytics = () => {
+  const { getToken } = useAuth();
   const [timeRange, setTimeRange] = useState("this-month");
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState(null);
@@ -163,13 +165,23 @@ const SystemAnalytics = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getAuthHeaders = useCallback(async () => {
+    try {
+      const token = await getToken();
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
+  }, [getToken]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
+      const headers = await getAuthHeaders();
       const [statsRes, collectorsRes, reportsRes] = await Promise.all([
-        axios.get('/api/admin/stats'),
+        axios.get('/api/admin/stats', { headers }),
         axios.get('/api/collectors'),
-        axios.get('/api/admin/reports'),
+        axios.get('/api/admin/reports', { headers }),
       ]);
       setStats(statsRes.data);
       setCollectors(collectorsRes.data?.data || collectorsRes.data || []);

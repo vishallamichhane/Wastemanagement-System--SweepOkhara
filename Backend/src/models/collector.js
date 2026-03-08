@@ -75,7 +75,6 @@ const collectorSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User', // Reference to admin who created this collector
-      required: true,
     },
   },
   {
@@ -84,13 +83,12 @@ const collectorSchema = new mongoose.Schema(
 );
 
 // Hash password before saving
-collectorSchema.pre('save', async function (next) {
+collectorSchema.pre('save', async function() {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Compare password method

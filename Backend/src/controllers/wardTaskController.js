@@ -1,6 +1,7 @@
 import WardTask from '../models/wardTask.js';
 import User from '../models/user.js';
-import emailService from '../utils/email.js';
+import Collector from '../models/collector.js';
+import { sendPickupCompletionEmail } from '../utils/email.js';
 
 // Ward schedule data (mirrors frontend wardSchedules.js)
 const WARD_SCHEDULES = {
@@ -330,7 +331,17 @@ async function notifyWardUsers(wardNumber, date, timeSlot) {
       return;
     }
 
-    console.log(`📧 Notifying ${users.length} users of Ward ${wardNumber} about completed pickup`);
+    // Fetch real collector data from database
+    const collector = await Collector.findOne({ 
+      assignedWards: wardNumber,
+      status: 'active'
+    });
+    
+    // Use real collector name if available, otherwise fallback
+    const collectorName = collector?.name || 'SweepPokhara Collection Team';
+    const vehicleId = collector?.vehicleId || `SW-${String(wardNumber).padStart(2, '0')}`;
+
+    console.log(`📧 Notifying ${users.length} users of Ward ${wardNumber} about completed pickup (Collector: ${collectorName}, Vehicle: ${vehicleId})`);
 
     const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
       weekday: 'long',
@@ -342,14 +353,14 @@ async function notifyWardUsers(wardNumber, date, timeSlot) {
     for (const user of users) {
       if (user.email) {
         try {
-          await emailService.sendScheduleReminderEmail({
+          await sendPickupCompletionEmail({
             to: user.email,
             name: user.fullName || user.username || 'Resident',
-            ward: `Ward ${wardNumber}`,
+            ward: wardNumber,
             timeSlot,
-            dayName: formattedDate,
-            vehicle: '',
-            driver: '',
+            date: formattedDate,
+            collectorName,
+            vehicleId,
           });
         } catch (emailErr) {
           console.error(`Failed to email ${user.email}:`, emailErr.message);

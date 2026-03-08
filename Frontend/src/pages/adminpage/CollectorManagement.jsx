@@ -349,7 +349,7 @@ const AddCollectorModal = ({ onClose, onAdd, assignedWards = [] }) => {
     setWardsError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate minimum 5 wards
@@ -358,7 +358,7 @@ const AddCollectorModal = ({ onClose, onAdd, assignedWards = [] }) => {
       return;
     }
     
-    onAdd(formData);
+    await onAdd(formData);
     onClose();
   };
 
@@ -442,7 +442,7 @@ const AddCollectorModal = ({ onClose, onAdd, assignedWards = [] }) => {
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                  placeholder="collector@sweepokhara.com"
+                  placeholder="collector@sweeppokhara.com"
                   required
                 />
               </div>
@@ -658,10 +658,20 @@ const CollectorManagement = () => {
       
       // Check if max limit reached before making API call
       if (collectors.length >= maxCollectors) {
-        alert(`Maximum limit of ${maxCollectors} collectors reached!`);
+        const errorMsg = `Maximum limit of ${maxCollectors} collectors reached!`;
+        setError(errorMsg);
         setLoading(false);
-        return;
+        alert(errorMsg);
+        return; // Return instead of throw
       }
+
+      console.log('📤 Creating collector with data:', {
+        collectorId: data.collectorId,
+        name: data.name,
+        email: data.email,
+        wardsCount: data.assignedWards.length,
+        vehicleId: data.vehicleId
+      });
 
       const response = await fetch('http://localhost:3000/api/collectors', {
         method: 'POST',
@@ -679,19 +689,29 @@ const CollectorManagement = () => {
         }),
       });
 
+      console.log('📥 Response status:', response.status);
       const result = await response.json();
+      console.log('📥 Response data:', result);
 
-      if (result.success) {
+      if (response.ok && result.success) {
         // Refresh the collectors list
         await fetchCollectors();
-        alert('Collector created successfully!');
+        console.log(`✅ Collector "${data.name}" created successfully!`);
+        alert(`✅ Collector "${data.name}" created successfully and assigned to ${data.assignedWards.length} wards!`);
+        setLoading(false);
       } else {
-        alert(result.message || 'Failed to create collector');
+        const errorMsg = result.message || 'Failed to create collector';
+        console.error('❌ Backend error:', errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        alert(`❌ Error: ${errorMsg}`);
       }
-      setLoading(false);
+      
     } catch (err) {
-      console.error('Error creating collector:', err);
-      alert('Failed to create collector. Please try again.');
+      console.error('❌ Error creating collector:', err);
+      const errorMsg = err.message || 'Failed to create collector. Please try again.';
+      setError(errorMsg);
+      alert(`❌ Error: ${errorMsg}`);
       setLoading(false);
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiSearch,
   FiFilter,
@@ -32,6 +32,7 @@ import {
 } from "react-icons/bs";
 import { FaUserTie, FaCity } from "react-icons/fa";
 import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 const userTypes = ["All", "Resident", "Business", "Commercial", "Government"];
 const userStatuses = ["All", "active", "inactive", "suspended"];
@@ -72,6 +73,7 @@ const TypeBadge = ({ type }) => {
 };
 
 const UserManagement = () => {
+  const { getToken } = useAuth();
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
@@ -89,11 +91,21 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const getAuthHeaders = useCallback(async () => {
+    try {
+      const token = await getToken();
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
+  }, [getToken]);
+
   // Fetch real users from backend API
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/admin/users');
+      const headers = await getAuthHeaders();
+      const res = await axios.get('/api/admin/users', { headers });
       if (res.data.success) {
         setUsers(res.data.data);
       } else {

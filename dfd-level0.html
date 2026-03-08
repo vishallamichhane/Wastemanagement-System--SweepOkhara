@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Level 0 DFD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .controls button {
+            padding: 8px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            overflow: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .description {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .description h2 {
+            font-size: 18px;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .description p {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Level 0 DFD &bull; Context Diagram &bull; High-Level Overview</p>
+    </div>
+
+    <div class="controls">
+        <button onclick="zoomIn()">🔍+ Zoom In</button>
+        <button onclick="zoomOut()">🔍- Zoom Out</button>
+        <button onclick="resetZoom()">↻ Reset</button>
+        <button onclick="downloadSVG()">⬇ Download SVG</button>
+    </div>
+
+    <div class="description">
+        <h2>About Level 0 DFD (Context Diagram)</h2>
+        <p>This is the highest level of abstraction showing the entire SweepPokhara Waste Management System as a single process. It displays all external entities that interact with the system and the major data flows between them.</p>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#fca5a5; border-color:#dc2626;"></div> External Entities</div>
+        <div class="legend-item"><div class="legend-color" style="background:#93c5fd; border-color:#2563eb;"></div> System Process</div>
+        <div class="legend-item"><div class="legend-color" style="background:#86efac; border-color:#16a34a;"></div> Data Flows</div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+graph TD
+    %% External Entities
+    USER["👤<br/>User<br/>City Resident"]
+    COLLECTOR["👤<br/>Collector<br/>Waste Collector"]
+    ADMIN["👤<br/>Admin<br/>Municipal Officer"]
+    SMART_BIN["📦<br/>Smart Bin<br/>IoT Device"]
+    
+    %% Central System Process
+    SYSTEM["0.0<br/>SweepPokhara<br/>Waste Management<br/>System"]
+    
+    %% User Data Flows
+    USER -->|User Credentials, Registration Data| SYSTEM
+    USER -->|Waste Report: Description, GPS, Images| SYSTEM
+    USER -->|Profile Updates, Ward Changes| SYSTEM
+    SYSTEM -->|Authentication Token| USER
+    SYSTEM -->|Schedule Information, 33 Wards| USER
+    SYSTEM -->|Report Status & Tracking| USER
+    SYSTEM -->|Email: Schedule Reminders, Pickup Alerts| USER
+    
+    %% Collector Data Flows
+    COLLECTOR -->|Collector ID, Password, Phone| SYSTEM
+    COLLECTOR -->|Task Status Updates| SYSTEM
+    COLLECTOR -->|Report Status Updates| SYSTEM
+    SYSTEM -->|JWT Token| COLLECTOR
+    SYSTEM -->|Today's Assigned Tasks| COLLECTOR
+    SYSTEM -->|Assigned Reports by Ward| COLLECTOR
+    SYSTEM -->|Email: Task Assignments| COLLECTOR
+    
+    %% Admin Data Flows
+    ADMIN -->|Admin Credentials| SYSTEM
+    ADMIN -->|Report Approval/Rejection| SYSTEM
+    ADMIN -->|Collector Management: Create, Update, Delete| SYSTEM
+    SYSTEM -->|Authentication Token| ADMIN
+    SYSTEM -->|All System Reports & Analytics| ADMIN
+    SYSTEM -->|User Statistics & Data| ADMIN
+    SYSTEM -->|Email: System Alerts| ADMIN
+    
+    %% Smart Bin Data Flows
+    SMART_BIN -->|Bin Status: Full, Emptied, Location, Ward| SYSTEM
+    SYSTEM -->|Bin Alert Notifications to All Users| SMART_BIN
+    
+    %% Styling
+    style USER fill:#fca5a5,stroke:#dc2626,stroke-width:3px,color:#000
+    style COLLECTOR fill:#fca5a5,stroke:#dc2626,stroke-width:3px,color:#000
+    style ADMIN fill:#fca5a5,stroke:#dc2626,stroke-width:3px,color:#000
+    style SMART_BIN fill:#fca5a5,stroke:#dc2626,stroke-width:3px,color:#000
+    
+    style SYSTEM fill:#93c5fd,stroke:#2563eb,stroke-width:4px,color:#000
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Level 0 DFD (Context Diagram)
+    </div>
+
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        let currentZoom = 1;
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 50,
+                rankSpacing: 80
+            },
+            themeVariables: {
+                fontSize: '13px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.15, 3);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.15, 0.3);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                svg.style.transform = `scale(${currentZoom})`;
+                svg.style.transformOrigin = 'top center';
+            }
+        }
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'SweepPokhara-Level0-DFD.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+
+</body>
+</html>

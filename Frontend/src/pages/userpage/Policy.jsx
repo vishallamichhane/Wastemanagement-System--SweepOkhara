@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
       id: "introduction",
       title: "Introduction",
       icon: <BsFileText className="text-xl" />,
-      content: "Welcome to SweepOkhara's Privacy Policy. This document outlines how we collect, use, disclose, and safeguard your information when you use our waste management platform. Your privacy is critically important to us, and we are committed to protecting it through our compliance with this policy."
+      content: "Welcome to SweepPokhara's Privacy Policy. This document outlines how we collect, use, disclose, and safeguard your information when you use our waste management platform. Your privacy is critically important to us, and we are committed to protecting it through our compliance with this policy."
     },
     {
       id: "data-collection",
@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
       id: "your-rights",
       title: "Your Rights",
       icon: <BsCheckCircle className="text-xl" />,
-      content: "You have the right to: access your personal information, correct inaccurate data, request deletion of your data, object to processing, and request data portability. You can exercise these rights by contacting us through the platform or at privacy@sweepokhara.gov.np"
+      content: "You have the right to: access your personal information, correct inaccurate data, request deletion of your data, object to processing, and request data portability. You can exercise these rights by contacting us through the platform or at privacy@sweeppokhara.gov.np"
     }
   ];
 
@@ -189,7 +189,7 @@ export default function PrivacyPolicyPage() {
           <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-green-100/50">
             <BsCheckCircle className="text-emerald-600 text-2xl" />
             <p className="text-gray-700 font-medium">
-              By using SweepOkhara, you acknowledge that you have read and understood this Privacy Policy.
+              By using SweepPokhara, you acknowledge that you have read and understood this Privacy Policy.
             </p>
           </div>
         </div>

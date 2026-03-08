@@ -36,6 +36,7 @@ import { GiBroom, GiPathDistance, GiRank3 } from "react-icons/gi";
 import { MdOutlineVerified, MdLocationPin, MdWorkHistory } from "react-icons/md";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import CollectorNotificationCenter from "./components/CollectorNotificationCenter";
+import sweepPokharaLogo from '../../assets/images/sweeppokhara-final-logo.png';
 
 // -------------------------
 // DUMMY PROFILE DATA
@@ -54,7 +55,7 @@ const collectorProfileData = {
   
   contact: {
     phone: "+977 9800000000",
-    email: "rajesh.kumar@sweepokhara.com",
+    email: "rajesh.kumar@sweeppokhara.com",
     address: "Lakeside, Pokhara, Nepal",
     emergencyContact: "+977 9812345678"
   },
@@ -458,15 +459,12 @@ const CollectorProfile = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-10 py-3 sm:py-4">
           {/* Logo */}
           <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
-              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
-                <GiBroom className="text-white text-xl" />
-              </div>
-              <div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                  SweePokhara
-                </span>
-              </div>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <img 
+                src={sweepPokharaLogo} 
+                alt="SweepPokhara Logo" 
+                className="h-11 sm:h-12 w-auto object-contain"
+              />
               <span className="hidden sm:inline-block px-2 sm:px-3 py-1 bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
@@ -778,7 +776,7 @@ const CollectorProfile = () => {
 
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-emerald-200 py-8 text-center text-emerald-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10 mt-12">
-        <span className="font-semibold">© 2024 SweepOkhara. All rights reserved.</span>
+        <span className="font-semibold">© 2024 SweepPokhara. All rights reserved.</span>
         <div className="flex gap-6">
           <a href="#" className="underline hover:text-emerald-900 transition-colors duration-300 font-medium">
             Privacy Policy

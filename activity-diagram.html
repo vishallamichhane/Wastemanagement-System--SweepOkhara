@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweepPokhara - Activity Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e3a5f, #2d6a4f); color: white; padding: 24px 40px; text-align: center; }
+        .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+        .header p { font-size: 14px; opacity: 0.85; }
+        .chart-container { display: flex; justify-content: center; padding: 30px 20px; overflow: auto; }
+        .mermaid { max-width: 100%; }
+        .footer { text-align: center; padding: 16px; font-size: 12px; color: #94a3b8; background: #fff; border-top: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SweepPokhara &mdash; Waste Management System</h1>
+        <p>Activity Diagram &bull; System Workflow Activities</p>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+        <pre class="mermaid">
+flowchart TD
+    START(((Start))) --> VISIT[Visit SweepPokhara Website]
+    VISIT --> IS_REG{Registered?}
+    
+    IS_REG -->|No| REGISTER[Register with Email/Google]
+    REGISTER --> VERIFY[Verify Email]
+    VERIFY --> SAVE_USER[Save User to Database]
+    SAVE_USER --> LOGIN
+    
+    IS_REG -->|Yes| LOGIN[Login to System]
+    LOGIN --> AUTH{Authenticate}
+    AUTH -->|Failed| LOGIN
+    AUTH -->|Success| ROLE{User Role?}
+    
+    ROLE -->|User| U_DASH[Open User Dashboard]
+    ROLE -->|Collector| C_DASH[Open Collector Dashboard]
+    ROLE -->|Admin| A_DASH[Open Admin Dashboard]
+    
+    %% ---- USER ACTIVITIES ----
+    U_DASH --> U_ACT{Select Activity}
+    U_ACT --> SCHED[View Pickup Schedule]
+    U_ACT --> SUBMIT[Submit Waste Report]
+    U_ACT --> TRACK[Track My Reports]
+    U_ACT --> PROFILE[Update Profile]
+    
+    SUBMIT --> FILL[Fill Report Form]
+    FILL --> ADD_IMG[Upload Images]
+    ADD_IMG --> ADD_LOC[Add GPS Location]
+    ADD_LOC --> SELECT_TYPE[Select Report Type]
+    SELECT_TYPE --> SEND_REPORT[Submit Report]
+    SEND_REPORT --> AUTO_ASSIGN[System Auto-Assigns Collector]
+    AUTO_ASSIGN --> REPORT_SAVED[Report Saved: Status in-progress]
+    REPORT_SAVED --> U_ACT
+    
+    SCHED --> U_ACT
+    TRACK --> U_ACT
+    PROFILE --> U_ACT
+    
+    %% ---- COLLECTOR ACTIVITIES ----
+    C_DASH --> C_ACT{Select Activity}
+    C_ACT --> VIEW_TASK[View Today Tasks]
+    C_ACT --> VIEW_REP[View Assigned Reports]
+    
+    VIEW_TASK --> HAS_TASK{Tasks Available?}
+    HAS_TASK -->|No| C_ACT
+    HAS_TASK -->|Yes| START_TASK[Start Task]
+    START_TASK --> DO_PICKUP[Perform Waste Pickup]
+    DO_PICKUP --> DONE_TASK[Mark Task Completed]
+    DONE_TASK --> NOTIFY_USER[System Notifies Ward Users]
+    NOTIFY_USER --> C_ACT
+    
+    VIEW_REP --> UPD_REP[Update Report Status]
+    UPD_REP --> MARK_DONE[Mark Report Resolved]
+    MARK_DONE --> PENDING_VER[Status: Pending Verification]
+    PENDING_VER --> C_ACT
+    
+    %% ---- ADMIN ACTIVITIES ----
+    A_DASH --> A_ACT{Select Activity}
+    A_ACT --> MGR_USERS[View All Users]
+    A_ACT --> MGR_COLL[Manage Collectors]
+    A_ACT --> REV_REP[Review Reports]
+    A_ACT --> ANALYTICS[View Analytics]
+    
+    MGR_COLL --> COLL_ACT{Action?}
+    COLL_ACT --> CREATE_C[Create Collector]
+    COLL_ACT --> EDIT_C[Edit Collector]
+    COLL_ACT --> DEL_C[Delete Collector]
+    CREATE_C --> A_ACT
+    EDIT_C --> A_ACT
+    DEL_C --> A_ACT
+    
+    REV_REP --> PICK_REP[Select Pending Report]
+    PICK_REP --> DECISION{Approve or Reject?}
+    DECISION -->|Approve| APPROVE[Mark Report Resolved]
+    DECISION -->|Reject| REJECT[Send Back to Collector]
+    APPROVE --> SEND_EMAIL[Send Resolution Email to User]
+    SEND_EMAIL --> A_ACT
+    REJECT --> A_ACT
+    
+    MGR_USERS --> A_ACT
+    ANALYTICS --> A_ACT
+    
+    U_ACT --> LOGOUT[Logout]
+    C_ACT --> LOGOUT
+    A_ACT --> LOGOUT
+    LOGOUT --> ENDED(((End)))
+    
+    %% Styling
+    style START fill:#22c55e,stroke:#16a34a,color:#fff
+    style ENDED fill:#ef4444,stroke:#dc2626,color:#fff
+    style U_DASH fill:#dbeafe,stroke:#3b82f6,color:#000
+    style C_DASH fill:#fef9c3,stroke:#eab308,color:#000
+    style A_DASH fill:#fce7f3,stroke:#ec4899,color:#000
+    style REPORT_SAVED fill:#bbf7d0,stroke:#22c55e,color:#000
+    style PENDING_VER fill:#fef08a,stroke:#ca8a04,color:#000
+    style APPROVE fill:#bbf7d0,stroke:#22c55e,color:#000
+    style REJECT fill:#fecaca,stroke:#ef4444,color:#000
+    style SEND_EMAIL fill:#e9d5ff,stroke:#a855f7,color:#000
+    style NOTIFY_USER fill:#e9d5ff,stroke:#a855f7,color:#000
+        </pre>
+    </div>
+
+    <div class="footer">
+        SweepPokhara &mdash; Activity Diagram
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 30,
+                rankSpacing: 40
+            },
+            themeVariables: {
+                fontSize: '13px',
+                fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+            }
+        });
+    </script>
+</body>
+</html>

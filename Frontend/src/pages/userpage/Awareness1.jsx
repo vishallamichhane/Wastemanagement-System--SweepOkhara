@@ -116,7 +116,7 @@ export default function ThreeRsPage() {
               </p>
               <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 sm:p-6 rounded-2xl border border-emerald-200">
                 <p className="text-emerald-800 font-semibold text-center">
-                  Every small action counts! Together, we can make Sweepokhara cleaner and greener.
+                  Every small action counts! Together, we can make SweepPokhara cleaner and greener.
                 </p>
               </div>
             </div>

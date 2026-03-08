@@ -30,6 +30,10 @@ import CollectorMapPage from './pages/collectorpage/Collectormap';
 import CollectorProfilePage from './pages/collectorpage/Profilecollector';
 import CollectorReportsPage from './pages/collectorpage/Reports';
 import AdminDashboard from './pages/adminpage/Admin';
+import AdminLogin from './pages/adminpage/AdminLogin';
+import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import ProtectedUserRoute from './components/ProtectedUserRoute';
+import ProtectedCollectorRoute from './components/ProtectedCollectorRoute';
 import UserManagementPage from './pages/adminpage/UserManagement';
 import { DarkModeProvider } from './context/DarkModeContext';
 import { useUser, ClerkProvider } from '@clerk/clerk-react';
@@ -117,7 +121,7 @@ function ClerkProviderWithRoutes() {
           <Route path='/api/auth/callback/google' element={<OAuthCallback />} />
           
           {/* Routes for user layout */}
-          <Route path="/user" element={<UserLayout />} > 
+          <Route path="/user" element={<ProtectedUserRoute><UserLayout /></ProtectedUserRoute>} > 
             <Route index element={<UserHomePage />} />
             <Route path='schedule' element= {<SchedulePage/>}/>
           <Route path='myreport' element= {<MyRepotPage/>}/>
@@ -135,7 +139,7 @@ function ClerkProviderWithRoutes() {
         </Route> 
 
         {/* Routes for collector layout */}
-        <Route path="/collector" element={<CollectorLayout />}>
+        <Route path="/collector" element={<ProtectedCollectorRoute><CollectorLayout /></ProtectedCollectorRoute>}>
           <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="tasks" element={<AssignedTaskPage />} />
@@ -145,8 +149,9 @@ function ClerkProviderWithRoutes() {
         </Route>
 
         {/* Routes for admin */}
-        <Route path='/admin' element= {<AdminDashboard/>}/>
-        <Route path='/usermanagement' element= {<UserManagementPage/>}/>
+        <Route path='/admin/login' element={<AdminLogin />} />
+        <Route path='/admin' element={<ProtectedAdminRoute><AdminDashboard/></ProtectedAdminRoute>} />
+        <Route path='/usermanagement' element={<ProtectedAdminRoute><UserManagementPage/></ProtectedAdminRoute>} />
       </Routes>
       </DarkModeProvider>
     </ClerkProvider>

@@ -1,6 +1,7 @@
 import { GiBroom } from "react-icons/gi";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import sweepPokharaLogo from '../../assets/images/sweeppokhara-final-logo.png';
 import { 
   FiChevronLeft,
   FiCheck,
@@ -527,15 +528,12 @@ const AssignedTasksPage = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center px-3 sm:px-6 lg:px-10 py-3 sm:py-4">
           {/* Logo */}
           <Link to="/collector" className="transform hover:scale-105 transition-transform duration-300">
-            <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
-              <div className="p-2 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl">
-                <GiBroom className="text-white text-xl" />
-              </div>
-              <div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
-                  SweePokhara
-                </span>
-              </div>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <img 
+                src={sweepPokharaLogo} 
+                alt="SweepPokhara Logo" 
+                className="h-11 sm:h-12 w-auto object-contain"
+              />
               <span className="hidden sm:inline-block px-3 py-1 bg-emerald-100 text-emerald-800 text-sm font-semibold rounded-full border border-emerald-200">
                 Collector
               </span>
@@ -833,7 +831,7 @@ const AssignedTasksPage = () => {
 
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-emerald-200 py-8 text-center text-emerald-800 text-sm select-none flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center relative z-10 mt-12">
-        <span className="font-semibold">&copy; 2024 SweePokhara. All rights reserved.</span>
+        <span className="font-semibold">&copy; 2024 SweepPokhara. All rights reserved.</span>
         <div className="flex gap-6">
           <a href="#" className="underline hover:text-emerald-900 transition-colors duration-300 font-medium">Privacy Policy</a>
           <a href="#" className="underline hover:text-emerald-900 transition-colors duration-300 font-medium">Terms of Service</a>
